@@ -1,0 +1,376 @@
+<UserControl x:Class="DocumentManagement.Wpf.Views.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+             xmlns:conv="clr-namespace:DocumentManagement.Wpf.Converters"
+             Background="{StaticResource AppBackgroundBrush}">
+
+    <UserControl.Resources>
+        <conv:StatusNameToBrushConverter x:Key="StatusNameToBrushConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+
+        <Style x:Key="RecentGridTextStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+
+        <Style x:Key="RecentGridMutedTextStyle"
+               TargetType="TextBlock"
+               BasedOn="{StaticResource RecentGridTextStyle}">
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        </Style>
+
+        <Style x:Key="RecentGridCellStyle" TargetType="DataGridCell">
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="DataGridCell">
+                        <Border Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="RecentGridRowStyle" TargetType="DataGridRow">
+            <Setter Property="Height" Value="48"/>
+            <Setter Property="MinHeight" Value="48"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#F8FAFC"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="#EEF2FF"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="RecentGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+            <Setter Property="Height" Value="42"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Background" Value="#F8FAFC"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Margin="24">
+
+                <DockPanel Margin="0,0,0,20">
+                    <StackPanel DockPanel.Dock="Left">
+                        <TextBlock Text="Bảng điều khiển"
+                                   Style="{StaticResource PageTitleTextStyle}"/>
+
+                        <TextBlock Text="Theo dõi nhanh trạng thái, tiến độ và văn bản mới nhất."
+                                   Margin="0,6,0,0"
+                                   Style="{StaticResource MutedTextStyle}"/>
+                    </StackPanel>
+
+                    <Button Content="Làm mới"
+                            Width="110"
+                            Height="38"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding RefreshCommand}"
+                            DockPanel.Dock="Right"/>
+                </DockPanel>
+
+                <UniformGrid Columns="4" Margin="0,0,0,18">
+
+                    <Border Style="{StaticResource HoverCardStyle}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock Text="Tổng số" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding TotalDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource TextBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource HoverCardStyle}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock Text="Bản nháp" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding DraftDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="#64748B"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource HoverCardStyle}" Margin="0,0,12,12">
+                        <StackPanel>
+                            <TextBlock Text="Chờ duyệt" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding PendingApprovalDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource WarningBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource HoverCardStyle}" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Đã ban hành" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding IssuedDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource SuccessBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource HoverCardStyle}" Margin="0,0,12,0">
+                        <StackPanel>
+                            <TextBlock Text="Đã lưu trữ" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding ArchivedDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="#7C3AED"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource HoverCardStyle}" Margin="0,0,12,0">
+                        <StackPanel>
+                            <TextBlock Text="Bị từ chối" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding RejectedDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource DangerBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource HoverCardStyle}" Margin="0,0,12,0">
+                        <StackPanel>
+                            <TextBlock Text="Quá hạn" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding OverdueDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="#B91C1C"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource HoverCardStyle}">
+                        <StackPanel>
+                            <TextBlock Text="Cần xử lý" Style="{StaticResource MutedTextStyle}"/>
+                            <TextBlock Text="{Binding PendingApprovalDocuments}"
+                                       FontSize="32"
+                                       FontWeight="Bold"
+                                       Foreground="{StaticResource PrimaryBrush}"/>
+                        </StackPanel>
+                    </Border>
+
+                </UniformGrid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2.2*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0"
+                            Style="{StaticResource AppCardStyle}"
+                            Margin="0,0,12,0">
+
+                        <StackPanel>
+                            <TextBlock Text="Văn bản gần đây"
+                                       Style="{StaticResource SectionTitleTextStyle}"
+                                       Margin="0,0,0,14"/>
+
+                            <DataGrid x:Name="RecentDocumentsGrid"
+                                      ItemsSource="{Binding RecentDocuments}"
+                                      Style="{StaticResource AppDataGridStyle}"
+                                      AutoGenerateColumns="False"
+                                      HeadersVisibility="Column"
+                                      GridLinesVisibility="None"
+                                      RowHeaderWidth="0"
+                                      RowHeight="48"
+                                      MinRowHeight="48"
+                                      ColumnHeaderHeight="42"
+                                      CanUserAddRows="False"
+                                      CanUserDeleteRows="False"
+                                      CanUserResizeRows="False"
+                                      SelectionMode="Single"
+                                      SelectionUnit="FullRow"
+                                      CellStyle="{StaticResource RecentGridCellStyle}"
+                                      RowStyle="{StaticResource RecentGridRowStyle}"
+                                      ColumnHeaderStyle="{StaticResource RecentGridColumnHeaderStyle}"
+                                      MouseDoubleClick="RecentDocumentsGrid_MouseDoubleClick">
+
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Mã VB"
+                                                        Binding="{Binding DocumentCode}"
+                                                        Width="130"
+                                                        ElementStyle="{StaticResource RecentGridMutedTextStyle}"/>
+
+                                    <DataGridTextColumn Header="Tiêu đề"
+                                                        Binding="{Binding Title}"
+                                                        Width="*">
+                                        <DataGridTextColumn.ElementStyle>
+                                            <Style TargetType="TextBlock"
+                                                   BasedOn="{StaticResource RecentGridTextStyle}">
+                                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                                <Setter Property="ToolTip" Value="{Binding Title}"/>
+                                            </Style>
+                                        </DataGridTextColumn.ElementStyle>
+                                    </DataGridTextColumn>
+
+                                    <DataGridTemplateColumn Header="Trạng thái" Width="145">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Grid VerticalAlignment="Center">
+                                                    <Border Style="{StaticResource BadgeBorderStyle}"
+                                                            Height="26"
+                                                            MinWidth="92"
+                                                            HorizontalAlignment="Left"
+                                                            VerticalAlignment="Center"
+                                                            Background="{Binding StatusName, Converter={StaticResource StatusNameToBrushConverter}}">
+                                                        <TextBlock Text="{Binding StatusName}"
+                                                                   Style="{StaticResource BadgeTextStyle}"
+                                                                   VerticalAlignment="Center"
+                                                                   HorizontalAlignment="Center"/>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                    </DataGridTemplateColumn>
+
+                                    <DataGridTextColumn Header="Hạn xử lý"
+                                                        Binding="{Binding DueDate, StringFormat=dd/MM/yyyy}"
+                                                        Width="120"
+                                                        ElementStyle="{StaticResource RecentGridMutedTextStyle}"/>
+
+                                    <DataGridTextColumn Header="Cập nhật"
+                                                        Binding="{Binding UpdatedAt, StringFormat=dd/MM/yyyy HH:mm}"
+                                                        Width="150"
+                                                        ElementStyle="{StaticResource RecentGridMutedTextStyle}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
+                    <StackPanel Grid.Column="1">
+
+                        <Border Style="{StaticResource AppCardStyle}" Margin="0,0,0,12">
+                            <StackPanel>
+                                <TextBlock Text="Trạng thái văn bản"
+                                           Style="{StaticResource SectionTitleTextStyle}"
+                                           Margin="0,0,0,12"/>
+
+                                <Grid Height="280">
+                                    <lvc:PieChart Series="{Binding StatusSeries}"
+                                                  LegendLocation="Bottom"
+                                                  HoverPushOut="8">
+                                        <lvc:PieChart.Style>
+                                            <Style TargetType="lvc:PieChart">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasStatusChartData}" Value="False">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </lvc:PieChart.Style>
+                                    </lvc:PieChart>
+
+                                    <Border>
+                                        <Border.Style>
+                                            <Style TargetType="Border" BasedOn="{StaticResource SoftCardStyle}">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding HasStatusChartData}" Value="False">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+
+                                        <StackPanel VerticalAlignment="Center"
+                                                    HorizontalAlignment="Center">
+                                            <TextBlock Text="Chưa có dữ liệu biểu đồ"
+                                                       FontSize="15"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{StaticResource TextMutedBrush}"
+                                                       HorizontalAlignment="Center"/>
+
+                                            <TextBlock Text="Biểu đồ sẽ hiển thị khi có dữ liệu trạng thái văn bản."
+                                                       Margin="0,8,0,0"
+                                                       Style="{StaticResource SmallMutedTextStyle}"
+                                                       HorizontalAlignment="Center"
+                                                       TextAlignment="Center"/>
+                                        </StackPanel>
+                                    </Border>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource AppCardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="Tóm tắt nhanh"
+                                           Style="{StaticResource SectionTitleTextStyle}"
+                                           Margin="0,0,0,12"/>
+
+                                <TextBlock Text="{Binding TotalDocuments, StringFormat=Tổng số: {0}}"
+                                           Margin="0,0,0,8"
+                                           Style="{StaticResource MutedTextStyle}"/>
+
+                                <TextBlock Text="{Binding PendingApprovalDocuments, StringFormat=Chờ duyệt: {0}}"
+                                           Margin="0,0,0,8"
+                                           Style="{StaticResource MutedTextStyle}"/>
+
+                                <TextBlock Text="{Binding OverdueDocuments, StringFormat=Quá hạn: {0}}"
+                                           Margin="0,0,0,8"
+                                           Style="{StaticResource MutedTextStyle}"/>
+
+                                <TextBlock Text="{Binding IssuedDocuments, StringFormat=Đã ban hành: {0}}"
+                                           Style="{StaticResource MutedTextStyle}"/>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </Grid>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- LOADING -->
+        <Grid Style="{StaticResource LoadingOverlayGridStyle}"
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+
+            <Border Style="{StaticResource LoadingCardStyle}">
+                <StackPanel HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <ProgressBar Width="140"
+                                 Height="6"
+                                 IsIndeterminate="True"
+                                 Margin="0,0,0,18"/>
+
+                    <TextBlock Text="Đang tải dashboard..."
+                               Style="{StaticResource LoadingTextStyle}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- ERROR -->
+        <Border Style="{StaticResource ErrorBannerStyle}"
+                Visibility="{Binding HasError, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock Text="{Binding ErrorMessage}"
+                       Style="{StaticResource ErrorBannerTextStyle}"/>
+        </Border>
+    </Grid>
+</UserControl>

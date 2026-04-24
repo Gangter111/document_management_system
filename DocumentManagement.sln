@@ -1,0 +1,28 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManagement.Domain", "DocumentManagement.Domain\DocumentManagement.Domain.csproj", "{3E49E054-94EC-4752-9653-F350F267A845}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManagement.Application", "DocumentManagement.Application\DocumentManagement.Application.csproj", "{7C833C97-8722-4D93-9F3B-C8DF646F0C52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManagement.Infrastructure", "DocumentManagement.Infrastructure\DocumentManagement.Infrastructure.csproj", "{4791E60B-F27A-45E1-8818-B5A96718E234}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocumentManagement.Wpf", "DocumentManagement.Wpf\DocumentManagement.Wpf.csproj", "{59B8E490-4139-497B-8BA4-54EA3A7867C0}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3E49E054-94EC-4752-9653-F350F267A845}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E49E054-94EC-4752-9653-F350F267A845}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C833C97-8722-4D93-9F3B-C8DF646F0C52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C833C97-8722-4D93-9F3B-C8DF646F0C52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4791E60B-F27A-45E1-8818-B5A96718E234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4791E60B-F27A-45E1-8818-B5A96718E234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{59B8E490-4139-497B-8BA4-54EA3A7867C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{59B8E490-4139-497B-8BA4-54EA3A7867C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,52 @@
+using DocumentManagement.Application.Interfaces;
+using DocumentManagement.Application.Models;
+using DocumentManagement.Application.Services;
+using DocumentManagement.Infrastructure.Data;
+using DocumentManagement.Infrastructure.Repositories;
+using DocumentManagement.Infrastructure.Services;
+
+var dbPath = Path.Combine(AppContext.BaseDirectory, "database", "app.db");
+var attachmentRoot = Path.Combine(AppContext.BaseDirectory, "storage", "attachments");
+
+var connectionFactory = new SqliteConnectionFactory(dbPath);
+var databaseInitializer = new DatabaseInitializer(connectionFactory, dbPath);
+databaseInitializer.Initialize();
+
+IDocumentRepository documentRepository = new DocumentRepository(connectionFactory);
+IAttachmentRepository attachmentRepository = new AttachmentRepository(connectionFactory);
+IFileStorageService fileStorageService = new LocalFileStorageService(attachmentRoot);
+
+IDocumentService documentService = new DocumentService(documentRepository);
+IAttachmentService attachmentService = new AttachmentService(attachmentRepository, fileStorageService);
+
+var newDocumentId = await documentService.CreateAsync(new CreateDocumentRequest
+{
+    DocumentType = "INCOMING",
+    DocumentNumber = "CV-2025-001",
+    Title = "Công văn triển khai kế hoạch quý II",
+    Summary = "Đề nghị triển khai kế hoạch quý II",
+    ContentText = "Nội dung chi tiết liên quan đến triển khai công việc nội bộ.",
+    IssueDate = "2025-04-01",
+    ReceivedDate = "2025-04-02",
+    SenderName = "Sở Kế hoạch",
+    ReceiverName = "Phòng Hành chính",
+    CategoryId = 2,
+    StatusId = 1,
+    ConfidentialityLevel = "NORMAL",
+    UrgencyLevel = "URGENT",
+    Notes = "Cần xử lý sớm",
+    CreatedBy = "admin"
+});
+
+Console.WriteLine($"Đã tạo văn bản ID = {newDocumentId}");
+
+var documents = await documentService.SearchAsync(new DocumentSearchRequest
+{
+    Keyword = "triển khai"
+});
+
+Console.WriteLine("Kết quả tìm kiếm:");
+foreach (var doc in documents)
+{
+    Console.WriteLine($"- [{doc.Id}] {doc.DocumentNumber} | {doc.Title}");
+}
