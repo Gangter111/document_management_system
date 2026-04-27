@@ -1,14 +1,6 @@
-using System;
-using DocumentManagement.Domain.Enums;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using DocumentManagement.Application.Interfaces;
-using DocumentManagement.Application.Models;
-using DocumentManagement.Application.Security;
-using DocumentManagement.Domain.Entities;
+using DocumentManagement.Contracts.Documents;
 using DocumentManagement.Wpf.Commands;
 using DocumentManagement.Wpf.Services;
 using Microsoft.Win32;
@@ -17,16 +9,11 @@ namespace DocumentManagement.Wpf.ViewModels;
 
 public class DocumentFormViewModel : BaseViewModel
 {
-    private static long DraftStatusId => (long)DocumentStatus.Draft;
-    private static long PendingStatusId => (long)DocumentStatus.PendingApproval;
-    private static long RejectedStatusId => (long)DocumentStatus.Rejected;
+    private const long IssuedStatusId = 4;
 
-    private readonly IDocumentService _documentService;
-    private readonly IOcrService _ocrService;
-    private readonly IAttachmentService _attachmentService;
-    private readonly IAuthService _authService;
-    private readonly IPermissionService _permissionService;
-    private readonly IHistoryRepository _historyRepository;
+    private readonly ApiService _apiService;
+    private readonly ApiAuthService _authService;
+    private readonly ClientPermissionService _permissionService;
     private readonly INotificationService _notificationService;
     private readonly IConfirmDialogService _confirmDialogService;
 
@@ -51,9 +38,8 @@ public class DocumentFormViewModel : BaseViewModel
     private string? _selectedFilePath;
 
     private long? _categoryId;
-    private long? _statusId = DraftStatusId;
+    private long? _statusId = IssuedStatusId;
 
-    private bool _lookupsLoaded;
     private bool _isReadOnlyMode;
 
     public bool IsEditMode => _id > 0;
@@ -64,62 +50,28 @@ public class DocumentFormViewModel : BaseViewModel
         private set => SetProperty(ref _isReadOnlyMode, value);
     }
 
-    public List<DocumentHistoryModel> Histories { get; private set; } = new();
+    public bool CanViewDocument => _permissionService.CanViewDocuments();
 
-    public bool HasHistories => Histories.Count > 0;
+    public bool CanCreateDocument => _permissionService.CanCreateDocuments();
 
-    public bool CanViewDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentView);
+    public bool CanEditDocument => _permissionService.CanEditDocuments();
 
-    public bool CanCreateDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentCreate);
-
-    public bool CanEditDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentEdit);
-
-    public bool CanSubmitDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentSubmit);
-
-    public bool CanApproveDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentApprove);
-
-    public bool CanRejectDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentReject);
+    public bool CanDeleteDocument => _permissionService.CanDeleteDocuments();
 
     public bool CanModifyDocument =>
         !IsReadOnlyMode
-        && (!IsEditMode ? CanCreateDocument : CanEditDocument)
-        && (!IsEditMode || StatusId == DraftStatusId || StatusId == RejectedStatusId);
+        && (!IsEditMode ? CanCreateDocument : CanEditDocument);
 
     public bool CanBrowseFile => CanModifyDocument;
 
-    public bool CanAutoFill => HasFile && CanModifyDocument;
+    public bool CanAutoFill => false;
 
     public bool CanSaveDocument => CanModifyDocument;
 
-    public bool CanSaveAndSubmitForApproval =>
-        !IsReadOnlyMode
-        && CanSubmitDocument
-        && CanModifyDocument
-        && (!IsEditMode || StatusId == DraftStatusId || StatusId == RejectedStatusId);
-
-    public bool CanSubmitForApproval =>
+    public bool CanDelete =>
         IsEditMode
         && !IsReadOnlyMode
-        && CanSubmitDocument
-        && (StatusId == DraftStatusId || StatusId == RejectedStatusId);
-
-    public bool CanApprove =>
-        IsEditMode
-        && !IsReadOnlyMode
-        && CanApproveDocument
-        && StatusId == PendingStatusId;
-
-    public bool CanReject =>
-        IsEditMode
-        && !IsReadOnlyMode
-        && CanRejectDocument
-        && StatusId == PendingStatusId;
+        && CanDeleteDocument;
 
     public string DocumentType
     {
@@ -223,9 +175,6 @@ public class DocumentFormViewModel : BaseViewModel
         set => SetProperty(ref _notes, value);
     }
 
-    public List<CategoryModel> Categories { get; private set; } = new();
-    public List<StatusModel> Statuses { get; private set; } = new();
-
     public long? CategoryId
     {
         get => _categoryId;
@@ -258,93 +207,68 @@ public class DocumentFormViewModel : BaseViewModel
         }
     }
 
-    public bool HasFile => !string.IsNullOrEmpty(SelectedFilePath);
+    public bool HasFile => !string.IsNullOrWhiteSpace(SelectedFilePath);
 
     public ICommand BrowseFileCommand { get; }
+
     public ICommand AutoFillCommand { get; }
+
     public ICommand SaveCommand { get; }
-    public ICommand SaveAndSubmitForApprovalCommand { get; }
-    public ICommand SubmitForApprovalCommand { get; }
-    public ICommand ApproveCommand { get; }
-    public ICommand RejectCommand { get; }
+
+    public ICommand DeleteCommand { get; }
 
     public DocumentFormViewModel(
-        IDocumentService documentService,
-        IOcrService ocrService,
-        IAttachmentService attachmentService,
-        IAuthService authService,
-        IPermissionService permissionService,
-        IHistoryRepository historyRepository,
+        ApiService apiService,
+        ApiAuthService authService,
+        ClientPermissionService permissionService,
         INotificationService notificationService,
         IConfirmDialogService confirmDialogService)
     {
-        _documentService = documentService;
-        _ocrService = ocrService;
-        _attachmentService = attachmentService;
+        _apiService = apiService;
         _authService = authService;
         _permissionService = permissionService;
-        _historyRepository = historyRepository;
         _notificationService = notificationService;
         _confirmDialogService = confirmDialogService;
 
         BrowseFileCommand = new RelayCommand(_ => BrowseFile(), _ => CanBrowseFile);
-        AutoFillCommand = new RelayCommand(async _ => await RunAutoFillAsync(), _ => CanAutoFill);
+        AutoFillCommand = new RelayCommand(_ => ShowOcrDisabledMessage(), _ => false);
         SaveCommand = new RelayCommand(async w => await SaveAsync(w), _ => CanSaveDocument);
-        SaveAndSubmitForApprovalCommand = new RelayCommand(async w => await SaveAndSubmitForApprovalAsync(w), _ => CanSaveAndSubmitForApproval);
+        DeleteCommand = new RelayCommand(async w => await DeleteAsync(w), _ => CanDelete);
+    }
 
-        SubmitForApprovalCommand = new RelayCommand(async _ => await SubmitForApprovalAsync(), _ => CanSubmitForApproval);
-        ApproveCommand = new RelayCommand(async _ => await ApproveAsync(), _ => CanApprove);
-        RejectCommand = new RelayCommand(async _ => await RejectAsync(), _ => CanReject);
+    public void ResetForCreate()
+    {
+        _id = 0;
 
-        _ = EnsureLookupsLoadedAsync();
+        DocumentType = "INCOMING";
+        DocumentNumber = string.Empty;
+        ReferenceNumber = null;
+        Title = string.Empty;
+        Summary = null;
+        ContentText = null;
+        IssueDate = DateTime.Today;
+        ReceivedDate = DateTime.Today;
+        DueDate = null;
+        SenderName = null;
+        ReceiverName = null;
+        SignerName = null;
+        ConfidentialityLevel = "NORMAL";
+        UrgencyLevel = "NORMAL";
+        ProcessingDepartment = null;
+        AssignedTo = null;
+        Notes = null;
+        CategoryId = null;
+        StatusId = IssuedStatusId;
+        SelectedFilePath = null;
+
+        OnPropertyChanged(nameof(IsEditMode));
+        RefreshAccessState();
     }
 
     public void ApplyAccessMode(bool isReadOnly)
     {
         IsReadOnlyMode = isReadOnly;
         RefreshAccessState();
-    }
-
-    private async Task EnsureLookupsLoadedAsync()
-    {
-        if (_lookupsLoaded)
-        {
-            return;
-        }
-
-        try
-        {
-            Categories = await _documentService.GetCategoriesAsync();
-            Statuses = await _documentService.GetStatusesAsync();
-
-            _lookupsLoaded = true;
-
-            OnPropertyChanged(nameof(Categories));
-            OnPropertyChanged(nameof(Statuses));
-
-            if (_id == 0 && !StatusId.HasValue)
-            {
-                StatusId = DraftStatusId;
-            }
-
-            if (_id == 0 && Statuses.Count > 0)
-            {
-                var draft = Statuses.FirstOrDefault(x =>
-                    string.Equals(x.Code, "DRAFT", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(x.Name, "Bản nháp", StringComparison.OrdinalIgnoreCase));
-
-                if (draft != null)
-                {
-                    StatusId = draft.Id;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            _notificationService.ShowError(
-                $"Không thể tải dữ liệu danh mục/trạng thái: {ex.Message}",
-                "Lỗi dữ liệu");
-        }
     }
 
     public async Task LoadDocumentAsync(long id)
@@ -357,55 +281,52 @@ public class DocumentFormViewModel : BaseViewModel
             return;
         }
 
-        await EnsureLookupsLoadedAsync();
-
-        var doc = await _documentService.GetByIdAsync(id);
-
-        if (doc == null)
+        try
         {
-            _notificationService.ShowInfo(
-                "Không tìm thấy văn bản.",
-                "Thông báo");
-            return;
+            var doc = await _apiService.GetDocumentByIdAsync(id);
+
+            if (doc == null)
+            {
+                _notificationService.ShowInfo(
+                    "Không tìm thấy văn bản.",
+                    "Thông báo");
+                return;
+            }
+
+            _id = doc.Id;
+
+            DocumentType = doc.DocumentType;
+            DocumentNumber = doc.DocumentNumber;
+            ReferenceNumber = doc.ReferenceNumber;
+            Title = doc.Title;
+            Summary = doc.Summary;
+            ContentText = doc.ContentText;
+
+            IssueDate = DateTime.TryParse(doc.IssueDate, out var issueDate) ? issueDate : null;
+            ReceivedDate = DateTime.TryParse(doc.ReceivedDate, out var receivedDate) ? receivedDate : null;
+            DueDate = DateTime.TryParse(doc.DueDate, out var dueDate) ? dueDate : null;
+
+            SenderName = doc.SenderName;
+            ReceiverName = doc.ReceiverName;
+            SignerName = doc.SignerName;
+            ConfidentialityLevel = doc.ConfidentialityLevel;
+            UrgencyLevel = doc.UrgencyLevel;
+            ProcessingDepartment = doc.ProcessingDepartment;
+            AssignedTo = doc.AssignedTo;
+            Notes = doc.Notes;
+            CategoryId = doc.CategoryId;
+            StatusId = doc.StatusId;
+            SelectedFilePath = null;
+
+            OnPropertyChanged(nameof(IsEditMode));
+            RefreshAccessState();
         }
-
-        _id = doc.Id;
-        DocumentType = doc.DocumentType;
-        DocumentNumber = doc.DocumentNumber;
-        ReferenceNumber = doc.ReferenceNumber;
-        Title = doc.Title;
-        Summary = doc.Summary;
-        ContentText = doc.ContentText;
-        ConfidentialityLevel = doc.ConfidentialityLevel;
-        UrgencyLevel = doc.UrgencyLevel;
-        SenderName = doc.SenderName;
-        ReceiverName = doc.ReceiverName;
-        SignerName = doc.SignerName;
-        ProcessingDepartment = doc.ProcessingDepartment;
-        AssignedTo = doc.AssignedTo;
-        Notes = doc.Notes;
-        CategoryId = doc.CategoryId;
-        StatusId = doc.StatusId;
-        SelectedFilePath = null;
-
-        IssueDate = DateTime.TryParse(doc.IssueDate, out var issueDate) ? issueDate : null;
-        ReceivedDate = DateTime.TryParse(doc.ReceivedDate, out var receivedDate) ? receivedDate : null;
-        DueDate = DateTime.TryParse(doc.DueDate, out var dueDate) ? dueDate : null;
-
-        await LoadHistoryAsync();
-
-        OnPropertyChanged(nameof(IsEditMode));
-        RefreshAccessState();
-    }
-
-    private async Task LoadHistoryAsync()
-    {
-        Histories = _id <= 0
-            ? new List<DocumentHistoryModel>()
-            : await _historyRepository.GetByDocumentIdAsync(_id);
-
-        OnPropertyChanged(nameof(Histories));
-        OnPropertyChanged(nameof(HasHistories));
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                "Không thể tải văn bản từ API: " + ex.Message,
+                "Lỗi API");
+        }
     }
 
     private void BrowseFile()
@@ -413,7 +334,7 @@ public class DocumentFormViewModel : BaseViewModel
         if (!CanBrowseFile)
         {
             _notificationService.ShowWarning(
-                "Bạn không có quyền thao tác với tệp đính kèm.",
+                "Bạn không có quyền thao tác với tệp.",
                 "Từ chối thao tác");
             return;
         }
@@ -428,74 +349,23 @@ public class DocumentFormViewModel : BaseViewModel
             SelectedFilePath = dialog.FileName;
 
             _notificationService.ShowInfo(
-                "Đã chọn file PDF. Bạn có thể tự động điền dữ liệu từ file này.",
+                "Đã chọn file PDF. OCR client đã tạm tắt, cần chuyển OCR sang API.",
                 "Đã chọn tệp");
         }
     }
 
-    private async Task RunAutoFillAsync()
+    private void ShowOcrDisabledMessage()
     {
-        if (!CanAutoFill)
-        {
-            _notificationService.ShowWarning(
-                "Bạn không có quyền tự động điền dữ liệu văn bản.",
-                "Từ chối thao tác");
-            return;
-        }
-
-        if (string.IsNullOrEmpty(SelectedFilePath))
-        {
-            _notificationService.ShowWarning(
-                "Vui lòng chọn file PDF trước khi tự động điền.",
-                "Thiếu tệp");
-            return;
-        }
-
-        try
-        {
-            var result = await _ocrService.ExtractAndParseAsync(SelectedFilePath);
-
-            if (!string.IsNullOrEmpty(result.DocumentNumber))
-                DocumentNumber = result.DocumentNumber;
-
-            if (!string.IsNullOrEmpty(result.Title))
-                Title = result.Title;
-
-            if (!string.IsNullOrEmpty(result.Summary))
-                Summary = result.Summary;
-
-            if (!string.IsNullOrEmpty(result.ContentText))
-                ContentText = result.ContentText;
-
-            if (!string.IsNullOrEmpty(result.UrgencyLevel))
-                UrgencyLevel = result.UrgencyLevel;
-
-            if (!string.IsNullOrEmpty(result.SenderName))
-                SenderName = result.SenderName;
-
-            if (!string.IsNullOrEmpty(result.IssueDate) &&
-                DateTime.TryParse(result.IssueDate, out var date))
-            {
-                IssueDate = date;
-            }
-
-            _notificationService.ShowSuccess(
-                "Đã tự động điền dữ liệu từ file PDF.",
-                "OCR hoàn tất");
-        }
-        catch (Exception ex)
-        {
-            _notificationService.ShowError(
-                $"Lỗi trích xuất: {ex.Message}",
-                "Lỗi OCR");
-        }
+        _notificationService.ShowInfo(
+            "OCR local đã bị tắt để giữ đúng kiến trúc client-server. Cần làm OCR qua API.",
+            "OCR chưa khả dụng");
     }
 
     private async Task SaveAsync(object? parameter)
     {
-        var docId = await SaveCoreAsync(showSuccess: true);
+        var saved = await SaveCoreAsync();
 
-        if (!docId.HasValue)
+        if (!saved)
         {
             return;
         }
@@ -507,55 +377,159 @@ public class DocumentFormViewModel : BaseViewModel
         }
     }
 
-    private async Task SaveAndSubmitForApprovalAsync(object? parameter)
+    private async Task<bool> SaveCoreAsync()
     {
-        if (!CanSaveAndSubmitForApproval)
+        try
+        {
+            if (!CanSaveDocument)
+            {
+                _notificationService.ShowWarning(
+                    IsEditMode
+                        ? "Bạn không có quyền sửa văn bản."
+                        : "Bạn không có quyền tạo văn bản.",
+                    "Từ chối thao tác");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(DocumentNumber))
+            {
+                _notificationService.ShowWarning(
+                    "Vui lòng nhập số hiệu văn bản.",
+                    "Thiếu dữ liệu");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(Title))
+            {
+                _notificationService.ShowWarning(
+                    "Vui lòng nhập tiêu đề / trích yếu văn bản.",
+                    "Thiếu dữ liệu");
+                return false;
+            }
+
+            var username = _authService.CurrentUser?.Username;
+
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                username = Environment.UserName;
+            }
+
+            var statusId = StatusId is > 0 ? StatusId.Value : IssuedStatusId;
+
+            if (_id > 0)
+            {
+                var request = new UpdateDocumentRequest
+                {
+                    Id = _id,
+                    DocumentType = DocumentType,
+                    DocumentNumber = DocumentNumber,
+                    ReferenceNumber = ReferenceNumber,
+                    Title = Title,
+                    Summary = Summary,
+                    ContentText = ContentText,
+                    IssueDate = IssueDate?.ToString("yyyy-MM-dd"),
+                    ReceivedDate = ReceivedDate?.ToString("yyyy-MM-dd"),
+                    DueDate = DueDate?.ToString("yyyy-MM-dd"),
+                    SenderName = SenderName,
+                    ReceiverName = ReceiverName,
+                    SignerName = SignerName,
+                    ConfidentialityLevel = ConfidentialityLevel,
+                    UrgencyLevel = UrgencyLevel,
+                    ProcessingDepartment = ProcessingDepartment,
+                    AssignedTo = AssignedTo,
+                    Notes = Notes,
+                    CategoryId = CategoryId,
+                    StatusId = statusId,
+                    OcrStatus = "PENDING",
+                    UpdatedBy = username
+                };
+
+                await _apiService.UpdateDocumentAsync(_id, request);
+
+                _notificationService.ShowSuccess(
+                    "Đã cập nhật văn bản.",
+                    "Lưu thành công");
+            }
+            else
+            {
+                var request = new CreateDocumentRequest
+                {
+                    DocumentType = DocumentType,
+                    DocumentNumber = DocumentNumber,
+                    ReferenceNumber = ReferenceNumber,
+                    Title = Title,
+                    Summary = Summary,
+                    ContentText = ContentText,
+                    IssueDate = IssueDate?.ToString("yyyy-MM-dd"),
+                    ReceivedDate = ReceivedDate?.ToString("yyyy-MM-dd"),
+                    DueDate = DueDate?.ToString("yyyy-MM-dd"),
+                    SenderName = SenderName,
+                    ReceiverName = ReceiverName,
+                    SignerName = SignerName,
+                    ConfidentialityLevel = ConfidentialityLevel,
+                    UrgencyLevel = UrgencyLevel,
+                    ProcessingDepartment = ProcessingDepartment,
+                    AssignedTo = AssignedTo,
+                    Notes = Notes,
+                    CategoryId = CategoryId,
+                    StatusId = statusId,
+                    OcrStatus = "PENDING",
+                    CreatedBy = username
+                };
+
+                var newId = await _apiService.CreateDocumentAsync(request);
+                _id = newId;
+
+                OnPropertyChanged(nameof(IsEditMode));
+
+                _notificationService.ShowSuccess(
+                    "Đã tạo mới văn bản.",
+                    "Lưu thành công");
+            }
+
+            SelectedFilePath = null;
+
+            RefreshAccessState();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                "Lỗi lưu văn bản qua API: " + ex.Message,
+                "Lỗi API");
+            return false;
+        }
+    }
+
+    private async Task DeleteAsync(object? parameter)
+    {
+        if (!CanDelete)
         {
             _notificationService.ShowWarning(
-                "Bạn không có quyền lưu và gửi duyệt văn bản.",
+                "Bạn không có quyền xóa văn bản này.",
                 "Từ chối thao tác");
             return;
         }
 
         var confirmed = _confirmDialogService.Confirm(
-            "Lưu văn bản và gửi duyệt ngay?",
-            "Lưu & gửi duyệt",
-            "Lưu & gửi",
+            "Xóa văn bản này? Thao tác này không thể hoàn tác.",
+            "Xác nhận xóa",
+            "Xóa",
             "Hủy",
-            ConfirmDialogType.Warning);
+            ConfirmDialogType.Danger);
 
         if (!confirmed)
         {
             return;
         }
 
-        var docId = await SaveCoreAsync(showSuccess: false);
-
-        if (!docId.HasValue)
-        {
-            return;
-        }
-
         try
         {
-            await _documentService.SubmitForApprovalAsync(docId.Value);
-
-            _id = docId.Value;
-
-            var reloaded = await _documentService.GetByIdAsync(_id);
-
-            if (reloaded != null)
-            {
-                StatusId = reloaded.StatusId;
-            }
-
-            await LoadHistoryAsync();
+            await _apiService.DeleteDocumentAsync(_id);
 
             _notificationService.ShowSuccess(
-                "Văn bản đã được lưu và gửi duyệt.",
-                "Gửi duyệt thành công");
-
-            RefreshAccessState();
+                "Đã xóa văn bản.",
+                "Xóa thành công");
 
             if (parameter is Window window)
             {
@@ -566,213 +540,8 @@ public class DocumentFormViewModel : BaseViewModel
         catch (Exception ex)
         {
             _notificationService.ShowError(
-                ex.Message,
-                "Lỗi gửi duyệt");
-        }
-    }
-
-    private async Task<long?> SaveCoreAsync(bool showSuccess)
-    {
-        try
-        {
-            if (!CanSaveDocument)
-            {
-                _notificationService.ShowWarning(
-                    IsEditMode
-                        ? "Không thể sửa văn bản ở trạng thái hiện tại."
-                        : "Bạn không có quyền tạo mới văn bản.",
-                    "Từ chối thao tác");
-                return null;
-            }
-
-            if (string.IsNullOrWhiteSpace(DocumentNumber))
-            {
-                _notificationService.ShowWarning(
-                    "Vui lòng nhập số hiệu văn bản.",
-                    "Thiếu dữ liệu");
-                return null;
-            }
-
-            if (string.IsNullOrWhiteSpace(Title))
-            {
-                _notificationService.ShowWarning(
-                    "Vui lòng nhập tiêu đề / trích yếu văn bản.",
-                    "Thiếu dữ liệu");
-                return null;
-            }
-
-            var username = _authService.CurrentUser?.Username ?? "system";
-            var finalStatusId = StatusId ?? DraftStatusId;
-
-            var doc = new Document
-            {
-                Id = _id,
-                DocumentType = DocumentType,
-                DocumentNumber = DocumentNumber,
-                ReferenceNumber = ReferenceNumber,
-                Title = Title,
-                Summary = Summary,
-                ContentText = ContentText,
-                IssueDate = IssueDate?.ToString("yyyy-MM-dd"),
-                ReceivedDate = ReceivedDate?.ToString("yyyy-MM-dd"),
-                DueDate = DueDate?.ToString("yyyy-MM-dd"),
-                SenderName = SenderName,
-                ReceiverName = ReceiverName,
-                SignerName = SignerName,
-                ConfidentialityLevel = ConfidentialityLevel,
-                UrgencyLevel = UrgencyLevel,
-                ProcessingDepartment = ProcessingDepartment,
-                AssignedTo = AssignedTo,
-                Notes = Notes,
-                CategoryId = CategoryId,
-                StatusId = finalStatusId,
-                CreatedBy = username,
-                UpdatedBy = username
-            };
-
-            long docId;
-
-            if (_id > 0)
-            {
-                doc.SetUpdated(DateTime.UtcNow, username);
-                await _documentService.UpdateAsync(doc);
-                docId = _id;
-            }
-            else
-            {
-                doc.SetCreated(DateTime.UtcNow, username);
-                docId = await _documentService.CreateAsync(doc);
-                _id = docId;
-
-                OnPropertyChanged(nameof(IsEditMode));
-            }
-
-            if (!string.IsNullOrEmpty(SelectedFilePath))
-            {
-                await _attachmentService.UploadAsync(docId, SelectedFilePath);
-                SelectedFilePath = null;
-            }
-
-            await LoadHistoryAsync();
-
-            if (showSuccess)
-            {
-                _notificationService.ShowSuccess(
-                    IsEditMode ? "Đã cập nhật văn bản." : "Đã tạo mới văn bản.",
-                    "Lưu thành công");
-            }
-
-            RefreshAccessState();
-
-            return docId;
-        }
-        catch (Exception ex)
-        {
-            _notificationService.ShowError(
-                ex.Message,
-                "Lỗi khi lưu");
-            return null;
-        }
-    }
-
-    private async Task SubmitForApprovalAsync()
-    {
-        if (_id <= 0)
-        {
-            _notificationService.ShowWarning(
-                "Bạn cần lưu văn bản trước khi gửi duyệt.",
-                "Thông báo");
-            return;
-        }
-
-        await RunWorkflowActionAsync(
-            "Gửi văn bản này để duyệt?",
-            "Đã gửi duyệt văn bản.",
-            () => _documentService.SubmitForApprovalAsync(_id),
-            "Gửi duyệt",
-            ConfirmDialogType.Warning);
-    }
-
-    private async Task ApproveAsync()
-    {
-        await RunWorkflowActionAsync(
-            "Phê duyệt văn bản này?",
-            "Đã phê duyệt văn bản.",
-            () => _documentService.ApproveAsync(_id),
-            "Duyệt",
-            ConfirmDialogType.Info);
-    }
-
-    private async Task RejectAsync()
-    {
-        var reason = Notes;
-
-        if (string.IsNullOrWhiteSpace(reason))
-        {
-            var continueWithoutReason = _confirmDialogService.Confirm(
-                "Bạn chưa nhập lý do từ chối trong ô Ghi chú.\n\nBạn vẫn muốn tiếp tục từ chối văn bản này?",
-                "Xác nhận từ chối",
-                "Tiếp tục",
-                "Hủy",
-                ConfirmDialogType.Warning);
-
-            if (!continueWithoutReason)
-            {
-                return;
-            }
-        }
-
-        await RunWorkflowActionAsync(
-            "Từ chối văn bản này?",
-            "Đã từ chối văn bản.",
-            () => _documentService.RejectAsync(_id, reason),
-            "Từ chối",
-            ConfirmDialogType.Danger);
-    }
-
-    private async Task RunWorkflowActionAsync(
-        string confirmMessage,
-        string successMessage,
-        Func<Task> action,
-        string confirmText,
-        ConfirmDialogType dialogType)
-    {
-        try
-        {
-            var confirmed = _confirmDialogService.Confirm(
-                confirmMessage,
-                "Xác nhận",
-                confirmText,
-                "Hủy",
-                dialogType);
-
-            if (!confirmed)
-            {
-                return;
-            }
-
-            await action();
-
-            var reloaded = await _documentService.GetByIdAsync(_id);
-
-            if (reloaded != null)
-            {
-                StatusId = reloaded.StatusId;
-            }
-
-            await LoadHistoryAsync();
-
-            _notificationService.ShowSuccess(
-                successMessage,
-                "Workflow");
-
-            RefreshAccessState();
-        }
-        catch (Exception ex)
-        {
-            _notificationService.ShowError(
-                ex.Message,
-                "Lỗi workflow");
+                "Lỗi xóa văn bản qua API: " + ex.Message,
+                "Lỗi API");
         }
     }
 
@@ -783,17 +552,12 @@ public class DocumentFormViewModel : BaseViewModel
         OnPropertyChanged(nameof(CanViewDocument));
         OnPropertyChanged(nameof(CanCreateDocument));
         OnPropertyChanged(nameof(CanEditDocument));
-        OnPropertyChanged(nameof(CanSubmitDocument));
-        OnPropertyChanged(nameof(CanApproveDocument));
-        OnPropertyChanged(nameof(CanRejectDocument));
+        OnPropertyChanged(nameof(CanDeleteDocument));
         OnPropertyChanged(nameof(CanModifyDocument));
         OnPropertyChanged(nameof(CanBrowseFile));
         OnPropertyChanged(nameof(CanAutoFill));
         OnPropertyChanged(nameof(CanSaveDocument));
-        OnPropertyChanged(nameof(CanSaveAndSubmitForApproval));
-        OnPropertyChanged(nameof(CanSubmitForApproval));
-        OnPropertyChanged(nameof(CanApprove));
-        OnPropertyChanged(nameof(CanReject));
+        OnPropertyChanged(nameof(CanDelete));
 
         CommandManager.InvalidateRequerySuggested();
     }

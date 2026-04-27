@@ -15,14 +15,12 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\DocumentManagement.Application\DocumentManagement.Application.csproj" />
-		<ProjectReference Include="..\DocumentManagement.Infrastructure\DocumentManagement.Infrastructure.csproj" />
+		<ProjectReference Include="..\DocumentManagement.Contracts\DocumentManagement.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="ClosedXML" Version="0.105.0" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-		<PackageReference Include="Dapper" Version="2.1.72" />
 		<PackageReference Include="EPPlus" Version="7.0.0" />
 		<PackageReference Include="LiveCharts.Wpf" Version="0.9.7" />
 		<PackageReference Include="MaterialDesignColors" Version="5.3.1" />
@@ -48,8 +46,5 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Folder Include="DocumentManagement\Application\" />
-	</ItemGroup>
-
 </Project>
+

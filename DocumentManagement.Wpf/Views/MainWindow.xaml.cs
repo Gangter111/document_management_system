@@ -2,7 +2,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
-using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Wpf.Services;
 using DocumentManagement.Wpf.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +11,6 @@ namespace DocumentManagement.Wpf.Views;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel _viewModel;
-    private readonly IAuthService _authService;
     private readonly IServiceProvider _serviceProvider;
     private readonly INotificationService _notificationService;
     private readonly IConfirmDialogService _confirmDialogService;
@@ -21,7 +19,6 @@ public partial class MainWindow : Window
 
     public MainWindow(
         MainViewModel viewModel,
-        IAuthService authService,
         IServiceProvider serviceProvider,
         INotificationService notificationService,
         IConfirmDialogService confirmDialogService)
@@ -29,7 +26,6 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _viewModel = viewModel;
-        _authService = authService;
         _serviceProvider = serviceProvider;
         _notificationService = notificationService;
         _confirmDialogService = confirmDialogService;
@@ -66,8 +62,6 @@ public partial class MainWindow : Window
 
         try
         {
-            _authService.Logout();
-
             Hide();
 
             var loginWindow = _serviceProvider.GetRequiredService<LoginWindow>();

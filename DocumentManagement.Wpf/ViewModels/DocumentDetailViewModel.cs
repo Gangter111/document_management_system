@@ -1,46 +1,77 @@
-using DocumentManagement.Application.Interfaces;
-using DocumentManagement.Domain.Entities;
 using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Input;
-using DocumentManagement.Wpf.Commands;
 using System.Diagnostics;
 using System.IO;
+using System.Windows.Input;
+using DocumentManagement.Contracts.Documents;
+using DocumentManagement.Wpf.Commands;
+using DocumentManagement.Wpf.Services;
 
 namespace DocumentManagement.Wpf.ViewModels;
 
 public class DocumentDetailViewModel : BaseViewModel
 {
-    private readonly IDocumentService _documentService;
-    private readonly IAttachmentService _attachmentService;
+    private readonly ApiService _apiService;
 
-    private Document? _document;
-    public Document? Document { get => _document; set => SetProperty(ref _document, value); }
+    private DocumentDto? _document;
 
-    public ObservableCollection<DocumentAttachment> Attachments { get; } = new();
+    public DocumentDto? Document
+    {
+        get => _document;
+        set => SetProperty(ref _document, value);
+    }
+
+    public ObservableCollection<DocumentAttachmentViewModel> Attachments { get; } = new();
 
     public ICommand OpenAttachmentCommand { get; }
 
-    public DocumentDetailViewModel(IDocumentService documentService, IAttachmentService attachmentService)
+    public DocumentDetailViewModel(ApiService apiService)
     {
-        _documentService = documentService;
-        _attachmentService = attachmentService;
-        OpenAttachmentCommand = new RelayCommand(async p => await OpenAttachmentAsync(p));
+        _apiService = apiService;
+        OpenAttachmentCommand = new RelayCommand(OpenAttachment);
     }
 
     public async Task LoadAsync(long id)
     {
-        Document = await _documentService.GetByIdAsync(id);
-        var files = await _attachmentService.GetByDocumentIdAsync(id);
+        Document = await _apiService.GetDocumentByIdAsync(id);
+
         Attachments.Clear();
-        foreach (var file in files) Attachments.Add(file);
+
+        // Client-server chuẩn: attachment phải lấy qua API.
+        // Tạm để rỗng, không gọi service local/backend trong WPF.
     }
 
-    private async Task OpenAttachmentAsync(object? parameter)
+    private static void OpenAttachment(object? parameter)
     {
-        if (parameter is DocumentAttachment att && File.Exists(att.StoredFilePath))
+        if (parameter is not DocumentAttachmentViewModel attachment)
         {
-            using Process? _ = Process.Start(new ProcessStartInfo(fileName: att.StoredFilePath) { UseShellExecute = true });
+            return;
         }
+
+        if (string.IsNullOrWhiteSpace(attachment.StoredFilePath))
+        {
+            return;
+        }
+
+        if (!File.Exists(attachment.StoredFilePath))
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = attachment.StoredFilePath,
+            UseShellExecute = true
+        });
     }
+}
+
+public class DocumentAttachmentViewModel
+{
+    public long Id { get; set; }
+
+    public long DocumentId { get; set; }
+
+    public string FileName { get; set; } = string.Empty;
+
+    public string StoredFilePath { get; set; } = string.Empty;
 }

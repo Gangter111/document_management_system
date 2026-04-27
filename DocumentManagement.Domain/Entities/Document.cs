@@ -1,5 +1,4 @@
 using System;
-using DocumentManagement.Domain.Enums;
 
 namespace DocumentManagement.Domain.Entities;
 
@@ -25,8 +24,12 @@ public class Document
 
     public long? CategoryId { get; set; }
 
-    // Tạm thời vẫn giữ StatusId để không làm vỡ Repository/ViewModel hiện tại.
-    public long? StatusId { get; set; }
+    // Giữ StatusId để không phá DB/repository hiện tại.
+    // Từ giờ chỉ dùng tối giản:
+    // 1 = Nháp
+    // 4 = Đã ban hành
+    // 5 = Đã lưu trữ
+    public long? StatusId { get; set; } = 4;
 
     public string ConfidentialityLevel { get; set; } = "NORMAL";
     public string UrgencyLevel { get; set; } = "NORMAL";
@@ -46,48 +49,28 @@ public class Document
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }
 
-    public DocumentStatus Status => StatusId switch
+    public string StatusCode => StatusId switch
     {
-        1 => DocumentStatus.Draft,
-        2 => DocumentStatus.PendingApproval,
-        3 => DocumentStatus.Approved,
-        4 => DocumentStatus.Issued,
-        5 => DocumentStatus.Archived,
-        6 => DocumentStatus.Rejected,
-        _ => DocumentStatus.Draft
+        1 => "DRAFT",
+        4 => "ISSUED",
+        5 => "ARCHIVED",
+        _ => "ISSUED"
     };
 
-    public string StatusCode => Status switch
+    public string StatusText => StatusId switch
     {
-        DocumentStatus.Draft => "DRAFT",
-        DocumentStatus.PendingApproval => "PENDING_APPROVAL",
-        DocumentStatus.Approved => "APPROVED",
-        DocumentStatus.Issued => "ISSUED",
-        DocumentStatus.Archived => "ARCHIVED",
-        DocumentStatus.Rejected => "REJECTED",
-        _ => "DRAFT"
+        1 => "Bản nháp",
+        4 => "Đã ban hành",
+        5 => "Đã lưu trữ",
+        _ => "Đã ban hành"
     };
 
-    public string StatusText => Status switch
+    public string StatusColor => StatusId switch
     {
-        DocumentStatus.Draft => "Bản nháp",
-        DocumentStatus.PendingApproval => "Đang duyệt",
-        DocumentStatus.Approved => "Đã duyệt",
-        DocumentStatus.Issued => "Đã ban hành",
-        DocumentStatus.Archived => "Đã lưu trữ",
-        DocumentStatus.Rejected => "Bị từ chối",
-        _ => "Chưa xác định"
-    };
-
-    public string StatusColor => Status switch
-    {
-        DocumentStatus.Draft => "#94A3B8",
-        DocumentStatus.PendingApproval => "#F59E0B",
-        DocumentStatus.Approved => "#3B82F6",
-        DocumentStatus.Issued => "#10B981",
-        DocumentStatus.Archived => "#8B5CF6",
-        DocumentStatus.Rejected => "#EF4444",
-        _ => "#9CA3AF"
+        1 => "#94A3B8",
+        4 => "#10B981",
+        5 => "#8B5CF6",
+        _ => "#10B981"
     };
 
     public string UrgencyText => UrgencyLevel switch
@@ -104,7 +87,7 @@ public class Document
         _ => "#10B981"
     };
 
-    public string DocumentDate => !string.IsNullOrEmpty(ReceivedDate)
+    public string DocumentDate => !string.IsNullOrWhiteSpace(ReceivedDate)
         ? ReceivedDate
         : IssueDate ?? string.Empty;
 
@@ -128,31 +111,15 @@ public class Document
         SetUpdated(DateTime.UtcNow, user);
     }
 
-    public void SubmitForApproval(string user)
+    public void MarkAsIssued(string user)
     {
-        if (Status != DocumentStatus.Draft)
-            throw new InvalidOperationException("Chỉ văn bản nháp mới được gửi duyệt.");
-
-        StatusId = (long)DocumentStatus.PendingApproval;
+        StatusId = 4;
         SetUpdated(DateTime.UtcNow, user);
     }
 
-    public void Approve(string user)
+    public void Archive(string user)
     {
-        if (Status != DocumentStatus.PendingApproval)
-            throw new InvalidOperationException("Chỉ văn bản đang duyệt mới được phê duyệt.");
-
-        StatusId = (long)DocumentStatus.Approved;
-        SetUpdated(DateTime.UtcNow, user);
-    }
-
-    public void Reject(string user, string? reason)
-    {
-        if (Status != DocumentStatus.PendingApproval)
-            throw new InvalidOperationException("Chỉ văn bản đang duyệt mới được từ chối.");
-
-        StatusId = (long)DocumentStatus.Rejected;
-        Notes = reason;
+        StatusId = 5;
         SetUpdated(DateTime.UtcNow, user);
     }
 }

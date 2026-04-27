@@ -59,7 +59,7 @@
             <Setter Property="Margin" Value="0,0,8,0"/>
         </Style>
 
-        <Style x:Key="WorkflowBadgeStyle"
+        <Style x:Key="ApiModeBadgeStyle"
                TargetType="Border"
                BasedOn="{StaticResource BadgeBaseStyle}">
             <Setter Property="Background" Value="#ECFDF5"/>
@@ -72,15 +72,6 @@
             <Setter Property="MaxWidth" Value="360"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontStyle" Value="Italic"/>
-        </Style>
-
-        <Style x:Key="HistoryCardStyle" TargetType="Border">
-            <Setter Property="Margin" Value="0,0,0,8"/>
-            <Setter Property="Padding" Value="12"/>
-            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="10"/>
         </Style>
     </Window.Resources>
 
@@ -112,7 +103,7 @@
                     <TextBlock Margin="0,6,0,0">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
-                                <Setter Property="Text" Value="Tạo mới hoặc cập nhật văn bản theo luồng xử lý chuẩn."/>
+                                <Setter Property="Text" Value="Tạo mới hoặc cập nhật văn bản qua API."/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
                                         <Setter Property="Text" Value="Đang mở văn bản ở chế độ xem. Bạn không thể chỉnh sửa nội dung."/>
@@ -135,8 +126,8 @@
                                    FontSize="12"/>
                     </Border>
 
-                    <Border Style="{StaticResource WorkflowBadgeStyle}">
-                        <TextBlock Text="Luồng xử lý: Bản nháp → Đang duyệt → Đã duyệt / Bị từ chối"
+                    <Border Style="{StaticResource ApiModeBadgeStyle}">
+                        <TextBlock Text="Client-server: CRUD qua API"
                                    Foreground="#166534"
                                    FontWeight="SemiBold"
                                    FontSize="12"/>
@@ -200,304 +191,215 @@
                     </Grid>
                 </Border>
 
-                <!-- FORM + HISTORY -->
+                <!-- FORM -->
                 <ScrollViewer Grid.Row="1"
                               VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               Padding="0,0,6,0">
 
-                    <Grid>
+                    <Grid IsEnabled="{Binding CanModifyDocument}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <!-- FORM -->
-                        <Grid Grid.Row="0"
-                              IsEnabled="{Binding CanModifyDocument}">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Row="0"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Loại văn bản" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox SelectedValue="{Binding DocumentType}"
+                                      SelectedValuePath="Tag"
+                                      Style="{StaticResource AppComboBoxStyle}">
+                                <ComboBoxItem Content="Văn bản đến" Tag="INCOMING"/>
+                                <ComboBoxItem Content="Văn bản đi" Tag="OUTGOING"/>
+                            </ComboBox>
+                        </StackPanel>
 
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                        <StackPanel Grid.Row="0"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Số hiệu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
+                            <TextBox Text="{Binding DocumentNumber, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="0"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Loại văn bản" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox SelectedValue="{Binding DocumentType}"
-                                          SelectedValuePath="Tag"
-                                          Style="{StaticResource AppComboBoxStyle}">
-                                    <ComboBoxItem Content="Văn bản đến" Tag="INCOMING"/>
-                                    <ComboBoxItem Content="Văn bản đi" Tag="OUTGOING"/>
-                                </ComboBox>
-                            </StackPanel>
+                        <StackPanel Grid.Row="1"
+                                    Grid.ColumnSpan="2"
+                                    Style="{StaticResource FormFieldPanelStyle}">
+                            <TextBlock Text="Tiêu đề / Trích yếu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
+                            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                                     FontWeight="SemiBold"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="0"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Số hiệu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
-                                <TextBox Text="{Binding DocumentNumber, UpdateSourceTrigger=PropertyChanged}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="2"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Số ký hiệu / Số phụ" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding ReferenceNumber}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="1"
-                                        Grid.ColumnSpan="2"
-                                        Style="{StaticResource FormFieldPanelStyle}">
-                                <TextBlock Text="Tiêu đề / Trích yếu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
-                                <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                         FontWeight="SemiBold"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="2"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Danh mục văn bản" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding Categories}"
+                                      SelectedValue="{Binding CategoryId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Name"
+                                      Style="{StaticResource AppComboBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="2"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Số ký hiệu / Số phụ" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding ReferenceNumber}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="3"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Ngày ban hành" Style="{StaticResource LabelStyle}"/>
+                            <DatePicker SelectedDate="{Binding IssueDate}"
+                                        Style="{StaticResource AppDatePickerStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="2"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Danh mục văn bản" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox ItemsSource="{Binding Categories}"
-                                          SelectedValue="{Binding CategoryId}"
-                                          SelectedValuePath="Id"
-                                          DisplayMemberPath="Name"
-                                          Style="{StaticResource AppComboBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="3"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Trạng thái" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox ItemsSource="{Binding Statuses}"
+                                      SelectedValue="{Binding StatusId}"
+                                      SelectedValuePath="Id"
+                                      DisplayMemberPath="Name"
+                                      IsEnabled="False"
+                                      Style="{StaticResource AppComboBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="3"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Ngày ban hành" Style="{StaticResource LabelStyle}"/>
-                                <DatePicker SelectedDate="{Binding IssueDate}"
-                                            Style="{StaticResource AppDatePickerStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="4"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Ngày nhận" Style="{StaticResource LabelStyle}"/>
+                            <DatePicker SelectedDate="{Binding ReceivedDate}"
+                                        Style="{StaticResource AppDatePickerStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="3"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Trạng thái workflow" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox ItemsSource="{Binding Statuses}"
-                                          SelectedValue="{Binding StatusId}"
-                                          SelectedValuePath="Id"
-                                          DisplayMemberPath="Name"
-                                          IsEnabled="False"
-                                          Style="{StaticResource AppComboBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="4"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Hạn xử lý" Style="{StaticResource LabelStyle}"/>
+                            <DatePicker SelectedDate="{Binding DueDate}"
+                                        Style="{StaticResource AppDatePickerStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="4"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Ngày nhận" Style="{StaticResource LabelStyle}"/>
-                                <DatePicker SelectedDate="{Binding ReceivedDate}"
-                                            Style="{StaticResource AppDatePickerStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="5"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Cơ quan ban hành / Người gửi" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding SenderName}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="4"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Hạn xử lý" Style="{StaticResource LabelStyle}"/>
-                                <DatePicker SelectedDate="{Binding DueDate}"
-                                            Style="{StaticResource AppDatePickerStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="5"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Nơi nhận / Người nhận" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding ReceiverName}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="5"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Cơ quan ban hành / Người gửi" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding SenderName}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="6"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Người ký" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding SignerName}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="5"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Nơi nhận / Người nhận" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding ReceiverName}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="6"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Phòng ban chủ trì" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding ProcessingDepartment}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="6"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Người ký" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding SignerName}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="7"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Người được giao xử lý" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding AssignedTo}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="6"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Phòng ban chủ trì" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding ProcessingDepartment}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="7"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Độ mật" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox SelectedValue="{Binding ConfidentialityLevel}"
+                                      SelectedValuePath="Tag"
+                                      Style="{StaticResource AppComboBoxStyle}">
+                                <ComboBoxItem Content="Bình thường" Tag="NORMAL"/>
+                                <ComboBoxItem Content="Mật" Tag="CONFIDENTIAL"/>
+                                <ComboBoxItem Content="Tối mật" Tag="SECRET"/>
+                                <ComboBoxItem Content="Tuyệt mật" Tag="TOP_SECRET"/>
+                            </ComboBox>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="7"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Người được giao xử lý" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding AssignedTo}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
+                        <StackPanel Grid.Row="8"
+                                    Grid.Column="0"
+                                    Style="{StaticResource LeftFormFieldPanelStyle}">
+                            <TextBlock Text="Độ khẩn" Style="{StaticResource LabelStyle}"/>
+                            <ComboBox SelectedValue="{Binding UrgencyLevel}"
+                                      SelectedValuePath="Tag"
+                                      Style="{StaticResource AppComboBoxStyle}">
+                                <ComboBoxItem Content="Bình thường" Tag="NORMAL"/>
+                                <ComboBoxItem Content="Khẩn" Tag="URGENT"/>
+                                <ComboBoxItem Content="Hỏa tốc" Tag="VERY_URGENT"/>
+                            </ComboBox>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="7"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Độ mật" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox SelectedValue="{Binding ConfidentialityLevel}"
-                                          SelectedValuePath="Tag"
-                                          Style="{StaticResource AppComboBoxStyle}">
-                                    <ComboBoxItem Content="Bình thường" Tag="NORMAL"/>
-                                    <ComboBoxItem Content="Mật" Tag="CONFIDENTIAL"/>
-                                    <ComboBoxItem Content="Tối mật" Tag="SECRET"/>
-                                    <ComboBoxItem Content="Tuyệt mật" Tag="TOP_SECRET"/>
-                                </ComboBox>
-                            </StackPanel>
+                        <StackPanel Grid.Row="8"
+                                    Grid.Column="1"
+                                    Style="{StaticResource RightFormFieldPanelStyle}">
+                            <TextBlock Text="Ghi chú" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding Notes}"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="8"
-                                        Grid.Column="0"
-                                        Style="{StaticResource LeftFormFieldPanelStyle}">
-                                <TextBlock Text="Độ khẩn" Style="{StaticResource LabelStyle}"/>
-                                <ComboBox SelectedValue="{Binding UrgencyLevel}"
-                                          SelectedValuePath="Tag"
-                                          Style="{StaticResource AppComboBoxStyle}">
-                                    <ComboBoxItem Content="Bình thường" Tag="NORMAL"/>
-                                    <ComboBoxItem Content="Khẩn" Tag="URGENT"/>
-                                    <ComboBoxItem Content="Hỏa tốc" Tag="VERY_URGENT"/>
-                                </ComboBox>
-                            </StackPanel>
+                        <StackPanel Grid.Row="9"
+                                    Grid.ColumnSpan="2"
+                                    Style="{StaticResource FormFieldPanelStyle}">
+                            <TextBlock Text="Trích yếu nội dung" Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding Summary}"
+                                     Height="84"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     VerticalContentAlignment="Top"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
 
-                            <StackPanel Grid.Row="8"
-                                        Grid.Column="1"
-                                        Style="{StaticResource RightFormFieldPanelStyle}">
-                                <TextBlock Text="Ghi chú / Lý do từ chối" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding Notes}"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="9"
-                                        Grid.ColumnSpan="2"
-                                        Style="{StaticResource FormFieldPanelStyle}">
-                                <TextBlock Text="Trích yếu nội dung" Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding Summary}"
-                                         Height="84"
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         VerticalContentAlignment="Top"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
-
-                            <StackPanel Grid.Row="10"
-                                        Grid.ColumnSpan="2">
-                                <TextBlock Text="Nội dung văn bản (trích xuất / toàn văn)"
-                                           Style="{StaticResource LabelStyle}"/>
-                                <TextBox Text="{Binding ContentText}"
-                                         Height="150"
-                                         TextWrapping="Wrap"
-                                         AcceptsReturn="True"
-                                         VerticalContentAlignment="Top"
-                                         VerticalScrollBarVisibility="Auto"
-                                         Style="{StaticResource AppTextBoxStyle}"/>
-                            </StackPanel>
-                        </Grid>
-
-                        <!-- HISTORY -->
-                        <Border Grid.Row="1"
-                                Margin="0,20,0,0"
-                                Style="{StaticResource SoftCardStyle}"
-                                Padding="14">
-
-                            <StackPanel>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <TextBlock Text="Lịch sử xử lý"
-                                               Style="{StaticResource SectionTitleTextStyle}"/>
-
-                                    <Border Grid.Column="1"
-                                            Style="{StaticResource BadgeBaseStyle}"
-                                            Background="#EFF6FF"
-                                            BorderBrush="#BFDBFE"
-                                            Visibility="{Binding HasHistories, Converter={StaticResource BoolToVisibility}}">
-                                        <TextBlock Text="Có dữ liệu"
-                                                   Foreground="#1D4ED8"
-                                                   FontWeight="SemiBold"
-                                                   FontSize="12"/>
-                                    </Border>
-                                </Grid>
-
-                                <TextBlock Text="Chưa có lịch sử xử lý."
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           FontStyle="Italic"
-                                           Margin="0,0,0,10">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasHistories}" Value="False">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-
-                                <ItemsControl ItemsSource="{Binding Histories}">
-                                    <ItemsControl.Style>
-                                        <Style TargetType="ItemsControl">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding HasHistories}" Value="True">
-                                                    <Setter Property="Visibility" Value="Visible"/>
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </ItemsControl.Style>
-
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border Style="{StaticResource HistoryCardStyle}">
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding DisplayText}"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="{StaticResource TextBrush}"
-                                                               TextWrapping="Wrap"/>
-
-                                                    <TextBlock Margin="0,5,0,0"
-                                                               FontSize="12"
-                                                               Foreground="{StaticResource TextMutedBrush}">
-                                                        <Run Text="{Binding ActionBy}"/>
-                                                        <Run Text=" • "/>
-                                                        <Run Text="{Binding ActionAt, StringFormat={}{0:dd/MM/yyyy HH:mm:ss}}"/>
-                                                    </TextBlock>
-                                                </StackPanel>
-                                            </Border>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
-                            </StackPanel>
-                        </Border>
+                        <StackPanel Grid.Row="10"
+                                    Grid.ColumnSpan="2">
+                            <TextBlock Text="Nội dung văn bản"
+                                       Style="{StaticResource LabelStyle}"/>
+                            <TextBox Text="{Binding ContentText}"
+                                     Height="150"
+                                     TextWrapping="Wrap"
+                                     AcceptsReturn="True"
+                                     VerticalContentAlignment="Top"
+                                     VerticalScrollBarVisibility="Auto"
+                                     Style="{StaticResource AppTextBoxStyle}"/>
+                        </StackPanel>
                     </Grid>
                 </ScrollViewer>
             </Grid>
@@ -510,67 +412,48 @@
                 BorderThickness="0,1,0,0"
                 Margin="0,14,0,0">
 
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right">
+            <DockPanel LastChildFill="False">
 
-                <Button Content="Từ chối"
-                        Width="100"
+                <Button Content="Xóa văn bản"
+                        DockPanel.Dock="Left"
+                        Width="130"
                         Height="40"
-                        Margin="0,0,10,0"
                         Style="{StaticResource DangerButtonStyle}"
-                        Command="{Binding RejectCommand}"
-                        Visibility="{Binding CanReject, Converter={StaticResource BoolToVisibility}}"/>
-
-                <Button Content="Duyệt"
-                        Width="100"
-                        Height="40"
-                        Margin="0,0,10,0"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        Command="{Binding ApproveCommand}"
-                        Visibility="{Binding CanApprove, Converter={StaticResource BoolToVisibility}}"/>
-
-                <Button Content="Gửi duyệt"
-                        Width="120"
-                        Height="40"
-                        Margin="0,0,10,0"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        Command="{Binding SubmitForApprovalCommand}"
-                        Visibility="{Binding CanSubmitForApproval, Converter={StaticResource BoolToVisibility}}"/>
-
-                <Button Content="Lưu &amp; gửi duyệt"
-                        Width="150"
-                        Height="40"
-                        Margin="0,0,10,0"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        Command="{Binding SaveAndSubmitForApprovalCommand}"
-                        Visibility="{Binding CanSaveAndSubmitForApproval, Converter={StaticResource BoolToVisibility}}"
+                        Command="{Binding DeleteCommand}"
+                        IsEnabled="{Binding CanDelete}"
+                        Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}"
                         CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
 
-                <Button Width="100"
-                        Height="40"
-                        IsCancel="True"
-                        Margin="0,0,10,0">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-                            <Setter Property="Content" Value="Hủy bỏ"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
-                                    <Setter Property="Content" Value="Đóng"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+                <StackPanel Orientation="Horizontal"
+                            DockPanel.Dock="Right"
+                            HorizontalAlignment="Right">
 
-                <Button Content="Lưu văn bản"
-                        Width="150"
-                        Height="40"
-                        Style="{StaticResource SuccessButtonStyle}"
-                        Command="{Binding SaveCommand}"
-                        IsEnabled="{Binding CanSaveDocument}"
-                        Visibility="{Binding CanSaveDocument, Converter={StaticResource BoolToVisibility}}"
-                        CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
-            </StackPanel>
+                    <Button Width="100"
+                            Height="40"
+                            IsCancel="True"
+                            Margin="0,0,10,0">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                                <Setter Property="Content" Value="Hủy bỏ"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
+                                        <Setter Property="Content" Value="Đóng"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <Button Content="Lưu văn bản"
+                            Width="150"
+                            Height="40"
+                            Style="{StaticResource SuccessButtonStyle}"
+                            Command="{Binding SaveCommand}"
+                            IsEnabled="{Binding CanSaveDocument}"
+                            Visibility="{Binding CanSaveDocument, Converter={StaticResource BoolToVisibility}}"
+                            CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>
+                </StackPanel>
+            </DockPanel>
         </Border>
     </Grid>
 </Window>

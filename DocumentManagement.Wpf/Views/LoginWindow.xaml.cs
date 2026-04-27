@@ -1,13 +1,13 @@
 ﻿using System.Windows;
-using DocumentManagement.Application.Interfaces;
+using DocumentManagement.Wpf.Services;
 
 namespace DocumentManagement.Wpf.Views;
 
 public partial class LoginWindow : Window
 {
-    private readonly IAuthService _authService;
+    private readonly ApiAuthService _authService;
 
-    public LoginWindow(IAuthService authService)
+    public LoginWindow(ApiAuthService authService)
     {
         InitializeComponent();
         _authService = authService;
@@ -15,10 +15,10 @@ public partial class LoginWindow : Window
 
     private async void LoginButton_Click(object sender, RoutedEventArgs e)
     {
-        ErrorText.Text = "";
+        ErrorText.Text = string.Empty;
 
-        var username = UsernameTextBox.Text?.Trim() ?? "";
-        var password = PasswordBox.Password ?? "";
+        var username = UsernameTextBox.Text?.Trim() ?? string.Empty;
+        var password = PasswordBox.Password ?? string.Empty;
 
         if (string.IsNullOrWhiteSpace(username))
         {
@@ -32,16 +32,23 @@ public partial class LoginWindow : Window
             return;
         }
 
-        var result = await _authService.LoginAsync(username, password);
-
-        if (result == null)
+        try
         {
-            ErrorText.Text = "Sai tài khoản hoặc mật khẩu.";
-            return;
-        }
+            var result = await _authService.LoginAsync(username, password);
 
-        DialogResult = true;
-        Close();
+            if (result == null)
+            {
+                ErrorText.Text = "Sai tài khoản hoặc mật khẩu.";
+                return;
+            }
+
+            DialogResult = true;
+            Close();
+        }
+        catch (Exception ex)
+        {
+            ErrorText.Text = "Không thể đăng nhập qua API: " + ex.Message;
+        }
     }
 
     private void ExitButton_Click(object sender, RoutedEventArgs e)

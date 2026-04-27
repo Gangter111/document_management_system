@@ -1,11 +1,11 @@
+using System.Globalization;
+using System.Reflection;
+using System.Text;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Models;
 using DocumentManagement.Domain.Entities;
 using DocumentManagement.Infrastructure.Data;
 using Microsoft.Data.Sqlite;
-using System.Globalization;
-using System.Reflection;
-using System.Text;
 
 namespace DocumentManagement.Infrastructure.Repositories;
 
@@ -23,46 +23,36 @@ public class DocumentRepository : IDocumentRepository
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        var columns = await GetDocumentColumnsAsync(connection);
+        var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+        var values = BuildDocumentColumnValues(document, now, includeId: false, includeCreatedAt: true);
+
+        var insertColumns = values
+            .Where(item => columns.Contains(item.Key))
+            .ToList();
+
         using var command = connection.CreateCommand();
-        command.CommandText = @"
+
+        command.CommandText = $@"
 INSERT INTO documents
 (
-    document_type,
-    document_number,
-    title,
-    issue_date,
-    category_id,
-    status_id,
-    urgency_level,
-    confidentiality_level,
-    processing_department,
-    assigned_to,
-    is_active,
-    created_at,
-    updated_at
+    {string.Join(",\n    ", insertColumns.Select(x => x.Key))}
 )
 VALUES
 (
-    $document_type,
-    $document_number,
-    $title,
-    $issue_date,
-    $category_id,
-    $status_id,
-    $urgency_level,
-    $confidentiality_level,
-    $processing_department,
-    $assigned_to,
-    $is_active,
-    $created_at,
-    $updated_at
+    {string.Join(",\n    ", insertColumns.Select(x => "$" + x.Key))}
 );
 
 SELECT last_insert_rowid();";
 
-        BindDocument(command, document, includeCreatedAt: true);
+        foreach (var item in insertColumns)
+        {
+            command.Parameters.AddWithValue("$" + item.Key, ToDbValue(item.Value));
+        }
 
         var result = await command.ExecuteScalarAsync();
+
         return Convert.ToInt64(result ?? 0L);
     }
 
@@ -71,27 +61,32 @@ SELECT last_insert_rowid();";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        var columns = await GetDocumentColumnsAsync(connection);
+        var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+
+        var values = BuildDocumentColumnValues(document, now, includeId: false, includeCreatedAt: false);
+
+        var updateColumns = values
+            .Where(item => columns.Contains(item.Key))
+            .ToList();
+
         using var command = connection.CreateCommand();
-        command.CommandText = @"
-UPDATE documents SET
-    document_type = $document_type,
-    document_number = $document_number,
-    title = $title,
-    issue_date = $issue_date,
-    category_id = $category_id,
-    status_id = $status_id,
-    urgency_level = $urgency_level,
-    confidentiality_level = $confidentiality_level,
-    processing_department = $processing_department,
-    assigned_to = $assigned_to,
-    is_active = $is_active,
-    updated_at = $updated_at
+
+        command.CommandText = $@"
+UPDATE documents
+SET
+    {string.Join(",\n    ", updateColumns.Select(x => $"{x.Key} = ${x.Key}"))}
 WHERE id = $id;";
 
-        BindDocument(command, document, includeCreatedAt: false);
-        command.Parameters.AddWithValue("$id", GetPropertyValue<long>(document, "Id"));
+        foreach (var item in updateColumns)
+        {
+            command.Parameters.AddWithValue("$" + item.Key, ToDbValue(item.Value));
+        }
+
+        command.Parameters.AddWithValue("$id", document.Id);
 
         var rows = await command.ExecuteNonQueryAsync();
+
         return rows > 0;
     }
 
@@ -100,11 +95,29 @@ WHERE id = $id;";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        var columns = await GetDocumentColumnsAsync(connection);
+
         using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM documents WHERE id = $id;";
+
+        if (columns.Contains("is_active"))
+        {
+            command.CommandText = @"
+UPDATE documents
+SET is_active = 0,
+    updated_at = $updated_at
+WHERE id = $id;";
+
+            command.Parameters.AddWithValue("$updated_at", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        }
+        else
+        {
+            command.CommandText = "DELETE FROM documents WHERE id = $id;";
+        }
+
         command.Parameters.AddWithValue("$id", id);
 
         var rows = await command.ExecuteNonQueryAsync();
+
         return rows > 0;
     }
 
@@ -114,12 +127,16 @@ WHERE id = $id;";
         await connection.OpenAsync();
 
         using var command = connection.CreateCommand();
+
         command.CommandText = "SELECT * FROM documents WHERE id = $id;";
         command.Parameters.AddWithValue("$id", id);
 
         using var reader = await command.ExecuteReaderAsync();
+
         if (await reader.ReadAsync())
+        {
             return Map(reader);
+        }
 
         return null;
     }
@@ -129,14 +146,32 @@ WHERE id = $id;";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        var columns = await GetDocumentColumnsAsync(connection);
+
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT * FROM documents ORDER BY created_at DESC;";
+
+        var where = columns.Contains("is_active")
+            ? "WHERE is_active = 1"
+            : string.Empty;
+
+        var orderBy = columns.Contains("updated_at") && columns.Contains("created_at")
+            ? "ORDER BY DATETIME(COALESCE(updated_at, created_at)) DESC"
+            : "ORDER BY id DESC";
+
+        command.CommandText = $@"
+SELECT *
+FROM documents
+{where}
+{orderBy};";
 
         using var reader = await command.ExecuteReaderAsync();
+
         var result = new List<Document>();
 
         while (await reader.ReadAsync())
+        {
             result.Add(Map(reader));
+        }
 
         return result;
     }
@@ -144,6 +179,7 @@ WHERE id = $id;";
     public async Task<List<Document>> SearchAsync(DocumentSearchRequest request)
     {
         var paged = await SearchPagedAsync(request);
+
         return paged.Items.ToList();
     }
 
@@ -152,47 +188,109 @@ WHERE id = $id;";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        var columns = await GetDocumentColumnsAsync(connection);
+
         var where = new StringBuilder("WHERE 1 = 1");
 
+        if (columns.Contains("is_active"))
+        {
+            where.Append(" AND is_active = 1");
+        }
+
         if (!string.IsNullOrWhiteSpace(request.Keyword))
-            where.Append(" AND (title LIKE $keyword OR document_number LIKE $keyword)");
+        {
+            var keywordParts = new List<string>();
 
-        if (request.CategoryId.HasValue)
+            if (columns.Contains("title"))
+            {
+                keywordParts.Add("title LIKE $keyword");
+            }
+
+            if (columns.Contains("document_number"))
+            {
+                keywordParts.Add("document_number LIKE $keyword");
+            }
+
+            if (columns.Contains("sender_name"))
+            {
+                keywordParts.Add("sender_name LIKE $keyword");
+            }
+
+            if (keywordParts.Count > 0)
+            {
+                where.Append(" AND (");
+                where.Append(string.Join(" OR ", keywordParts));
+                where.Append(")");
+            }
+        }
+
+        if (request.CategoryId.HasValue && columns.Contains("category_id"))
+        {
             where.Append(" AND category_id = $categoryId");
+        }
 
-        if (!string.IsNullOrWhiteSpace(request.UrgencyLevel))
+        if (request.StatusId.HasValue && columns.Contains("status_id"))
+        {
+            where.Append(" AND status_id = $statusId");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.UrgencyLevel) && columns.Contains("urgency_level"))
+        {
             where.Append(" AND urgency_level = $urgencyLevel");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.FromDate) && columns.Contains("issue_date"))
+        {
+            where.Append(" AND issue_date >= $fromDate");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ToDate) && columns.Contains("issue_date"))
+        {
+            where.Append(" AND issue_date <= $toDate");
+        }
 
         using var countCommand = connection.CreateCommand();
         countCommand.CommandText = $"SELECT COUNT(*) FROM documents {where};";
-        BindSearch(countCommand, request);
+        BindSearch(countCommand, request, columns);
 
         var totalCount = Convert.ToInt32(await countCommand.ExecuteScalarAsync() ?? 0);
 
+        var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize <= 0 ? 100 : request.PageSize;
+
+        var orderBy = columns.Contains("updated_at") && columns.Contains("created_at")
+            ? "ORDER BY DATETIME(COALESCE(updated_at, created_at)) DESC"
+            : "ORDER BY id DESC";
+
         using var command = connection.CreateCommand();
+
         command.CommandText = $@"
 SELECT *
 FROM documents
 {where}
-ORDER BY DATETIME(COALESCE(updated_at, created_at)) DESC
+{orderBy}
 LIMIT $pageSize OFFSET $offset;";
 
-        BindSearch(command, request);
-        command.Parameters.AddWithValue("$pageSize", request.PageSize);
-        command.Parameters.AddWithValue("$offset", (request.PageNumber - 1) * request.PageSize);
+        BindSearch(command, request, columns);
+
+        command.Parameters.AddWithValue("$pageSize", pageSize);
+        command.Parameters.AddWithValue("$offset", (pageNumber - 1) * pageSize);
 
         using var reader = await command.ExecuteReaderAsync();
+
         var items = new List<Document>();
 
         while (await reader.ReadAsync())
+        {
             items.Add(Map(reader));
+        }
 
         return new PagedResult<Document>
         {
             Items = items,
             TotalCount = totalCount,
-            PageNumber = request.PageNumber,
-            PageSize = request.PageSize
+            PageNumber = pageNumber,
+            PageSize = pageSize
         };
     }
 
@@ -202,9 +300,15 @@ LIMIT $pageSize OFFSET $offset;";
         await connection.OpenAsync();
 
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT id, name FROM document_categories WHERE is_active = 1 ORDER BY name;";
+
+        command.CommandText = @"
+SELECT id, name
+FROM document_categories
+WHERE is_active = 1
+ORDER BY name;";
 
         using var reader = await command.ExecuteReaderAsync();
+
         var items = new List<CategoryModel>();
 
         while (await reader.ReadAsync())
@@ -225,9 +329,15 @@ LIMIT $pageSize OFFSET $offset;";
         await connection.OpenAsync();
 
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT id, name FROM document_statuses WHERE is_active = 1 ORDER BY id;";
+
+        command.CommandText = @"
+SELECT id, name
+FROM document_statuses
+WHERE is_active = 1
+ORDER BY id;";
 
         using var reader = await command.ExecuteReaderAsync();
+
         var items = new List<StatusModel>();
 
         while (await reader.ReadAsync())
@@ -242,40 +352,109 @@ LIMIT $pageSize OFFSET $offset;";
         return items;
     }
 
-    private static void BindSearch(SqliteCommand command, DocumentSearchRequest request)
+    private static async Task<HashSet<string>> GetDocumentColumnsAsync(SqliteConnection connection)
     {
-        if (!string.IsNullOrWhiteSpace(request.Keyword))
-            command.Parameters.AddWithValue("$keyword", $"%{request.Keyword}%");
+        using var command = connection.CreateCommand();
 
-        if (request.CategoryId.HasValue)
-            command.Parameters.AddWithValue("$categoryId", request.CategoryId.Value);
+        command.CommandText = "PRAGMA table_info(documents);";
 
-        if (!string.IsNullOrWhiteSpace(request.UrgencyLevel))
-            command.Parameters.AddWithValue("$urgencyLevel", request.UrgencyLevel);
+        using var reader = await command.ExecuteReaderAsync();
+
+        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        while (await reader.ReadAsync())
+        {
+            var name = reader["name"]?.ToString();
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                columns.Add(name);
+            }
+        }
+
+        return columns;
     }
 
-    private static void BindDocument(SqliteCommand command, Document document, bool includeCreatedAt)
+    private static Dictionary<string, object?> BuildDocumentColumnValues(
+        Document document,
+        string now,
+        bool includeId,
+        bool includeCreatedAt)
     {
-        command.Parameters.AddWithValue("$document_type", ToDbValue(GetPropertyValue<string?>(document, "DocumentType")));
-        command.Parameters.AddWithValue("$document_number", ToDbValue(GetPropertyValue<string?>(document, "DocumentNumber")));
-        command.Parameters.AddWithValue("$title", ToDbValue(GetPropertyValue<string?>(document, "Title")));
-        command.Parameters.AddWithValue("$issue_date", ToDbValue(GetPropertyValueAsString(document, "IssueDate")));
-        command.Parameters.AddWithValue("$category_id", ToDbValue(GetPropertyValue<object?>(document, "CategoryId")));
-        command.Parameters.AddWithValue("$status_id", ToDbValue(GetPropertyValue<object?>(document, "StatusId")));
-        command.Parameters.AddWithValue("$urgency_level", ToDbValue(GetPropertyValue<string?>(document, "UrgencyLevel")));
-        command.Parameters.AddWithValue("$confidentiality_level", ToDbValue(GetPropertyValue<string?>(document, "ConfidentialityLevel")));
-        command.Parameters.AddWithValue("$processing_department", ToDbValue(GetPropertyValue<string?>(document, "ProcessingDepartment")));
-        command.Parameters.AddWithValue("$assigned_to", ToDbValue(GetPropertyValue<string?>(document, "AssignedTo")));
-        command.Parameters.AddWithValue("$is_active", GetBoolValue(document, "IsActive") ? 1 : 0);
-        command.Parameters.AddWithValue("$updated_at", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        var values = new Dictionary<string, object?>();
+
+        if (includeId)
+        {
+            values["id"] = document.Id;
+        }
+
+        values["document_type"] = document.DocumentType;
+        values["document_number"] = document.DocumentNumber;
+        values["reference_number"] = document.ReferenceNumber;
+        values["title"] = document.Title;
+        values["summary"] = document.Summary;
+        values["content_text"] = document.ContentText;
+        values["issue_date"] = document.IssueDate;
+        values["received_date"] = document.ReceivedDate;
+        values["due_date"] = document.DueDate;
+        values["sender_name"] = document.SenderName;
+        values["receiver_name"] = document.ReceiverName;
+        values["signer_name"] = document.SignerName;
+        values["category_id"] = document.CategoryId;
+        values["status_id"] = document.StatusId;
+        values["confidentiality_level"] = document.ConfidentialityLevel;
+        values["urgency_level"] = document.UrgencyLevel;
+        values["processing_department"] = document.ProcessingDepartment;
+        values["assigned_to"] = document.AssignedTo;
+        values["notes"] = document.Notes;
+        values["is_active"] = document.IsActive ? 1 : 0;
+        values["is_expired"] = document.IsExpired ? 1 : 0;
+        values["ocr_status"] = document.OcrStatus;
+        values["updated_at"] = now;
+        values["created_by"] = document.CreatedBy;
+        values["updated_by"] = document.UpdatedBy;
 
         if (includeCreatedAt)
         {
-            var createdAt = GetPropertyValueAsString(document, "CreatedAt");
-            if (string.IsNullOrWhiteSpace(createdAt))
-                createdAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            values["created_at"] = now;
+        }
 
-            command.Parameters.AddWithValue("$created_at", createdAt);
+        return values;
+    }
+
+    private static void BindSearch(
+        SqliteCommand command,
+        DocumentSearchRequest request,
+        HashSet<string> columns)
+    {
+        if (!string.IsNullOrWhiteSpace(request.Keyword))
+        {
+            command.Parameters.AddWithValue("$keyword", $"%{request.Keyword.Trim()}%");
+        }
+
+        if (request.CategoryId.HasValue && columns.Contains("category_id"))
+        {
+            command.Parameters.AddWithValue("$categoryId", request.CategoryId.Value);
+        }
+
+        if (request.StatusId.HasValue && columns.Contains("status_id"))
+        {
+            command.Parameters.AddWithValue("$statusId", request.StatusId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.UrgencyLevel) && columns.Contains("urgency_level"))
+        {
+            command.Parameters.AddWithValue("$urgencyLevel", request.UrgencyLevel.Trim());
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.FromDate) && columns.Contains("issue_date"))
+        {
+            command.Parameters.AddWithValue("$fromDate", request.FromDate.Trim());
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ToDate) && columns.Contains("issue_date"))
+        {
+            command.Parameters.AddWithValue("$toDate", request.ToDate.Trim());
         }
     }
 
@@ -283,22 +462,69 @@ LIMIT $pageSize OFFSET $offset;";
     {
         var document = new Document();
 
-        SetPropertyIfExists(document, "Id", Convert.ToInt64(reader["id"]));
-        SetPropertyIfExists(document, "DocumentType", reader["document_type"]?.ToString());
-        SetPropertyIfExists(document, "DocumentNumber", reader["document_number"]?.ToString());
-        SetPropertyIfExists(document, "Title", reader["title"]?.ToString());
-        SetPropertyIfExists(document, "IssueDate", reader["issue_date"] == DBNull.Value ? null : reader["issue_date"]?.ToString());
-        SetPropertyIfExists(document, "CategoryId", reader["category_id"] == DBNull.Value ? null : reader["category_id"]);
-        SetPropertyIfExists(document, "StatusId", reader["status_id"] == DBNull.Value ? null : reader["status_id"]);
-        SetPropertyIfExists(document, "UrgencyLevel", reader["urgency_level"]?.ToString());
-        SetPropertyIfExists(document, "ConfidentialityLevel", reader["confidentiality_level"]?.ToString());
-        SetPropertyIfExists(document, "ProcessingDepartment", reader["processing_department"]?.ToString());
-        SetPropertyIfExists(document, "AssignedTo", reader["assigned_to"]?.ToString());
-        SetPropertyIfExists(document, "IsActive", reader["is_active"] != DBNull.Value && Convert.ToInt32(reader["is_active"]) == 1);
-        SetPropertyIfExists(document, "CreatedAt", reader["created_at"] == DBNull.Value ? null : reader["created_at"]?.ToString());
-        SetPropertyIfExists(document, "UpdatedAt", reader["updated_at"] == DBNull.Value ? null : reader["updated_at"]?.ToString());
+        SetPropertyIfColumnExists(reader, document, "id", "Id");
+        SetPropertyIfColumnExists(reader, document, "document_type", "DocumentType");
+        SetPropertyIfColumnExists(reader, document, "document_number", "DocumentNumber");
+        SetPropertyIfColumnExists(reader, document, "reference_number", "ReferenceNumber");
+        SetPropertyIfColumnExists(reader, document, "title", "Title");
+        SetPropertyIfColumnExists(reader, document, "summary", "Summary");
+        SetPropertyIfColumnExists(reader, document, "content_text", "ContentText");
+        SetPropertyIfColumnExists(reader, document, "issue_date", "IssueDate");
+        SetPropertyIfColumnExists(reader, document, "received_date", "ReceivedDate");
+        SetPropertyIfColumnExists(reader, document, "due_date", "DueDate");
+        SetPropertyIfColumnExists(reader, document, "sender_name", "SenderName");
+        SetPropertyIfColumnExists(reader, document, "receiver_name", "ReceiverName");
+        SetPropertyIfColumnExists(reader, document, "signer_name", "SignerName");
+        SetPropertyIfColumnExists(reader, document, "category_id", "CategoryId");
+        SetPropertyIfColumnExists(reader, document, "status_id", "StatusId");
+        SetPropertyIfColumnExists(reader, document, "confidentiality_level", "ConfidentialityLevel");
+        SetPropertyIfColumnExists(reader, document, "urgency_level", "UrgencyLevel");
+        SetPropertyIfColumnExists(reader, document, "processing_department", "ProcessingDepartment");
+        SetPropertyIfColumnExists(reader, document, "assigned_to", "AssignedTo");
+        SetPropertyIfColumnExists(reader, document, "notes", "Notes");
+        SetPropertyIfColumnExists(reader, document, "is_active", "IsActive");
+        SetPropertyIfColumnExists(reader, document, "is_expired", "IsExpired");
+        SetPropertyIfColumnExists(reader, document, "ocr_status", "OcrStatus");
+        SetPropertyIfColumnExists(reader, document, "created_at", "CreatedAt");
+        SetPropertyIfColumnExists(reader, document, "updated_at", "UpdatedAt");
+        SetPropertyIfColumnExists(reader, document, "created_by", "CreatedBy");
+        SetPropertyIfColumnExists(reader, document, "updated_by", "UpdatedBy");
 
         return document;
+    }
+
+    private static void SetPropertyIfColumnExists(
+        SqliteDataReader reader,
+        object target,
+        string columnName,
+        string propertyName)
+    {
+        if (!ColumnExists(reader, columnName))
+        {
+            return;
+        }
+
+        var value = reader[columnName];
+
+        if (value == DBNull.Value)
+        {
+            value = null;
+        }
+
+        SetPropertyIfExists(target, propertyName, value);
+    }
+
+    private static bool ColumnExists(SqliteDataReader reader, string columnName)
+    {
+        for (var i = 0; i < reader.FieldCount; i++)
+        {
+            if (string.Equals(reader.GetName(i), columnName, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static object ToDbValue(object? value)
@@ -306,58 +532,25 @@ LIMIT $pageSize OFFSET $offset;";
         return value ?? DBNull.Value;
     }
 
-    private static T GetPropertyValue<T>(object obj, string propertyName)
-    {
-        var prop = obj.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
-        if (prop == null)
-            return default!;
-
-        var value = prop.GetValue(obj);
-        if (value == null)
-            return default!;
-
-        if (value is T tValue)
-            return tValue;
-
-        return (T)Convert.ChangeType(value, typeof(T), CultureInfo.InvariantCulture);
-    }
-
-    private static string? GetPropertyValueAsString(object obj, string propertyName)
-    {
-        var prop = obj.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
-        if (prop == null)
-            return null;
-
-        var value = prop.GetValue(obj);
-        return value?.ToString();
-    }
-
-    private static bool GetBoolValue(object obj, string propertyName)
-    {
-        var prop = obj.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
-        if (prop == null)
-            return true;
-
-        var value = prop.GetValue(obj);
-        if (value == null)
-            return true;
-
-        if (value is bool b)
-            return b;
-
-        return Convert.ToBoolean(value);
-    }
-
     private static void SetPropertyIfExists(object obj, string propertyName, object? value)
     {
-        var prop = obj.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
-        if (prop == null || !prop.CanWrite)
+        var prop = obj.GetType().GetProperty(
+            propertyName,
+            BindingFlags.Public | BindingFlags.Instance);
+
+        if (prop == null)
+        {
             return;
+        }
 
         if (value == null || value == DBNull.Value)
         {
-            if (!prop.PropertyType.IsValueType || Nullable.GetUnderlyingType(prop.PropertyType) != null)
+            if (!prop.PropertyType.IsValueType ||
+                Nullable.GetUnderlyingType(prop.PropertyType) != null)
+            {
                 prop.SetValue(obj, null);
+            }
+
             return;
         }
 
@@ -373,19 +566,23 @@ LIMIT $pageSize OFFSET $offset;";
             }
             else if (targetType == typeof(long))
             {
-                convertedValue = Convert.ToInt64(value);
+                convertedValue = Convert.ToInt64(value, CultureInfo.InvariantCulture);
             }
             else if (targetType == typeof(int))
             {
-                convertedValue = Convert.ToInt32(value);
+                convertedValue = Convert.ToInt32(value, CultureInfo.InvariantCulture);
             }
             else if (targetType == typeof(bool))
             {
-                convertedValue = value is bool b ? b : Convert.ToInt32(value) == 1;
+                convertedValue = value is bool b
+                    ? b
+                    : Convert.ToInt32(value, CultureInfo.InvariantCulture) == 1;
             }
             else if (targetType == typeof(DateTime))
             {
-                convertedValue = value is DateTime dt ? dt : DateTime.Parse(value.ToString()!);
+                convertedValue = value is DateTime dateTime
+                    ? dateTime
+                    : DateTime.Parse(value.ToString()!, CultureInfo.InvariantCulture);
             }
             else
             {
@@ -396,7 +593,7 @@ LIMIT $pageSize OFFSET $offset;";
         }
         catch
         {
-            // Bỏ qua field không map được để tránh compile/runtime gãy toàn repo.
+            // Bỏ qua field lỗi để repository không làm gãy toàn hệ thống.
         }
     }
 }

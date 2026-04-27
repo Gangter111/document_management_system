@@ -8,6 +8,7 @@ D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\DocumentManageme
 D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\DocumentManagement.Application.AssemblyInfoInputs.cache
 D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\DocumentManagement.Application.AssemblyInfo.cs
 D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\DocumentManagement.Application.csproj.CoreCompileInputs.cache
+D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\DocumentManagement.Application.sourcelink.json
 D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\Document.E76BA36E.Up2Date
 D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\DocumentManagement.Application.dll
 D:\QuanLyVanBan\DocumentManagement.Application\obj\Debug\net8.0\refint\DocumentManagement.Application.dll

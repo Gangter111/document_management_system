@@ -1,9 +1,5 @@
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Windows.Input;
-using DocumentManagement.Application.Interfaces;
-using DocumentManagement.Application.Security;
 using DocumentManagement.Wpf.Commands;
 using DocumentManagement.Wpf.Services;
 using DocumentManagement.Wpf.Views;
@@ -15,8 +11,9 @@ namespace DocumentManagement.Wpf.ViewModels;
 public class MainViewModel : BaseViewModel
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IAuthService _authService;
-    private readonly IPermissionService _permissionService;
+    private readonly ApiService _apiService;
+    private readonly ApiAuthService _authService;
+    private readonly ClientPermissionService _permissionService;
     private readonly INotificationService _notificationService;
     private readonly IConfirmDialogService _confirmDialogService;
 
@@ -43,57 +40,84 @@ public class MainViewModel : BaseViewModel
         }
     }
 
-    public string CurrentDisplayName =>
-        _authService.CurrentUser?.DisplayName ?? "Chưa đăng nhập";
+    public string CurrentDisplayName
+    {
+        get
+        {
+            var fullName = _authService.CurrentUser?.FullName;
+            var username = _authService.CurrentUser?.Username;
 
-    public string CurrentRoleName =>
-        _authService.CurrentUser?.Roles.FirstOrDefault() ?? "Không có quyền";
+            if (!string.IsNullOrWhiteSpace(fullName))
+            {
+                return fullName;
+            }
 
-    public bool CanViewDashboard =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DashboardView);
+            if (!string.IsNullOrWhiteSpace(username))
+            {
+                return username;
+            }
 
-    public bool CanViewDocuments =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentView);
+            return "Người dùng";
+        }
+    }
 
-    public bool CanViewTasks =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.TaskView);
+    public string CurrentRoleName
+    {
+        get
+        {
+            var role = _authService.CurrentUser?.Role;
 
-    public bool CanViewReports =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.ReportView);
+            return string.IsNullOrWhiteSpace(role)
+                ? "User"
+                : role;
+        }
+    }
 
-    public bool CanViewSettings =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.SettingsView);
+    public bool CanViewDashboard => _permissionService.CanViewDashboard();
+
+    public bool CanViewDocuments => _permissionService.CanViewDocuments();
+
+    public bool CanViewTasks => false;
+
+    public bool CanViewReports => false;
+
+    public bool CanViewSettings => string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase);
 
     public bool CanBackup =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.BackupCreate);
+        string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(CurrentRoleName, "Manager", StringComparison.OrdinalIgnoreCase);
 
     public bool CanRestore =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.BackupRestore);
+        string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase);
 
     public bool CanRunBackupCommand => CanBackup && !IsSystemOperationRunning;
 
     public bool CanRunRestoreCommand => CanRestore && !IsSystemOperationRunning;
 
-    public bool CanCreateDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentCreate);
+    public bool CanCreateDocument => _permissionService.CanCreateDocuments();
 
-    public bool CanEditDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentEdit);
+    public bool CanEditDocument => _permissionService.CanEditDocuments();
 
     public ICommand ShowDashboardCommand { get; }
+
     public ICommand ShowDocumentListCommand { get; }
+
     public ICommand CreateDocumentCommand { get; }
+
     public ICommand BackupCommand { get; }
+
     public ICommand RestoreCommand { get; }
 
     public MainViewModel(
         IServiceProvider serviceProvider,
-        IAuthService authService,
-        IPermissionService permissionService,
+        ApiService apiService,
+        ApiAuthService authService,
+        ClientPermissionService permissionService,
         INotificationService notificationService,
         IConfirmDialogService confirmDialogService)
     {
         _serviceProvider = serviceProvider;
+        _apiService = apiService;
         _authService = authService;
         _permissionService = permissionService;
         _notificationService = notificationService;
@@ -102,23 +126,37 @@ public class MainViewModel : BaseViewModel
         ShowDashboardCommand = new RelayCommand(_ => ShowDashboard(), _ => CanViewDashboard);
         ShowDocumentListCommand = new RelayCommand(_ => ShowDocuments(), _ => CanViewDocuments);
         CreateDocumentCommand = new RelayCommand(async _ => await CreateDocumentAsync(), _ => CanCreateDocument);
-        BackupCommand = new RelayCommand(async _ => await RunBackupAsync(), _ => CanRunBackupCommand);
-        RestoreCommand = new RelayCommand(async _ => await RunRestoreAsync(), _ => CanRunRestoreCommand);
+
+        BackupCommand = new RelayCommand(
+            async _ => await BackupAsync(),
+            _ => CanRunBackupCommand);
+
+        RestoreCommand = new RelayCommand(
+            async _ => await RestoreAsync(),
+            _ => CanRunRestoreCommand);
+
+        RefreshPermissions();
 
         if (CanViewDashboard)
         {
             ShowDashboard();
         }
-        else if (CanViewDocuments)
+        else
         {
             ShowDocuments();
         }
     }
 
-    public void RefreshPermissions()
+    public void RefreshUserInfo()
     {
         OnPropertyChanged(nameof(CurrentDisplayName));
         OnPropertyChanged(nameof(CurrentRoleName));
+    }
+
+    public void RefreshPermissions()
+    {
+        RefreshUserInfo();
+
         OnPropertyChanged(nameof(CanViewDashboard));
         OnPropertyChanged(nameof(CanViewDocuments));
         OnPropertyChanged(nameof(CanViewTasks));
@@ -139,7 +177,7 @@ public class MainViewModel : BaseViewModel
         if (!CanViewDashboard)
         {
             _notificationService.ShowWarning(
-                "Bạn không có quyền truy cập Bảng điều khiển.",
+                "Bạn không có quyền xem bảng điều khiển.",
                 "Từ chối truy cập");
             return;
         }
@@ -163,7 +201,7 @@ public class MainViewModel : BaseViewModel
         if (!CanViewDocuments)
         {
             _notificationService.ShowWarning(
-                "Bạn không có quyền truy cập Quản lý tài liệu.",
+                "Bạn không có quyền xem danh sách văn bản.",
                 "Từ chối truy cập");
             return;
         }
@@ -184,19 +222,19 @@ public class MainViewModel : BaseViewModel
 
     public async Task OpenDocumentAsync(long documentId)
     {
-        if (!CanViewDocuments)
-        {
-            _notificationService.ShowWarning(
-                "Bạn không có quyền xem văn bản.",
-                "Từ chối truy cập");
-            return;
-        }
-
         if (documentId <= 0)
         {
             _notificationService.ShowWarning(
                 "Mã văn bản không hợp lệ.",
                 "Thông báo");
+            return;
+        }
+
+        if (!CanViewDocuments)
+        {
+            _notificationService.ShowWarning(
+                "Bạn không có quyền xem văn bản.",
+                "Từ chối truy cập");
             return;
         }
 
@@ -236,7 +274,7 @@ public class MainViewModel : BaseViewModel
         if (!CanCreateDocument)
         {
             _notificationService.ShowWarning(
-                "Bạn không có quyền tạo mới văn bản.",
+                "Bạn không có quyền tạo văn bản.",
                 "Từ chối thao tác");
             return;
         }
@@ -244,6 +282,7 @@ public class MainViewModel : BaseViewModel
         try
         {
             var vm = _serviceProvider.GetRequiredService<DocumentFormViewModel>();
+            vm.ResetForCreate();
             vm.ApplyAccessMode(isReadOnly: false);
 
             var window = new DocumentFormWindow(vm)
@@ -270,6 +309,107 @@ public class MainViewModel : BaseViewModel
         }
     }
 
+    private async Task BackupAsync()
+    {
+        if (!CanBackup)
+        {
+            _notificationService.ShowWarning(
+                "Bạn không có quyền sao lưu dữ liệu.",
+                "Từ chối thao tác");
+            return;
+        }
+
+        var dialog = new SaveFileDialog
+        {
+            Title = "Lưu file sao lưu dữ liệu",
+            Filter = "SQLite Database (*.db)|*.db|All Files (*.*)|*.*",
+            FileName = $"document_management_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db"
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        try
+        {
+            IsSystemOperationRunning = true;
+
+            var bytes = await _apiService.DownloadBackupAsync();
+            await File.WriteAllBytesAsync(dialog.FileName, bytes);
+
+            _notificationService.ShowSuccess(
+                "Đã sao lưu dữ liệu thành công.",
+                "Sao lưu dữ liệu");
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                $"Sao lưu thất bại: {ex.Message}",
+                "Lỗi sao lưu");
+        }
+        finally
+        {
+            IsSystemOperationRunning = false;
+        }
+    }
+
+    private async Task RestoreAsync()
+    {
+        if (!CanRestore)
+        {
+            _notificationService.ShowWarning(
+                "Chỉ Admin được khôi phục dữ liệu.",
+                "Từ chối thao tác");
+            return;
+        }
+
+        var dialog = new OpenFileDialog
+        {
+            Title = "Chọn file khôi phục dữ liệu",
+            Filter = "SQLite Database (*.db;*.sqlite)|*.db;*.sqlite|All Files (*.*)|*.*"
+        };
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        var confirmed = _confirmDialogService.Confirm(
+            "Khôi phục dữ liệu sẽ ghi đè database hiện tại. Hệ thống sẽ tự tạo bản sao an toàn trước khi khôi phục. Tiếp tục?",
+            "Xác nhận khôi phục dữ liệu",
+            "Khôi phục",
+            "Hủy",
+            ConfirmDialogType.Danger);
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            IsSystemOperationRunning = true;
+
+            await _apiService.RestoreBackupAsync(dialog.FileName);
+            await RefreshCurrentViewAsync();
+
+            _notificationService.ShowSuccess(
+                "Đã khôi phục dữ liệu thành công. Nên khởi động lại ứng dụng để làm sạch cache UI.",
+                "Khôi phục dữ liệu");
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                $"Khôi phục thất bại: {ex.Message}",
+                "Lỗi khôi phục");
+        }
+        finally
+        {
+            IsSystemOperationRunning = false;
+        }
+    }
+
     private async Task RefreshCurrentViewAsync()
     {
         if (CurrentView is DashboardViewModel dashboardVm)
@@ -283,199 +423,4 @@ public class MainViewModel : BaseViewModel
             await listVm.LoadAsync();
         }
     }
-
-    private async Task RunBackupAsync()
-    {
-        if (!CanBackup)
-        {
-            _notificationService.ShowWarning(
-                "Bạn không có quyền sao lưu dữ liệu.",
-                "Từ chối thao tác");
-            return;
-        }
-
-        if (IsSystemOperationRunning)
-        {
-            _notificationService.ShowInfo(
-                "Hệ thống đang thực hiện thao tác khác. Vui lòng chờ.",
-                "Đang xử lý");
-            return;
-        }
-
-        try
-        {
-            IsSystemOperationRunning = true;
-
-            var backupFolder = GetBackupFolder();
-            var dbPath = GetDatabasePath();
-            var storageRoot = GetStorageRoot();
-
-            Directory.CreateDirectory(backupFolder);
-            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-            Directory.CreateDirectory(storageRoot);
-
-            if (!File.Exists(dbPath))
-            {
-                _notificationService.ShowWarning(
-                    $"Không tìm thấy database: {dbPath}",
-                    "Không thể sao lưu");
-                return;
-            }
-
-            var backupService = _serviceProvider.GetRequiredService<IBackupService>();
-            var backupPath = await backupService.CreateBackupAsync(dbPath, storageRoot, backupFolder);
-
-            _notificationService.ShowSuccess(
-                $"Sao lưu thành công: {Path.GetFileName(backupPath)}",
-                "Sao lưu dữ liệu");
-
-            var shouldOpenFolder = _confirmDialogService.Confirm(
-                $"Sao lưu thành công:\n{Path.GetFileName(backupPath)}\n\nBạn có muốn mở thư mục sao lưu không?",
-                "Sao lưu dữ liệu",
-                "Mở thư mục",
-                "Đóng",
-                ConfirmDialogType.Info);
-
-            if (shouldOpenFolder)
-            {
-                OpenFolder(backupFolder);
-            }
-        }
-        catch (Exception ex)
-        {
-            _notificationService.ShowError(
-                $"Lỗi sao lưu: {ex.Message}",
-                "Lỗi");
-        }
-        finally
-        {
-            IsSystemOperationRunning = false;
-        }
-    }
-
-    private async Task RunRestoreAsync()
-    {
-        if (!CanRestore)
-        {
-            _notificationService.ShowWarning(
-                "Bạn không có quyền khôi phục dữ liệu.",
-                "Từ chối thao tác");
-            return;
-        }
-
-        if (IsSystemOperationRunning)
-        {
-            _notificationService.ShowInfo(
-                "Hệ thống đang thực hiện thao tác khác. Vui lòng chờ.",
-                "Đang xử lý");
-            return;
-        }
-
-        try
-        {
-            var dialog = new OpenFileDialog
-            {
-                Filter = "Backup files (*.zip)|*.zip",
-                Title = "Chọn file backup để khôi phục",
-                InitialDirectory = GetBackupFolder(),
-                CheckFileExists = true,
-                Multiselect = false
-            };
-
-            if (dialog.ShowDialog() != true)
-            {
-                return;
-            }
-
-            var firstConfirm = _confirmDialogService.Confirm(
-                "Khôi phục sẽ ghi đè database và toàn bộ thư mục storage hiện tại.\n\nHệ thống sẽ tự tạo một bản backup an toàn trước khi khôi phục.\n\nBạn có chắc chắn muốn tiếp tục?",
-                "Xác nhận khôi phục",
-                "Tiếp tục",
-                "Hủy",
-                ConfirmDialogType.Warning);
-
-            if (!firstConfirm)
-            {
-                return;
-            }
-
-            var secondConfirm = _confirmDialogService.Confirm(
-                "Xác nhận lần cuối:\n\nSau khi khôi phục thành công, ứng dụng sẽ đóng. Bạn cần mở lại ứng dụng để tiếp tục.",
-                "Xác nhận lần cuối",
-                "Khôi phục",
-                "Hủy",
-                ConfirmDialogType.Danger);
-
-            if (!secondConfirm)
-            {
-                return;
-            }
-
-            IsSystemOperationRunning = true;
-
-            var dbPath = GetDatabasePath();
-            var storageRoot = GetStorageRoot();
-
-            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
-            Directory.CreateDirectory(storageRoot);
-
-            var backupService = _serviceProvider.GetRequiredService<IBackupService>();
-            await backupService.RestoreBackupAsync(dialog.FileName, dbPath, storageRoot);
-
-            _confirmDialogService.Confirm(
-                "Khôi phục thành công.\n\nỨng dụng sẽ đóng. Vui lòng mở lại ứng dụng để tiếp tục.",
-                "Khôi phục dữ liệu",
-                "Đóng ứng dụng",
-                "Đóng",
-                ConfirmDialogType.Info);
-
-            global::System.Windows.Application.Current?.Shutdown();
-        }
-        catch (Exception ex)
-        {
-            _notificationService.ShowError(
-                $"Lỗi khôi phục: {ex.Message}",
-                "Lỗi");
-        }
-        finally
-        {
-            IsSystemOperationRunning = false;
-        }
-    }
-
-    private static string GetBackupFolder()
-    {
-        return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-            "DocumentManagement",
-            "Backups");
-    }
-
-    private static string GetDatabasePath()
-    {
-        return Path.Combine(AppContext.BaseDirectory, "database", "app.db");
-    }
-
-    private static string GetStorageRoot()
-    {
-        return Path.Combine(AppContext.BaseDirectory, "storage");
-    }
-
-    private static void OpenFolder(string folder)
-    {
-        if (!Directory.Exists(folder))
-        {
-            return;
-        }
-
-        var startInfo = new ProcessStartInfo
-        {
-            FileName = folder,
-            UseShellExecute = true
-        };
-
-        Process.Start(startInfo);
-    }
 }
-
-//ver2442026

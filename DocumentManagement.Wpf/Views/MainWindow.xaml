@@ -29,7 +29,6 @@
             <views:DashboardView />
         </DataTemplate>
 
-        <!-- SIDEBAR SECTION TITLE -->
         <Style x:Key="SidebarSectionTitleStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="{StaticResource TextSoftBrush}"/>
             <Setter Property="FontSize" Value="11"/>
@@ -37,7 +36,6 @@
             <Setter Property="Margin" Value="18,0,0,10"/>
         </Style>
 
-        <!-- SIDEBAR MENU BUTTON -->
         <Style x:Key="MenuButtonStyle" TargetType="RadioButton">
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
             <Setter Property="Margin" Value="10,0,10,6"/>
@@ -76,7 +74,6 @@
             </Setter>
         </Style>
 
-        <!-- SIDEBAR SYSTEM ACTION BUTTON -->
         <Style x:Key="SystemActionButtonStyle" TargetType="Button">
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
             <Setter Property="Margin" Value="10,0,10,6"/>
@@ -120,7 +117,6 @@
             </Setter>
         </Style>
 
-        <!-- RESTORE ACTION BUTTON -->
         <Style x:Key="RestoreActionButtonStyle"
                TargetType="Button"
                BasedOn="{StaticResource SystemActionButtonStyle}">
@@ -133,7 +129,6 @@
             </Style.Triggers>
         </Style>
 
-        <!-- TOP ICON BUTTON -->
         <Style x:Key="TopIconButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
@@ -175,7 +170,6 @@
             </Setter>
         </Style>
 
-        <!-- EXIT BUTTON -->
         <Style x:Key="ExitButtonStyle" TargetType="Button">
             <Setter Property="Margin" Value="10,0,10,10"/>
             <Setter Property="Height" Value="48"/>
@@ -225,7 +219,6 @@
                 BorderThickness="0,0,1,0">
             <DockPanel LastChildFill="True">
 
-                <!-- EXIT -->
                 <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,14">
                     <Button Click="ExitButton_Click"
                             Style="{StaticResource ExitButtonStyle}">
@@ -244,7 +237,6 @@
                     </Button>
                 </StackPanel>
 
-                <!-- BRAND -->
                 <StackPanel DockPanel.Dock="Top" Margin="18,22,18,18">
                     <Border Background="{StaticResource SurfaceMutedBrush}"
                             BorderBrush="{StaticResource BorderBrushDefault}"
@@ -289,7 +281,6 @@
                     </Border>
                 </StackPanel>
 
-                <!-- MENU -->
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled">
                     <StackPanel Margin="0,4,0,0">
@@ -453,7 +444,9 @@
         </Border>
 
         <!-- MAIN AREA -->
-        <Grid Grid.Column="1" Background="{StaticResource AppBackgroundBrush}">
+        <Grid Grid.Column="1"
+              Background="{StaticResource AppBackgroundBrush}"
+              ClipToBounds="True">
             <Grid.RowDefinitions>
                 <RowDefinition Height="76"/>
                 <RowDefinition Height="*"/>
@@ -471,7 +464,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- SEARCH PLACEHOLDER -->
+                    <!-- QUICK SEARCH -->
                     <Border Grid.Column="0"
                             Height="44"
                             VerticalAlignment="Center"
@@ -492,21 +485,23 @@
                                                      Foreground="{StaticResource TextSoftBrush}"
                                                      VerticalAlignment="Center"/>
 
-                            <TextBlock Grid.Column="1"
-                                       Margin="10,0,0,0"
-                                       VerticalAlignment="Center"
-                                       Foreground="{StaticResource TextSoftBrush}"
-                                       FontSize="14"
-                                       Text="Tìm kiếm nhanh sẽ được kết nối ở phase sau..."/>
+                            <TextBox Grid.Column="1"
+                                     Margin="10,0,0,0"
+                                     VerticalAlignment="Center"
+                                     Text="{Binding QuickSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     FontSize="14"
+                                     Foreground="{StaticResource TextBrush}"
+                                     materialDesign:HintAssist.Hint="Tìm theo số hiệu, trích yếu, người gửi..."
+                                     materialDesign:TextFieldAssist.DecorationVisibility="Hidden"/>
                         </Grid>
                     </Border>
 
-                    <!-- RIGHT ACTIONS -->
                     <StackPanel Grid.Column="2"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center">
-
                         <Button Style="{StaticResource TopIconButtonStyle}"
                                 ToolTip="Thông báo">
                             <materialDesign:PackIcon Kind="BellOutline"
@@ -562,8 +557,10 @@
                 </Grid>
             </Border>
 
-            <!-- CONTENT -->
-            <Grid Grid.Row="1" Margin="24">
+            <!-- CONTENT AREA -->
+            <Grid Grid.Row="1"
+                  Margin="24"
+                  ClipToBounds="True">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -573,7 +570,8 @@
                 <Border Grid.Row="0"
                         Style="{StaticResource AppCardStyle}"
                         Padding="20"
-                        Margin="0,0,0,18">
+                        Margin="0,0,0,18"
+                        Panel.ZIndex="10">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -630,13 +628,12 @@
                     </Grid>
                 </Border>
 
-                <!-- CURRENT VIEW HOST -->
-                <Border Grid.Row="1"
-                        Style="{StaticResource AppCardStyle}"
-                        Padding="0"
-                        SnapsToDevicePixels="True">
-                    <ContentControl Content="{Binding CurrentView}"/>
-                </Border>
+                <!-- VIEW HOST -->
+                <ContentControl Grid.Row="1"
+                                Content="{Binding CurrentView}"
+                                ClipToBounds="True"
+                                HorizontalContentAlignment="Stretch"
+                                VerticalContentAlignment="Stretch"/>
             </Grid>
         </Grid>
     </Grid>

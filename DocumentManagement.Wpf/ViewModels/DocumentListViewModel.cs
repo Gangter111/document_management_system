@@ -1,14 +1,10 @@
-using System;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
-using DocumentManagement.Application.Interfaces;
-using DocumentManagement.Application.Models;
-using DocumentManagement.Application.Security;
-using DocumentManagement.Domain.Entities;
+using DocumentManagement.Contracts.Common;
+using DocumentManagement.Contracts.Documents;
 using DocumentManagement.Wpf.Commands;
 using DocumentManagement.Wpf.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,16 +15,15 @@ namespace DocumentManagement.Wpf.ViewModels;
 
 public class DocumentListViewModel : BaseViewModel
 {
-    private readonly IDocumentService _documentService;
+    private readonly ApiService _apiService;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IAuthService _authService;
-    private readonly IPermissionService _permissionService;
     private readonly INotificationService _notificationService;
+    private readonly ClientPermissionService _permissionService;
 
     private CancellationTokenSource? _searchCts;
 
     private string? _searchText;
-    private Document? _selectedDocument;
+    private DocumentDto? _selectedDocument;
     private long? _selectedCategoryId;
     private long? _selectedStatusId;
     private string? _selectedUrgency;
@@ -43,9 +38,11 @@ public class DocumentListViewModel : BaseViewModel
     private int _totalCount;
     private int _totalPages;
 
-    public ObservableCollection<Document> Documents { get; } = new();
-    public ObservableCollection<CategoryModel> Categories { get; } = new();
-    public ObservableCollection<StatusModel> Statuses { get; } = new();
+    public ObservableCollection<DocumentDto> Documents { get; } = new();
+
+    public ObservableCollection<LookupItemDto> Categories { get; } = new();
+
+    public ObservableCollection<LookupItemDto> Statuses { get; } = new();
 
     public ObservableCollection<OptionItem> UrgencyOptions { get; } = new()
     {
@@ -68,7 +65,7 @@ public class DocumentListViewModel : BaseViewModel
         }
     }
 
-    public Document? SelectedDocument
+    public DocumentDto? SelectedDocument
     {
         get => _selectedDocument;
         set
@@ -202,49 +199,52 @@ public class DocumentListViewModel : BaseViewModel
         ? "Trang 0/0"
         : $"Trang {PageNumber}/{TotalPages}";
 
-    public bool CanCreateDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentCreate);
+    public bool CanCreateDocument => _permissionService.CanCreateDocuments();
 
-    public bool CanEditDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentEdit);
+    public bool CanEditDocument => _permissionService.CanEditDocuments();
 
-    public bool CanViewDocument =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.DocumentView);
+    public bool CanViewDocument => _permissionService.CanViewDocuments();
 
-    public bool CanExportExcel =>
-        _permissionService.HasPermission(_authService.CurrentUser, PermissionCodes.ReportView);
+    public bool CanExportExcel => _permissionService.CanExportDocuments();
 
     public ICommand AddCommand { get; }
+
     public ICommand RefreshCommand { get; }
+
     public ICommand ClearFiltersCommand { get; }
+
     public ICommand ExportExcelCommand { get; }
+
     public ICommand PreviousPageCommand { get; }
+
     public ICommand NextPageCommand { get; }
+
     public ICommand OpenSelectedDocumentCommand { get; }
 
     public DocumentListViewModel(
-        IDocumentService documentService,
+        ApiService apiService,
         IServiceProvider serviceProvider,
-        IAuthService authService,
-        IPermissionService permissionService,
-        INotificationService notificationService)
+        INotificationService notificationService,
+        ClientPermissionService permissionService)
     {
-        _documentService = documentService;
+        _apiService = apiService;
         _serviceProvider = serviceProvider;
-        _authService = authService;
-        _permissionService = permissionService;
         _notificationService = notificationService;
+        _permissionService = permissionService;
 
         Documents.CollectionChanged += (_, _) =>
         {
             OnPropertyChanged(nameof(HasDocuments));
         };
 
-        AddCommand = new RelayCommand(_ => OpenCreateForm(), _ => CanCreateDocument);
+        AddCommand = new RelayCommand(
+            _ => OpenCreateForm(),
+            _ => CanCreateDocument);
 
         RefreshCommand = new RelayCommand(async _ =>
         {
             PageNumber = 1;
+            await LoadLookupsAsync();
             await SearchAsync();
 
             _notificationService.ShowSuccess(
@@ -255,8 +255,8 @@ public class DocumentListViewModel : BaseViewModel
         ClearFiltersCommand = new RelayCommand(async _ =>
         {
             SearchText = null;
-            SelectedCategoryId = null;
-            SelectedStatusId = null;
+            SelectedCategoryId = 0;
+            SelectedStatusId = 0;
             SelectedUrgency = null;
             FromDate = null;
             ToDate = null;
@@ -299,8 +299,9 @@ public class DocumentListViewModel : BaseViewModel
             async _ => await OpenSelectedDocumentAsync(),
             _ => SelectedDocument != null && CanViewDocument);
 
+        SelectedCategoryId = 0;
+        SelectedStatusId = 0;
         SelectedUrgency = null;
-        SelectedStatusId = null;
     }
 
     public async Task LoadAsync()
@@ -319,86 +320,14 @@ public class DocumentListViewModel : BaseViewModel
         CommandManager.InvalidateRequerySuggested();
     }
 
-    public async Task OpenSelectedDocumentAsync()
-    {
-        if (!CanViewDocument)
-        {
-            _notificationService.ShowWarning(
-                "Bạn không có quyền xem văn bản.",
-                "Từ chối truy cập");
-            return;
-        }
-
-        if (SelectedDocument == null)
-        {
-            _notificationService.ShowWarning(
-                "Vui lòng chọn một văn bản để mở.",
-                "Chưa chọn văn bản");
-            return;
-        }
-
-        try
-        {
-            var vm = _serviceProvider.GetRequiredService<DocumentFormViewModel>();
-            await vm.LoadDocumentAsync(SelectedDocument.Id);
-
-            vm.ApplyAccessMode(isReadOnly: !CanEditDocument);
-
-            var win = new Views.DocumentFormWindow(vm)
-            {
-                Owner = System.Windows.Application.Current?.MainWindow
-            };
-
-            var result = win.ShowDialog();
-
-            if (result == true)
-            {
-                await SearchAsync();
-
-                _notificationService.ShowSuccess(
-                    "Danh sách đã được cập nhật.",
-                    "Cập nhật dữ liệu");
-            }
-        }
-        catch (Exception ex)
-        {
-            _notificationService.ShowError(
-                "Không thể mở văn bản: " + ex.Message,
-                "Lỗi");
-        }
-    }
-
     private async Task InitializeAsync()
     {
         try
         {
             IsLoading = true;
-            StatusMessage = "Đang tải dữ liệu...";
+            StatusMessage = "Đang khởi tạo dữ liệu...";
 
-            var categories = await _documentService.GetCategoriesAsync();
-            var statuses = await _documentService.GetStatusesAsync();
-
-            Categories.Clear();
-            foreach (var category in categories)
-            {
-                Categories.Add(category);
-            }
-
-            Statuses.Clear();
-            Statuses.Add(new StatusModel
-            {
-                Id = 0,
-                Code = string.Empty,
-                Name = "Tất cả"
-            });
-
-            foreach (var status in statuses)
-            {
-                Statuses.Add(status);
-            }
-
-            SelectedStatusId = 0;
-
+            await LoadLookupsAsync();
             await SearchAsync();
         }
         catch (Exception ex)
@@ -413,6 +342,138 @@ public class DocumentListViewModel : BaseViewModel
         {
             IsLoading = false;
         }
+    }
+
+    private async Task LoadLookupsAsync()
+    {
+        try
+        {
+            await LoadCategoriesAsync();
+            await LoadStatusesAsync();
+
+            SelectedCategoryId ??= 0;
+            SelectedStatusId ??= 0;
+        }
+        catch (Exception ex)
+        {
+            LoadFallbackLookups();
+
+            _notificationService.ShowWarning(
+                "Không thể tải danh mục từ API. Đã dùng danh mục mặc định. Chi tiết: " + ex.Message,
+                "Danh mục");
+        }
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        var categories = await _apiService.GetCategoriesAsync();
+
+        Categories.Clear();
+
+        Categories.Add(new LookupItemDto
+        {
+            Id = 0,
+            Code = string.Empty,
+            Name = "Tất cả"
+        });
+
+        foreach (var category in categories.OrderBy(x => x.Name))
+        {
+            Categories.Add(category);
+        }
+    }
+
+    private async Task LoadStatusesAsync()
+    {
+        var statuses = await _apiService.GetStatusesAsync();
+
+        Statuses.Clear();
+
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 0,
+            Code = string.Empty,
+            Name = "Tất cả"
+        });
+
+        foreach (var status in statuses.OrderBy(x => x.Id))
+        {
+            Statuses.Add(status);
+        }
+
+        if (Statuses.Count == 1)
+        {
+            AddFallbackStatuses();
+        }
+    }
+
+    private void LoadFallbackLookups()
+    {
+        Categories.Clear();
+        Categories.Add(new LookupItemDto
+        {
+            Id = 0,
+            Code = string.Empty,
+            Name = "Tất cả"
+        });
+
+        Statuses.Clear();
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 0,
+            Code = string.Empty,
+            Name = "Tất cả"
+        });
+
+        AddFallbackStatuses();
+
+        SelectedCategoryId = 0;
+        SelectedStatusId = 0;
+    }
+
+    private void AddFallbackStatuses()
+    {
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 1,
+            Code = "DRAFT",
+            Name = "Bản nháp"
+        });
+
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 2,
+            Code = "PENDING_APPROVAL",
+            Name = "Chờ duyệt"
+        });
+
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 3,
+            Code = "APPROVED",
+            Name = "Đang xử lý"
+        });
+
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 4,
+            Code = "ISSUED",
+            Name = "Đã ban hành"
+        });
+
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 5,
+            Code = "ARCHIVED",
+            Name = "Đã lưu trữ"
+        });
+
+        Statuses.Add(new LookupItemDto
+        {
+            Id = 6,
+            Code = "REJECTED",
+            Name = "Bị từ chối"
+        });
     }
 
     private async Task DebouncedSearchAsync()
@@ -444,7 +505,16 @@ public class DocumentListViewModel : BaseViewModel
         try
         {
             IsLoading = true;
-            StatusMessage = "Đang tải dữ liệu...";
+            StatusMessage = "Đang tải dữ liệu từ API...";
+
+            if (!CanViewDocument)
+            {
+                Documents.Clear();
+                TotalCount = 0;
+                TotalPages = 0;
+                StatusMessage = "Bạn không có quyền xem danh sách văn bản.";
+                return;
+            }
 
             if (FromDate.HasValue && ToDate.HasValue && FromDate > ToDate)
             {
@@ -457,23 +527,18 @@ public class DocumentListViewModel : BaseViewModel
                 return;
             }
 
-            var request = new DocumentSearchRequest
-            {
-                Keyword = SearchText,
-                CategoryId = SelectedCategoryId,
-                StatusId = SelectedStatusId is null or 0 ? null : SelectedStatusId,
-                UrgencyLevel = string.IsNullOrWhiteSpace(SelectedUrgency)
-                    ? null
-                    : SelectedUrgency,
-                FromDate = FromDate?.ToString("yyyy-MM-dd"),
-                ToDate = ToDate?.ToString("yyyy-MM-dd"),
-                PageNumber = PageNumber <= 0 ? 1 : PageNumber,
-                PageSize = PageSize <= 0 ? 100 : PageSize
-            };
-
-            var result = await _documentService.SearchPagedAsync(request);
+            var result = await _apiService.SearchDocumentsAsync(
+                SearchText,
+                SelectedCategoryId,
+                SelectedStatusId,
+                SelectedUrgency,
+                FromDate,
+                ToDate,
+                PageNumber,
+                PageSize);
 
             Documents.Clear();
+
             foreach (var item in result.Items)
             {
                 Documents.Add(item);
@@ -482,17 +547,24 @@ public class DocumentListViewModel : BaseViewModel
             TotalCount = result.TotalCount;
             TotalPages = result.TotalPages;
 
-            StatusMessage = result.TotalCount == 0
+            if (TotalPages > 0 && PageNumber > TotalPages)
+            {
+                PageNumber = TotalPages;
+                await SearchAsync();
+                return;
+            }
+
+            StatusMessage = TotalCount == 0
                 ? "Không tìm thấy dữ liệu"
-                : $"Trang {result.PageNumber}/{result.TotalPages} • {result.TotalCount} văn bản";
+                : $"Trang {PageNumber}/{TotalPages} • {TotalCount} văn bản";
         }
         catch (Exception ex)
         {
-            StatusMessage = "Lỗi tải dữ liệu";
+            StatusMessage = "Lỗi tải dữ liệu từ API";
 
             _notificationService.ShowError(
-                "Lỗi tải dữ liệu: " + ex.Message,
-                "Lỗi");
+                "Lỗi gọi API: " + ex.Message,
+                "Lỗi API");
         }
         finally
         {
@@ -505,12 +577,61 @@ public class DocumentListViewModel : BaseViewModel
         }
     }
 
+    public async Task OpenSelectedDocumentAsync()
+    {
+        if (SelectedDocument == null)
+        {
+            _notificationService.ShowWarning(
+                "Vui lòng chọn một văn bản để mở.",
+                "Chưa chọn văn bản");
+            return;
+        }
+
+        if (!CanViewDocument)
+        {
+            _notificationService.ShowWarning(
+                "Bạn không có quyền xem văn bản.",
+                "Từ chối truy cập");
+            return;
+        }
+
+        try
+        {
+            var vm = _serviceProvider.GetRequiredService<DocumentFormViewModel>();
+            await vm.LoadDocumentAsync(SelectedDocument.Id);
+
+            vm.ApplyAccessMode(isReadOnly: !CanEditDocument);
+
+            var win = new Views.DocumentFormWindow(vm)
+            {
+                Owner = Application.Current?.MainWindow
+            };
+
+            var result = win.ShowDialog();
+
+            if (result == true)
+            {
+                await SearchAsync();
+
+                _notificationService.ShowSuccess(
+                    "Danh sách đã được cập nhật.",
+                    "Cập nhật dữ liệu");
+            }
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                "Không thể mở văn bản: " + ex.Message,
+                "Lỗi");
+        }
+    }
+
     private void OpenCreateForm()
     {
         if (!CanCreateDocument)
         {
             _notificationService.ShowWarning(
-                "Bạn không có quyền tạo mới văn bản.",
+                "Bạn không có quyền tạo văn bản.",
                 "Từ chối thao tác");
             return;
         }
@@ -518,11 +639,12 @@ public class DocumentListViewModel : BaseViewModel
         try
         {
             var vm = _serviceProvider.GetRequiredService<DocumentFormViewModel>();
+            vm.ResetForCreate();
             vm.ApplyAccessMode(isReadOnly: false);
 
             var win = new Views.DocumentFormWindow(vm)
             {
-                Owner = System.Windows.Application.Current?.MainWindow
+                Owner = Application.Current?.MainWindow
             };
 
             if (win.ShowDialog() == true)
@@ -627,10 +749,4 @@ public class DocumentListViewModel : BaseViewModel
             IsLoading = false;
         }
     }
-}
-
-public class OptionItem
-{
-    public string Text { get; set; } = string.Empty;
-    public string? Value { get; set; }
 }

@@ -1,46 +1,52 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using DocumentManagement.Application.Models;
 using DocumentManagement.Wpf.ViewModels;
 
-namespace DocumentManagement.Wpf.Views
+namespace DocumentManagement.Wpf.Views;
+
+public partial class DashboardView : UserControl
 {
-    public partial class DashboardView : UserControl
+    private bool _isLoaded;
+
+    public DashboardView()
     {
-        private bool _isLoaded;
+        InitializeComponent();
+        Loaded += DashboardView_Loaded;
+    }
 
-        public DashboardView()
+    private async void DashboardView_Loaded(object sender, RoutedEventArgs e)
+    {
+        if (_isLoaded)
         {
-            InitializeComponent();
-            Loaded += DashboardView_Loaded;
+            return;
         }
 
-        private async void DashboardView_Loaded(object sender, RoutedEventArgs e)
+        _isLoaded = true;
+
+        if (DataContext is DashboardViewModel vm)
         {
-            if (_isLoaded)
-                return;
+            await vm.LoadAsync();
+        }
+    }
 
-            _isLoaded = true;
-
-            if (DataContext is DashboardViewModel vm)
-            {
-                await vm.LoadAsync();
-            }
+    private async void RecentDocumentsGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is not DataGrid grid)
+        {
+            return;
         }
 
-        private async void RecentDocumentsGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        if (grid.SelectedItem is not RecentDocumentItem item)
         {
-            if (sender is not DataGrid grid)
-                return;
-
-            if (grid.SelectedItem is not RecentDocumentItem item)
-                return;
-
-            if (System.Windows.Application.Current?.MainWindow?.DataContext is not MainViewModel mainVm)
-                return;
-
-            await mainVm.OpenDocumentAsync(item.Id);
+            return;
         }
+
+        if (Application.Current?.MainWindow?.DataContext is not MainViewModel mainVm)
+        {
+            return;
+        }
+
+        await mainVm.OpenDocumentAsync(item.Id);
     }
 }

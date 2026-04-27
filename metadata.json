@@ -1,6 +1,0 @@
-{
-  "name": "Hệ thống Quản lý Văn bản .NET 8 WPF",
-  "description": "Phần mềm Desktop 3 lớp (Domain, Application, Infrastructure) sử dụng .NET 8, WPF và Microsoft.Data.Sqlite với FTS5.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["dotnet-8", "wpf", "sqlite-fts5"]
-}

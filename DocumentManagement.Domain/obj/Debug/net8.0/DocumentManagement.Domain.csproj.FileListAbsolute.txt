@@ -5,6 +5,7 @@ D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\DocumentManagement.Do
 D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\DocumentManagement.Domain.AssemblyInfoInputs.cache
 D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\DocumentManagement.Domain.AssemblyInfo.cs
 D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\DocumentManagement.Domain.csproj.CoreCompileInputs.cache
+D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\DocumentManagement.Domain.sourcelink.json
 D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\DocumentManagement.Domain.dll
 D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\refint\DocumentManagement.Domain.dll
 D:\QuanLyVanBan\DocumentManagement.Domain\obj\Debug\net8.0\DocumentManagement.Domain.pdb

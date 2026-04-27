@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Models;
 using DocumentManagement.Domain.Entities;
@@ -36,9 +32,31 @@ public class DocumentService : IDocumentService
         return items.Where(x => x.IsActive);
     }
 
-    public Task<PagedResult<Document>> SearchPagedAsync(DocumentSearchRequest request)
+    public async Task<PagedResult<Document>> SearchPagedAsync(DocumentSearchRequest request)
     {
-        return _documentRepository.SearchPagedAsync(request);
+        var allItems = await _documentRepository.SearchAsync(request);
+
+        var activeItems = allItems
+            .Where(x => x.IsActive)
+            .ToList();
+
+        var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize <= 0 ? 100 : request.PageSize;
+
+        var totalCount = activeItems.Count;
+
+        var pagedItems = activeItems
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToList();
+
+        return new PagedResult<Document>
+        {
+            Items = pagedItems,
+            TotalCount = totalCount,
+            PageNumber = pageNumber,
+            PageSize = pageSize
+        };
     }
 
     public Task<Document?> GetByIdAsync(long id)
@@ -48,10 +66,15 @@ public class DocumentService : IDocumentService
 
     public async Task<long> CreateAsync(Document document)
     {
-        var username = GetCurrentUsername();
+        var username = GetCurrentUsername(document.CreatedBy);
 
         document.SetCreated(DateTime.UtcNow, username);
         document.IsActive = true;
+
+        if (document.StatusId is null or <= 0)
+        {
+            document.StatusId = 1; // Bản nháp
+        }
 
         var id = await _documentRepository.CreateAsync(document);
 
@@ -66,25 +89,59 @@ public class DocumentService : IDocumentService
 
     public async Task UpdateAsync(Document document)
     {
+        var existing = await GetRequiredActiveDocumentAsync(document.Id);
         var username = GetCurrentUsername(document.UpdatedBy);
 
-        document.SetUpdated(DateTime.UtcNow, username);
+        existing.DocumentType = document.DocumentType;
+        existing.DocumentNumber = document.DocumentNumber;
+        existing.ReferenceNumber = document.ReferenceNumber;
+        existing.Title = document.Title;
+        existing.Summary = document.Summary;
+        existing.ContentText = document.ContentText;
+        existing.IssueDate = document.IssueDate;
+        existing.ReceivedDate = document.ReceivedDate;
+        existing.DueDate = document.DueDate;
+        existing.SenderName = document.SenderName;
+        existing.ReceiverName = document.ReceiverName;
+        existing.SignerName = document.SignerName;
+        existing.CategoryId = document.CategoryId;
+        existing.StatusId = document.StatusId;
+        existing.ConfidentialityLevel = document.ConfidentialityLevel;
+        existing.UrgencyLevel = document.UrgencyLevel;
+        existing.ProcessingDepartment = document.ProcessingDepartment;
+        existing.AssignedTo = document.AssignedTo;
+        existing.Notes = document.Notes;
 
-        var result = await _documentRepository.UpdateAsync(document);
+        existing.SetUpdated(DateTime.UtcNow, username);
+
+        var result = await _documentRepository.UpdateAsync(existing);
 
         if (!result)
+        {
             return;
+        }
 
         await AddHistoryAsync(
-            document.Id,
+            existing.Id,
             "UPDATE",
-            $"Cập nhật văn bản số: {document.DocumentNumber}",
+            $"Cập nhật văn bản số: {existing.DocumentNumber}",
             username);
     }
 
     public async Task SoftDeleteAsync(long id)
     {
-        var existing = await GetRequiredDocumentAsync(id);
+        var existing = await _documentRepository.GetByIdAsync(id);
+
+        if (existing == null)
+        {
+            return;
+        }
+
+        if (!existing.IsActive)
+        {
+            return;
+        }
+
         var username = GetCurrentUsername();
 
         existing.Deactivate(username);
@@ -92,7 +149,9 @@ public class DocumentService : IDocumentService
         var result = await _documentRepository.UpdateAsync(existing);
 
         if (!result)
+        {
             return;
+        }
 
         await AddHistoryAsync(
             id,
@@ -103,62 +162,68 @@ public class DocumentService : IDocumentService
 
     public async Task SubmitForApprovalAsync(long id)
     {
-        var document = await GetRequiredDocumentAsync(id);
+        var document = await GetRequiredActiveDocumentAsync(id);
         var username = GetCurrentUsername();
 
-        document.SubmitForApproval(username);
+        document.MarkAsIssued(username);
 
         var result = await _documentRepository.UpdateAsync(document);
 
         if (!result)
+        {
             return;
+        }
 
         await AddHistoryAsync(
             id,
-            "SUBMIT_FOR_APPROVAL",
-            $"Gửi duyệt văn bản số: {document.DocumentNumber}",
+            "ISSUE",
+            $"Ghi nhận văn bản đã ban hành: {document.DocumentNumber}",
             username);
     }
 
     public async Task ApproveAsync(long id)
     {
-        var document = await GetRequiredDocumentAsync(id);
+        var document = await GetRequiredActiveDocumentAsync(id);
         var username = GetCurrentUsername();
 
-        document.Approve(username);
+        document.MarkAsIssued(username);
 
         var result = await _documentRepository.UpdateAsync(document);
 
         if (!result)
+        {
             return;
+        }
 
         await AddHistoryAsync(
             id,
-            "APPROVE",
-            $"Phê duyệt văn bản số: {document.DocumentNumber}",
+            "ISSUE",
+            $"Ghi nhận văn bản đã ban hành: {document.DocumentNumber}",
             username);
     }
 
     public async Task RejectAsync(long id, string? reason)
     {
-        var document = await GetRequiredDocumentAsync(id);
+        var document = await GetRequiredActiveDocumentAsync(id);
         var username = GetCurrentUsername();
 
-        document.Reject(username, reason);
+        document.Notes = string.IsNullOrWhiteSpace(reason)
+            ? document.Notes
+            : reason;
+
+        document.SetUpdated(DateTime.UtcNow, username);
 
         var result = await _documentRepository.UpdateAsync(document);
 
         if (!result)
+        {
             return;
-
-        var message = string.IsNullOrWhiteSpace(reason)
-            ? $"Từ chối văn bản số: {document.DocumentNumber}"
-            : $"Từ chối văn bản số: {document.DocumentNumber}. Lý do: {reason}";
+        }
 
         await AddHistoryAsync(
             id,
-            "REJECT",
-            message,
+            "NOTE",
+            $"Cập nhật ghi chú văn bản số: {document.DocumentNumber}",
             username);
     }
 
@@ -172,15 +237,19 @@ public class DocumentService : IDocumentService
         return _documentRepository.GetStatusesAsync();
     }
 
-    private async Task<Document> GetRequiredDocumentAsync(long id)
+    private async Task<Document> GetRequiredActiveDocumentAsync(long id)
     {
         var document = await _documentRepository.GetByIdAsync(id);
 
         if (document == null)
+        {
             throw new InvalidOperationException("Không tìm thấy văn bản.");
+        }
 
         if (!document.IsActive)
+        {
             throw new InvalidOperationException("Văn bản đã bị xóa.");
+        }
 
         return document;
     }

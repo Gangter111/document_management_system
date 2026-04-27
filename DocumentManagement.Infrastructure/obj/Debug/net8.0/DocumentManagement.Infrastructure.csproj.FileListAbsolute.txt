@@ -10,6 +10,7 @@ D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManag
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.AssemblyInfoInputs.cache
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.AssemblyInfo.cs
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.csproj.CoreCompileInputs.cache
+D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.sourcelink.json
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\Document.A48CA7E9.Up2Date
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.dll
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\refint\DocumentManagement.Infrastructure.dll
