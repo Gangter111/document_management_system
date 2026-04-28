@@ -1,4 +1,4 @@
-using DocumentManagement.Application.Models;
+﻿using DocumentManagement.Application.Models;
 
 namespace DocumentManagement.Application.Interfaces;
 

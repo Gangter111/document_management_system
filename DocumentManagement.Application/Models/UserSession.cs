@@ -1,4 +1,4 @@
-namespace DocumentManagement.Application.Models;
+﻿namespace DocumentManagement.Application.Models;
 
 public class UserSession
 {
@@ -7,6 +7,6 @@ public class UserSession
     public string DisplayName { get; set; } = string.Empty;
     public List<string> Roles { get; set; } = new();
     public bool MustChangePassword { get; set; }
-    
+
     public bool IsAdmin => Roles.Contains("ADMIN");
 }

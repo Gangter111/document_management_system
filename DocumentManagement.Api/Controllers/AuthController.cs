@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using DocumentManagement.Api.Services;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Auth;
 using Microsoft.AspNetCore.Mvc;
@@ -10,10 +11,12 @@ namespace DocumentManagement.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
+    private readonly JwtService _jwtService;
 
-    public AuthController(IAuthService authService)
+    public AuthController(IAuthService authService, JwtService jwtService)
     {
         _authService = authService;
+        _jwtService = jwtService;
     }
 
     [HttpPost("login")]
@@ -61,7 +64,9 @@ public class AuthController : ControllerBase
 
         var role = GetRoleValue(userSession)
             ?? GetStringValue(userSession, "Role")
-            ?? "User";
+            ?? "STAFF";
+
+        var token = _jwtService.GenerateToken(userId, username, fullName, role);
 
         return Ok(new LoginResponse
         {
@@ -70,7 +75,8 @@ public class AuthController : ControllerBase
             UserId = userId,
             Username = username,
             FullName = fullName,
-            Role = role
+            Role = role,
+            Token = token
         });
     }
 

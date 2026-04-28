@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("DocumentManagement.Wpf")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+27b143180c2eb50773708d617544754001a93918")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+da16f081a96e7a0b530540cdec48a95ae1f1f0f1")]
 [assembly: System.Reflection.AssemblyProductAttribute("DocumentManagement.Wpf")]
 [assembly: System.Reflection.AssemblyTitleAttribute("DocumentManagement.Wpf")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

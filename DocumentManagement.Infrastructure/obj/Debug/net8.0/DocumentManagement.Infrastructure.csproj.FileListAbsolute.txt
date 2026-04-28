@@ -1,4 +1,5 @@
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\bin\Debug\net8.0\DocumentManagement.Infrastructure.deps.json
+D:\QuanLyVanBan\DocumentManagement.Infrastructure\bin\Debug\net8.0\DocumentManagement.Infrastructure.runtimeconfig.json
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\bin\Debug\net8.0\DocumentManagement.Infrastructure.dll
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\bin\Debug\net8.0\DocumentManagement.Infrastructure.pdb
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\bin\Debug\net8.0\DocumentManagement.Application.dll
@@ -15,4 +16,5 @@ D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\Document.A48C
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.dll
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\refint\DocumentManagement.Infrastructure.dll
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.pdb
+D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\DocumentManagement.Infrastructure.genruntimeconfig.cache
 D:\QuanLyVanBan\DocumentManagement.Infrastructure\obj\Debug\net8.0\ref\DocumentManagement.Infrastructure.dll

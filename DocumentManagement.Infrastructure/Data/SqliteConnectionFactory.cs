@@ -2,7 +2,7 @@ using Microsoft.Data.Sqlite;
 
 namespace DocumentManagement.Infrastructure.Data;
 
-public sealed class SqliteConnectionFactory
+public class SqliteConnectionFactory
 {
     private readonly string _connectionString;
 

@@ -9,56 +9,166 @@ public static class DatabaseMigrator
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
 
-        AddColumnIfMissing(connection, "documents", "reference_number", "TEXT");
-        AddColumnIfMissing(connection, "documents", "summary", "TEXT");
-        AddColumnIfMissing(connection, "documents", "content_text", "TEXT");
-        AddColumnIfMissing(connection, "documents", "received_date", "TEXT");
-        AddColumnIfMissing(connection, "documents", "due_date", "TEXT");
-        AddColumnIfMissing(connection, "documents", "sender_name", "TEXT");
-        AddColumnIfMissing(connection, "documents", "receiver_name", "TEXT");
-        AddColumnIfMissing(connection, "documents", "signer_name", "TEXT");
-        AddColumnIfMissing(connection, "documents", "is_expired", "INTEGER DEFAULT 0");
-        AddColumnIfMissing(connection, "documents", "ocr_status", "TEXT DEFAULT 'PENDING'");
-        AddColumnIfMissing(connection, "documents", "created_by", "TEXT");
-        AddColumnIfMissing(connection, "documents", "updated_by", "TEXT");
+        EnsureDocumentsTable(connection);
+        EnsureCategoriesTable(connection);
+        EnsureStatusesTable(connection);
+        EnsureHistoryTable(connection);
+        EnsureAuditLogTable(connection);
+
+        SeedCategories(connection);
+        SeedStatuses(connection);
     }
 
-    private static void AddColumnIfMissing(
-        SqliteConnection connection,
-        string tableName,
-        string columnName,
-        string columnType)
+    private static void EnsureDocumentsTable(SqliteConnection connection)
     {
-        if (ColumnExists(connection, tableName, columnName))
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = @"
+CREATE TABLE IF NOT EXISTS documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_type TEXT,
+    document_number TEXT NOT NULL,
+    reference_number TEXT,
+    title TEXT NOT NULL,
+    summary TEXT,
+    content_text TEXT,
+    issue_date TEXT,
+    received_date TEXT,
+    due_date TEXT,
+    sender_name TEXT,
+    receiver_name TEXT,
+    signer_name TEXT,
+    category_id INTEGER,
+    status_id INTEGER,
+    confidentiality_level TEXT,
+    urgency_level TEXT,
+    processing_department TEXT,
+    assigned_to TEXT,
+    notes TEXT,
+    is_active INTEGER NOT NULL DEFAULT 1,
+    is_expired INTEGER NOT NULL DEFAULT 0,
+    ocr_status TEXT,
+    created_at TEXT,
+    updated_at TEXT,
+    created_by TEXT,
+    updated_by TEXT
+);";
+
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void EnsureCategoriesTable(SqliteConnection connection)
+    {
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = @"
+CREATE TABLE IF NOT EXISTS document_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1
+);";
+
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void EnsureStatusesTable(SqliteConnection connection)
+    {
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = @"
+CREATE TABLE IF NOT EXISTS document_statuses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    is_active INTEGER NOT NULL DEFAULT 1
+);";
+
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void EnsureHistoryTable(SqliteConnection connection)
+    {
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = @"
+CREATE TABLE IF NOT EXISTS document_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    document_id INTEGER,
+    action_type TEXT NOT NULL,
+    action_description TEXT,
+    old_value TEXT,
+    new_value TEXT,
+    action_by TEXT,
+    action_at TEXT NOT NULL
+);";
+
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void EnsureAuditLogTable(SqliteConnection connection)
+    {
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = @"
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    entity_name TEXT NOT NULL,
+    entity_id INTEGER NOT NULL,
+    action TEXT NOT NULL,
+    old_values TEXT,
+    new_values TEXT,
+    username TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);";
+
+        cmd.ExecuteNonQuery();
+    }
+
+    private static void SeedCategories(SqliteConnection connection)
+    {
+        using var countCmd = connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM document_categories;";
+
+        var count = Convert.ToInt32(countCmd.ExecuteScalar() ?? 0);
+
+        if (count > 0)
         {
             return;
         }
 
-        using var command = connection.CreateCommand();
-        command.CommandText = $"ALTER TABLE {tableName} ADD COLUMN {columnName} {columnType};";
-        command.ExecuteNonQuery();
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = @"
+INSERT INTO document_categories (id, name, is_active) VALUES
+(1, 'Công văn', 1),
+(2, 'Quyết định', 1),
+(3, 'Thông báo', 1),
+(4, 'Báo cáo', 1);";
+
+        cmd.ExecuteNonQuery();
     }
 
-    private static bool ColumnExists(
-        SqliteConnection connection,
-        string tableName,
-        string columnName)
+    private static void SeedStatuses(SqliteConnection connection)
     {
-        using var command = connection.CreateCommand();
-        command.CommandText = $"PRAGMA table_info({tableName});";
+        using var countCmd = connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM document_statuses;";
 
-        using var reader = command.ExecuteReader();
+        var count = Convert.ToInt32(countCmd.ExecuteScalar() ?? 0);
 
-        while (reader.Read())
+        if (count > 0)
         {
-            var name = reader["name"]?.ToString();
-
-            if (string.Equals(name, columnName, StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
+            return;
         }
 
-        return false;
+        using var cmd = connection.CreateCommand();
+
+        cmd.CommandText = @"
+INSERT INTO document_statuses (id, name, is_active) VALUES
+(1, 'Bản nháp', 1),
+(2, 'Chờ duyệt', 1),
+(3, 'Đã ban hành', 1),
+(4, 'Đang xử lý', 1),
+(5, 'Hoàn thành', 1);";
+
+        cmd.ExecuteNonQuery();
     }
 }

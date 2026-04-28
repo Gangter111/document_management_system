@@ -1,17 +1,18 @@
-﻿using DocumentManagement.Application.Interfaces;
+﻿using System.Security.Claims;
+using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Common;
 using DocumentManagement.Contracts.Documents;
 using DocumentManagement.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocumentManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class DocumentsController : ControllerBase
 {
-    private const string RoleHeaderName = "X-User-Role";
-
     private readonly IDocumentService _documentService;
 
     public DocumentsController(IDocumentService documentService)
@@ -105,6 +106,8 @@ public class DocumentsController : ControllerBase
         }
 
         var document = ToEntity(request);
+        document.CreatedBy = GetCurrentUsername();
+
         var id = await _documentService.CreateAsync(document);
 
         return CreatedAtAction(nameof(GetById), new { id }, id);
@@ -143,6 +146,7 @@ public class DocumentsController : ControllerBase
         }
 
         ApplyUpdate(existing, request);
+        existing.UpdatedBy = GetCurrentUsername();
 
         await _documentService.UpdateAsync(existing);
 
@@ -229,28 +233,35 @@ public class DocumentsController : ControllerBase
 
     private string GetCurrentRole()
     {
-        if (!Request.Headers.TryGetValue(RoleHeaderName, out var values))
-        {
-            return string.Empty;
-        }
+        return User.FindFirst(ClaimTypes.Role)?.Value
+               ?? User.FindFirst("role")?.Value
+               ?? string.Empty;
+    }
 
-        return values.FirstOrDefault()?.Trim() ?? string.Empty;
+    private string GetCurrentUsername()
+    {
+        return User.FindFirst(ClaimTypes.Name)?.Value
+               ?? User.Identity?.Name
+               ?? "system";
     }
 
     private static bool IsAdmin(string role)
     {
-        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
+        return string.Equals(role, "ADMIN", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
                || string.Equals(role, "Administrator", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsManager(string role)
     {
-        return string.Equals(role, "Manager", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(role, "MANAGER", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(role, "Manager", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsStaff(string role)
     {
-        return string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase);
+        return string.Equals(role, "STAFF", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase);
     }
 
     private static DocumentDto ToDto(Document document)

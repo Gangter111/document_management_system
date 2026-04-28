@@ -1,0 +1,109 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '18.x'
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Restore dependencies
+      run: dotnet restore DocumentManagement.sln
+      
+    - name: Build solution
+      run: dotnet build DocumentManagement.sln --configuration Release --no-restore
+      
+    - name: Run tests
+      run: dotnet test DocumentManagement.sln --configuration Release --no-build --verbosity normal --collect:"XPlat Code Coverage"
+      
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: failure()
+      with:
+        name: test-results
+        path: |
+          **/TestResults/
+          **/*.trx
+          
+  lint:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Install dotnet-format
+      run: dotnet tool install --global dotnet-format
+      
+    - name: Run format check
+      run: dotnet format --verify-no-changes --verbosity diagnostic
+      continue-on-error: true
+
+  package:
+    needs: build
+    runs-on: windows-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+        
+    - name: Publish API
+      run: |
+        dotnet publish DocumentManagement.Api/DocumentManagement.Api.csproj -c Release -o ./publish/api
+        
+    - name: Publish WPF
+      run: |
+        dotnet publish DocumentManagement.Wpf/DocumentManagement.Wpf.csproj -c Release -o ./publish/wpf --self-contained false
+        
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: publish-artifacts
+        path: |
+          publish/
+          
+  deploy:
+    needs: package
+    runs-on: windows-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: publish-artifacts
+        path: ./publish
+        
+    - name: Deploy to server
+      run: |
+        Write-Host "Deployment would happen here"
+        # Add your deployment commands here
+        # Example: Copy files to server, restart services, etc.

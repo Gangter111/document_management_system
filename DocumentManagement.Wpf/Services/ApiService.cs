@@ -36,6 +36,17 @@ public class ApiService
         };
     }
 
+    public void SetToken(string? token)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization = null;
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            _httpClient.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+        }
+    }
+
     public void SetCurrentRole(string? role)
     {
         _httpClient.DefaultRequestHeaders.Remove("X-User-Role");
