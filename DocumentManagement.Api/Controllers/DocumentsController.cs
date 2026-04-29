@@ -14,10 +14,14 @@ namespace DocumentManagement.Api.Controllers;
 public class DocumentsController : ControllerBase
 {
     private readonly IDocumentService _documentService;
+    private readonly IOcrService? _ocrService;
 
-    public DocumentsController(IDocumentService documentService)
+    public DocumentsController(
+        IDocumentService documentService,
+        IOcrService? ocrService = null)
     {
         _documentService = documentService;
+        _ocrService = ocrService;
     }
 
     [HttpGet]
@@ -111,6 +115,74 @@ public class DocumentsController : ControllerBase
         var id = await _documentService.CreateAsync(document);
 
         return CreatedAtAction(nameof(GetById), new { id }, id);
+    }
+
+    [HttpPost("extract-pdf")]
+    [RequestSizeLimit(20 * 1024 * 1024)]
+    public async Task<ActionResult<AutoFillDocumentResultDto>> ExtractPdf(IFormFile file)
+    {
+        var permissionResult = RequireCreatePermission();
+
+        if (permissionResult != null)
+        {
+            return permissionResult;
+        }
+
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("Vui lòng chọn file PDF.");
+        }
+
+        if (!string.Equals(Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest("Hệ thống chỉ hỗ trợ file PDF.");
+        }
+
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "DocumentManagement", "pdf-extract");
+        Directory.CreateDirectory(tempDirectory);
+
+        var tempPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}.pdf");
+
+        try
+        {
+            await using (var stream = System.IO.File.Create(tempPath))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            if (_ocrService == null)
+            {
+                return StatusCode(
+                    StatusCodes.Status503ServiceUnavailable,
+                    "Chức năng trích xuất PDF chưa được cấu hình trên máy chủ.");
+            }
+
+            var result = await _ocrService.ExtractAndParseAsync(tempPath);
+
+            return Ok(new AutoFillDocumentResultDto
+            {
+                DocumentNumber = result.DocumentNumber,
+                Title = result.Title,
+                Summary = result.Summary,
+                IssueDate = result.IssueDate,
+                SenderName = result.SenderName,
+                ReceiverName = result.ReceiverName,
+                UrgencyLevel = result.UrgencyLevel,
+                ContentText = result.ContentText,
+                IsFromOcr = result.IsFromOcr
+            });
+        }
+        finally
+        {
+            try
+            {
+                System.IO.File.Delete(tempPath);
+            }
+            catch
+            {
+                // Best effort cleanup for temporary upload files.
+            }
+        }
     }
 
     [HttpPut("{id:long}")]

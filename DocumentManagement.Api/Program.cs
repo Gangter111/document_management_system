@@ -7,6 +7,7 @@ using DocumentManagement.Infrastructure.Data;
 using DocumentManagement.Infrastructure.Repositories;
 using DocumentManagement.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.IdentityModel.Tokens;
@@ -73,6 +74,9 @@ else
 // =======================
 builder.Services.AddControllers();
 builder.Services
+    .AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(rootPath, "keys")));
+builder.Services
     .AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>("database");
 
@@ -120,6 +124,7 @@ builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+builder.Services.AddScoped<IOcrService, PdfExtractionService>();
 builder.Services.AddSingleton<IFileStorageService>(_ =>
     new LocalFileStorageService(Path.Combine(rootPath, "storage", "attachments")));
 

@@ -2,6 +2,12 @@
 
 Huong dan nay danh cho ban phat hanh noi bo hien tai cua QuanLyVanBan / DocumentManagement.
 
+Neu nguoi van hanh khong phai IT, doc ban huong dan don gian hon truoc:
+
+```text
+docs/HUONG_DAN_VAN_HANH_THUC_TE.md
+```
+
 Kien truc trien khai:
 
 - WPF client cai tren may nguoi dung.
@@ -36,13 +42,27 @@ C:\QuanLyVanBan\Backups
 
 ## 2. Build Goi API Server
 
-Chay tren may dev:
+### SQLite pilot
 
 ```powershell
 cd D:\QuanLyVanBan
 powershell -ExecutionPolicy Bypass -File .\tools\publish-api.ps1 `
   -Urls http://0.0.0.0:5033 `
+  -DatabaseProvider Sqlite `
   -DatabasePath database/app.db `
+  -JwtSecret CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026
+```
+
+### SQL Server production
+
+Dung cho rollout chinh thuc 50-70 user:
+
+```powershell
+cd D:\QuanLyVanBan
+powershell -ExecutionPolicy Bypass -File .\tools\publish-api.ps1 `
+  -Urls http://0.0.0.0:5033 `
+  -DatabaseProvider SqlServer `
+  -ConnectionString "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True" `
   -JwtSecret CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026
 ```
 
@@ -72,7 +92,9 @@ Cac gia tri quan trong:
 ```json
 {
   "Database": {
-    "Path": "database/app.db"
+    "Provider": "Sqlite",
+    "Path": "database/app.db",
+    "ConnectionString": "Server=localhost\\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True"
   },
   "Jwt": {
     "Issuer": "DocumentManagement",
@@ -91,6 +113,19 @@ Cac gia tri quan trong:
 ```
 
 Bat buoc doi `Jwt:Secret` khi cai that. Secret toi thieu 32 ky tu, nen dung chuoi dai va rieng cho tung cong ty.
+
+Neu dung SQL Server, dat:
+
+```json
+{
+  "Database": {
+    "Provider": "SqlServer",
+    "ConnectionString": "Server=localhost\\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True"
+  }
+}
+```
+
+Tai khoan chay API service phai co quyen doc/ghi database. Neu dung SQL authentication, thay connection string bang user rieng cho ung dung, khong dung tai khoan `sa`.
 
 ## 4. Cai API Thanh Windows Service
 
@@ -255,7 +290,53 @@ Copy-Item C:\QuanLyVanBan\Backups\app-YYYYMMDD-HHMMSS.db C:\QuanLyVanBan\Api\dat
 Start-Service DocumentManagement.Api
 ```
 
-## 10. Kiem Tra Sau Trien Khai
+## 10. Backup SQL Server Production
+
+Thu muc backup khuyen dung:
+
+```text
+C:\QuanLyVanBan\Backups
+```
+
+Chay backup ngay lap tuc:
+
+```powershell
+cd D:\QuanLyVanBan
+powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlserver.ps1 `
+  -ConnectionString "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True" `
+  -BackupDirectory C:\QuanLyVanBan\Backups `
+  -RetentionDays 30
+```
+
+Cai lich backup hang ngay luc 23:00:
+
+```powershell
+cd D:\QuanLyVanBan
+powershell -ExecutionPolicy Bypass -File .\tools\install-sqlserver-backup-task.ps1 `
+  -ConnectionString "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True" `
+  -BackupDirectory C:\QuanLyVanBan\Backups `
+  -Time 23:00 `
+  -RetentionDays 30
+```
+
+Restore tu file `.bak`:
+
+```powershell
+cd D:\QuanLyVanBan
+powershell -ExecutionPolicy Bypass -File .\tools\restore-sqlserver.ps1 `
+  -ConnectionString "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True" `
+  -BackupPath C:\QuanLyVanBan\Backups\DocumentManagementDb-YYYYMMDD-HHMMSS.bak `
+  -ServiceName DocumentManagement.Api
+```
+
+Luu y quan trong:
+
+- SQL Server service account phai co quyen ghi vao `C:\QuanLyVanBan\Backups`.
+- Test restore tren may khac moi tuan truoc khi rollout rong.
+- Voi SQL Server production, uu tien backup bang SQL Server Agent neu dung ban Standard; voi SQL Server Express co the dung Task Scheduler script tren.
+- Neu da xac nhan SQL Server ho tro backup compression, co the them tham so `-Compress` vao lenh backup/schedule.
+
+## 11. Kiem Tra Sau Trien Khai
 
 Tu may dev hoac may trong LAN:
 
@@ -280,7 +361,7 @@ cd D:\QuanLyVanBan
 powershell -ExecutionPolicy Bypass -File .\tools\session-close.ps1
 ```
 
-## 11. Log He Thong
+## 12. Log He Thong
 
 API ghi log rolling theo ngay trong thu muc:
 
@@ -290,7 +371,7 @@ C:\QuanLyVanBan\Api\logs
 
 Khi co loi 500, API tra ve JSON ngan gon cho client va ghi chi tiet exception vao file log server.
 
-## 12. Checklist Rollout Noi Bo
+## 13. Checklist Rollout Noi Bo
 
 Server:
 
@@ -317,7 +398,7 @@ Van hanh:
 - Co noi ghi nhan loi nguoi dung.
 - Chot SQL Server Express/Standard cho quy mo 50-70 user.
 
-## 13. Gioi Han Ban Hien Tai
+## 14. Gioi Han Ban Hien Tai
 
 Ban hien tai phu hop pilot noi bo. Truoc rollout lon can lam tiep:
 

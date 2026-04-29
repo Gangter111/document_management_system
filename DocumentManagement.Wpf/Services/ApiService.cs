@@ -234,6 +234,45 @@ public class ApiService
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<AutoFillDocumentResultDto> ExtractPdfAsync(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+        {
+            throw new ArgumentException("Đường dẫn file PDF không hợp lệ.", nameof(filePath));
+        }
+
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException("Không tìm thấy file PDF.", filePath);
+        }
+
+        await using var stream = File.OpenRead(filePath);
+
+        using var content = new MultipartFormDataContent();
+        using var fileContent = new StreamContent(stream);
+
+        fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+        content.Add(fileContent, "file", Path.GetFileName(filePath));
+
+        var response = await _httpClient.PostAsync("api/documents/extract-pdf", content);
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            throw new UnauthorizedAccessException("Bạn không có quyền trích xuất thông tin từ PDF.");
+        }
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var message = await response.Content.ReadAsStringAsync();
+            throw new InvalidOperationException(message);
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<AutoFillDocumentResultDto>()
+               ?? new AutoFillDocumentResultDto();
+    }
+
     public async Task<byte[]> DownloadBackupAsync()
     {
         var response = await _httpClient.GetAsync("api/backup/download");

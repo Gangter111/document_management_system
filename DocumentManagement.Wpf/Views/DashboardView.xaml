@@ -4,15 +4,61 @@
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:conv="clr-namespace:DocumentManagement.Wpf.Converters"
-             Background="{StaticResource AppBackgroundBrush}">
+             Background="#EAF5EE"
+             UseLayoutRounding="True"
+             SnapsToDevicePixels="True">
 
     <UserControl.Resources>
         <conv:StatusNameToBrushConverter x:Key="StatusNameToBrushConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 
-        <Style x:Key="MetricCardStyle" TargetType="Border" BasedOn="{StaticResource AppCardStyle}">
-            <Setter Property="Padding" Value="18,16"/>
-            <Setter Property="Margin" Value="0,0,12,0"/>
+        <SolidColorBrush x:Key="DashboardGreen" Color="#2FA52C"/>
+        <SolidColorBrush x:Key="DashboardGreenDark" Color="#168333"/>
+        <SolidColorBrush x:Key="DashboardGreenSoft" Color="#EEF8EC"/>
+        <SolidColorBrush x:Key="DashboardBorder" Color="#259323"/>
+        <SolidColorBrush x:Key="DashboardGridLine" Color="#D9ECDD"/>
+
+        <Style x:Key="DashboardPanelStyle" TargetType="Border">
+            <Setter Property="Background" Value="#FFFFFC"/>
+            <Setter Property="BorderBrush" Value="{StaticResource DashboardBorder}"/>
+            <Setter Property="BorderThickness" Value="1.2"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
+        <Style x:Key="PanelTitleStyle" TargetType="TextBlock">
+            <Setter Property="Height" Value="30"/>
+            <Setter Property="Padding" Value="10,6,10,0"/>
+            <Setter Property="Background" Value="#F5FBF3"/>
+            <Setter Property="Foreground" Value="#2B2F2D"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+        </Style>
+
+        <Style x:Key="MetricBoxStyle" TargetType="Border">
+            <Setter Property="Height" Value="94"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Background" Value="#FFFFFC"/>
+            <Setter Property="BorderBrush" Value="{StaticResource DashboardBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="10,8"/>
+        </Style>
+
+        <Style x:Key="MetricLabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#244238"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+        </Style>
+
+        <Style x:Key="MetricValueStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource DashboardGreenDark}"/>
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,8,0,0"/>
         </Style>
 
         <Style x:Key="GridTextStyle" TargetType="TextBlock">
@@ -28,113 +74,111 @@
     </UserControl.Resources>
 
     <Grid>
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Margin="20">
-                <TextBlock Text="TỔNG QUAN"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           Foreground="{StaticResource TextBrush}"
-                           Margin="0,0,0,16"/>
+        <Border Margin="14"
+                Background="#FFFFFC"
+                BorderBrush="{StaticResource DashboardBorder}"
+                BorderThickness="1.4">
+            <Grid Margin="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="146"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <UniformGrid Columns="5" Margin="0,0,0,14">
-                    <Border Style="{StaticResource MetricCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="42"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="34" Height="34" CornerRadius="17" Background="#087A3D">
-                                <materialDesign:PackIcon Kind="FileDocumentOutline" Width="18" Height="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <TextBlock Text="Tổng số văn bản" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
-                                <TextBlock Text="{Binding TotalDocuments}" FontSize="25" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,2,0,0"/>
-                                <TextBlock Text="+12,5% so với tháng trước" FontSize="10" Foreground="{StaticResource SuccessBrush}"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource MetricCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="42"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="34" Height="34" CornerRadius="17" Background="#F59E0B">
-                                <materialDesign:PackIcon Kind="ClipboardTextOutline" Width="18" Height="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <TextBlock Text="Đã ban hành" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
-                                <TextBlock Text="{Binding IssuedDocuments}" FontSize="25" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,2,0,0"/>
-                                <TextBlock Text="-0,7% so với tháng trước" FontSize="10" Foreground="#F59E0B"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource MetricCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="42"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="34" Height="34" CornerRadius="17" Background="#087A3D">
-                                <materialDesign:PackIcon Kind="FileCheckOutline" Width="18" Height="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <TextBlock Text="Có hiệu lực" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
-                                <TextBlock Text="{Binding EffectiveDocuments}" FontSize="25" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,2,0,0"/>
-                                <TextBlock Text="+10,3% so với tháng trước" FontSize="10" Foreground="{StaticResource SuccessBrush}"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource MetricCardStyle}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="42"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="34" Height="34" CornerRadius="17" Background="#E30613">
-                                <materialDesign:PackIcon Kind="FileCancelOutline" Width="18" Height="18" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <TextBlock Text="Hết hiệu lực" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
-                                <TextBlock Text="{Binding ExpiredDocuments}" FontSize="25" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,2,0,0"/>
-                                <TextBlock Text="-5,2% so với tháng trước" FontSize="10" Foreground="{StaticResource DangerBrush}"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <Border Style="{StaticResource AppCardStyle}" Padding="18,16">
-                        <StackPanel>
-                            <TextBlock Text="TB/thang" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}"/>
-                            <TextBlock Text="{Binding AverageIssuedPerMonth, StringFormat={}{0:N1}}" FontSize="25" FontWeight="Bold" Foreground="{StaticResource TextBrush}" Margin="0,2,0,0"/>
-                            <TextBlock Text="Văn bản ban hành" FontSize="10" Foreground="{StaticResource TextMutedBrush}"/>
-                        </StackPanel>
-                    </Border>
-                </UniformGrid>
-
-                <Grid Margin="0,0,0,14">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.05*"/>
-                        <ColumnDefinition Width="1.55*"/>
-                        <ColumnDefinition Width="1.25*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Border Grid.Column="0" Style="{StaticResource AppCardStyle}" Margin="0,0,12,0">
-                        <StackPanel>
-                            <TextBlock Text="Cơ cấu hiệu lực" FontSize="13" FontWeight="Bold" Margin="0,0,0,10"/>
-                            <Grid Height="230">
-                                <lvc:PieChart Series="{Binding EffectivenessSeries}" LegendLocation="Right" HoverPushOut="6"/>
-                            </Grid>
+                <StackPanel Grid.Column="0">
+                    <Border Style="{StaticResource MetricBoxStyle}">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="TỔNG VĂN BẢN" Style="{StaticResource MetricLabelStyle}"/>
+                            <TextBlock Text="{Binding TotalDocuments, StringFormat={}{0:N0}}" Style="{StaticResource MetricValueStyle}"/>
                         </StackPanel>
                     </Border>
 
-                    <Border Grid.Column="1" Style="{StaticResource AppCardStyle}" Margin="0,0,12,0">
-                        <StackPanel>
-                            <TextBlock Text="Văn bản ban hành theo tháng" FontSize="13" FontWeight="Bold" Margin="0,0,0,10"/>
-                            <Grid Height="230">
-                                <lvc:CartesianChart Series="{Binding MonthlyIssuedSeries}" LegendLocation="Top">
+                    <Border Style="{StaticResource MetricBoxStyle}">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="ĐÃ BAN HÀNH" Style="{StaticResource MetricLabelStyle}"/>
+                            <TextBlock Text="{Binding IssuedDocuments, StringFormat={}{0:N0}}" Style="{StaticResource MetricValueStyle}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource MetricBoxStyle}">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="CÒN HIỆU LỰC" Style="{StaticResource MetricLabelStyle}"/>
+                            <TextBlock Text="{Binding EffectiveDocuments, StringFormat={}{0:N0}}" Style="{StaticResource MetricValueStyle}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource MetricBoxStyle}">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="HẾT HIỆU LỰC" Style="{StaticResource MetricLabelStyle}"/>
+                            <TextBlock Text="{Binding ExpiredDocuments, StringFormat={}{0:N0}}" Style="{StaticResource MetricValueStyle}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Style="{StaticResource MetricBoxStyle}" Height="112">
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="TB BAN HÀNH / THÁNG" Style="{StaticResource MetricLabelStyle}"/>
+                            <TextBlock Text="{Binding AverageIssuedPerMonth, StringFormat={}{0:N1}}" Style="{StaticResource MetricValueStyle}"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="42"/>
+                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0">
+                        <Border Background="{StaticResource DashboardGreen}">
+                            <TextBlock Text="TỔNG QUAN VĂN BẢN"
+                                       Foreground="White"
+                                       FontSize="20"
+                                       FontWeight="Bold"
+                                       TextAlignment="Center"
+                                       VerticalAlignment="Center"/>
+                        </Border>
+
+                        <Border Width="118"
+                                Height="34"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,8,0"
+                                Background="#FFFFFC"
+                                BorderBrush="#E2B66C"
+                                BorderThickness="1"
+                                Padding="8,3">
+                            <Image Source="pack://application:,,,/Assets/Images/logo-tach.png"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"/>
+                        </Border>
+                    </Grid>
+
+                    <Grid Grid.Row="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="1*"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="1*"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.08*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="1*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Row="0"
+                                Grid.Column="0"
+                                Style="{StaticResource DashboardPanelStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Văn bản ban hành theo tháng" Style="{StaticResource PanelTitleStyle}"/>
+                                <lvc:CartesianChart Grid.Row="1"
+                                                    Margin="10,4,10,8"
+                                                    Series="{Binding MonthlyIssuedSeries}"
+                                                    LegendLocation="Top">
                                     <lvc:CartesianChart.AxisX>
                                         <lvc:Axis Labels="{Binding MonthlyIssuedLabels}" Separator="{x:Static lvc:DefaultAxes.CleanSeparator}"/>
                                     </lvc:CartesianChart.AxisX>
@@ -143,14 +187,21 @@
                                     </lvc:CartesianChart.AxisY>
                                 </lvc:CartesianChart>
                             </Grid>
-                        </StackPanel>
-                    </Border>
+                        </Border>
 
-                    <Border Grid.Column="2" Style="{StaticResource AppCardStyle}">
-                        <StackPanel>
-                            <TextBlock Text="Văn bản theo phòng ban" FontSize="13" FontWeight="Bold" Margin="0,0,0,10"/>
-                            <Grid Height="230">
-                                <lvc:CartesianChart Series="{Binding DepartmentIssuedSeries}" LegendLocation="None">
+                        <Border Grid.Row="0"
+                                Grid.Column="2"
+                                Style="{StaticResource DashboardPanelStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Văn bản theo phòng ban" Style="{StaticResource PanelTitleStyle}"/>
+                                <lvc:CartesianChart Grid.Row="1"
+                                                    Margin="10,4,10,8"
+                                                    Series="{Binding DepartmentIssuedSeries}"
+                                                    LegendLocation="None">
                                     <lvc:CartesianChart.AxisX>
                                         <lvc:Axis Labels="{Binding DepartmentIssuedLabels}" Separator="{x:Static lvc:DefaultAxes.CleanSeparator}"/>
                                     </lvc:CartesianChart.AxisX>
@@ -159,80 +210,83 @@
                                     </lvc:CartesianChart.AxisY>
                                 </lvc:CartesianChart>
                             </Grid>
-                        </StackPanel>
-                    </Border>
+                        </Border>
+
+                        <Border Grid.Row="2"
+                                Grid.Column="0"
+                                Style="{StaticResource DashboardPanelStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Văn bản mới ban hành" Style="{StaticResource PanelTitleStyle}"/>
+                                <DataGrid x:Name="RecentDocumentsGrid"
+                                          Grid.Row="1"
+                                          ItemsSource="{Binding RecentDocuments}"
+                                          Style="{StaticResource AppDataGridStyle}"
+                                          AutoGenerateColumns="False"
+                                          HeadersVisibility="Column"
+                                          GridLinesVisibility="None"
+                                          RowHeaderWidth="0"
+                                          RowHeight="38"
+                                          ColumnHeaderHeight="34"
+                                          MouseDoubleClick="RecentDocumentsGrid_MouseDoubleClick">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Số ký hiệu" Binding="{Binding DocumentNumber}" Width="116" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                                        <DataGridTextColumn Header="Trích yếu" Binding="{Binding Title}" Width="*" ElementStyle="{StaticResource GridTextStyle}"/>
+                                        <DataGridTextColumn Header="Ngày cập nhật" Binding="{Binding UpdatedAt, StringFormat=dd/MM}" Width="104" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Grid>
+                        </Border>
+
+                        <Border Grid.Row="2"
+                                Grid.Column="2"
+                                Style="{StaticResource DashboardPanelStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="30"/>
+                                    <RowDefinition Height="*"/>
+                                </Grid.RowDefinitions>
+                                <TextBlock Text="Cơ cấu hiệu lực văn bản" Style="{StaticResource PanelTitleStyle}"/>
+                                <Grid Grid.Row="1" Margin="8">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="130"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <lvc:PieChart Series="{Binding EffectivenessSeries}"
+                                                  LegendLocation="None"
+                                                  HoverPushOut="4"
+                                                  InnerRadius="58"/>
+
+                                    <StackPanel Grid.Column="1"
+                                                VerticalAlignment="Center"
+                                                Margin="10,0,0,0">
+                                        <TextBlock Text="Tổng văn bản"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   FontSize="12"
+                                                   TextAlignment="Center"/>
+                                        <TextBlock Text="{Binding TotalDocuments, StringFormat={}{0:N0}}"
+                                                   Foreground="{StaticResource DashboardGreenDark}"
+                                                   FontSize="24"
+                                                   FontWeight="Bold"
+                                                   TextAlignment="Center"
+                                                   Margin="0,4,0,12"/>
+                                        <TextBlock Text="{Binding TopIssuingDepartment, StringFormat=Đơn vị nổi bật: {0}}"
+                                                   Foreground="{StaticResource TextMutedBrush}"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   TextAlignment="Center"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Grid>
+                        </Border>
+                    </Grid>
                 </Grid>
-
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.55*"/>
-                        <ColumnDefinition Width="1*"/>
-                    </Grid.ColumnDefinitions>
-
-                    <Border Grid.Column="0" Style="{StaticResource AppCardStyle}" Padding="0" Margin="0,0,12,0">
-                        <StackPanel>
-                            <DockPanel Margin="18,14,18,8">
-                                <TextBlock Text="Văn bản mới ban hành" FontSize="13" FontWeight="Bold" DockPanel.Dock="Left"/>
-                                <TextBlock Text="Xem tất cả" FontSize="11" Foreground="{StaticResource PrimaryBrush}" DockPanel.Dock="Right"/>
-                            </DockPanel>
-
-                            <DataGrid x:Name="RecentDocumentsGrid"
-                                      ItemsSource="{Binding RecentDocuments}"
-                                      Style="{StaticResource AppDataGridStyle}"
-                                      AutoGenerateColumns="False"
-                                      HeadersVisibility="Column"
-                                      GridLinesVisibility="None"
-                                      RowHeaderWidth="0"
-                                      RowHeight="42"
-                                      ColumnHeaderHeight="36"
-                                      MouseDoubleClick="RecentDocumentsGrid_MouseDoubleClick">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Số ký hiệu" Binding="{Binding DocumentNumber}" Width="110" ElementStyle="{StaticResource GridMutedTextStyle}"/>
-                                    <DataGridTextColumn Header="Trích yếu" Binding="{Binding Title}" Width="*" ElementStyle="{StaticResource GridTextStyle}"/>
-                                    <DataGridTextColumn Header="Cơ quan ban hành" Binding="{Binding SenderName}" Width="140" ElementStyle="{StaticResource GridMutedTextStyle}"/>
-                                    <DataGridTextColumn Header="Ngày ban hành" Binding="{Binding IssueDate}" Width="110" ElementStyle="{StaticResource GridMutedTextStyle}"/>
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </StackPanel>
-                    </Border>
-
-                    <Border Grid.Column="1" Style="{StaticResource AppCardStyle}">
-                        <StackPanel>
-                            <DockPanel Margin="0,0,0,10">
-                                <TextBlock Text="Công việc chờ xử lý" FontSize="13" FontWeight="Bold" DockPanel.Dock="Left"/>
-                                <TextBlock Text="Xem tất cả" FontSize="11" Foreground="{StaticResource PrimaryBrush}" DockPanel.Dock="Right"/>
-                            </DockPanel>
-
-                            <ItemsControl ItemsSource="{Binding RecentDocuments}">
-                                <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <Border BorderBrush="{StaticResource BorderBrushDefault}"
-                                                BorderThickness="0,0,0,1"
-                                                Padding="0,10">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions>
-                                                    <ColumnDefinition Width="34"/>
-                                                    <ColumnDefinition Width="*"/>
-                                                    <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-                                                <Border Width="24" Height="24" CornerRadius="12" Background="#FFF7ED">
-                                                    <materialDesign:PackIcon Kind="AccountOutline" Width="15" Height="15" Foreground="#F59E0B" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <StackPanel Grid.Column="1">
-                                                    <TextBlock Text="{Binding Title}" FontSize="12" Foreground="{StaticResource TextBrush}" TextTrimming="CharacterEllipsis"/>
-                                                    <TextBlock Text="{Binding ProcessingDepartment}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" Margin="0,3,0,0"/>
-                                                </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="{Binding UpdatedAt, StringFormat=dd/MM}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" VerticalAlignment="Top"/>
-                                            </Grid>
-                                        </Border>
-                                    </DataTemplate>
-                                </ItemsControl.ItemTemplate>
-                            </ItemsControl>
-                        </StackPanel>
-                    </Border>
-                </Grid>
-            </StackPanel>
-        </ScrollViewer>
+            </Grid>
+        </Border>
 
         <Grid Style="{StaticResource LoadingOverlayGridStyle}"
               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">

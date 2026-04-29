@@ -100,18 +100,6 @@
                                FontWeight="Bold"
                                Foreground="{StaticResource TextBrush}"/>
 
-                    <TextBlock Margin="0,6,0,0">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource MutedTextStyle}">
-                                <Setter Property="Text" Value="Tạo mới hoặc cập nhật văn bản qua API."/>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
-                                        <Setter Property="Text" Value="Đang mở văn bản ở chế độ xem. Bạn không thể chỉnh sửa nội dung."/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
                 </StackPanel>
 
                 <StackPanel Grid.Column="1"
@@ -126,12 +114,6 @@
                                    FontSize="12"/>
                     </Border>
 
-                    <Border Style="{StaticResource ApiModeBadgeStyle}">
-                        <TextBlock Text="Client-server: CRUD qua API"
-                                   Foreground="#166534"
-                                   FontWeight="SemiBold"
-                                   FontSize="12"/>
-                    </Border>
                 </StackPanel>
             </Grid>
         </Border>

@@ -1,6 +1,9 @@
 param(
     [string]$Urls = "http://0.0.0.0:5033",
+    [ValidateSet("Sqlite", "SqlServer")]
+    [string]$DatabaseProvider = "Sqlite",
     [string]$DatabasePath = "database/app.db",
+    [string]$ConnectionString = "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True",
     [string]$JwtSecret = "CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026",
     [string]$Configuration = "Release",
     [string]$RuntimeIdentifier = "win-x64",
@@ -24,8 +27,12 @@ if ([string]::IsNullOrWhiteSpace($Urls)) {
     Fail "Urls is required."
 }
 
-if ([string]::IsNullOrWhiteSpace($DatabasePath)) {
+if ($DatabaseProvider -eq "Sqlite" -and [string]::IsNullOrWhiteSpace($DatabasePath)) {
     Fail "DatabasePath is required."
+}
+
+if ($DatabaseProvider -eq "SqlServer" -and [string]::IsNullOrWhiteSpace($ConnectionString)) {
+    Fail "ConnectionString is required when DatabaseProvider is SqlServer."
 }
 
 if ([string]::IsNullOrWhiteSpace($JwtSecret) -or $JwtSecret.Length -lt 32) {
@@ -41,7 +48,13 @@ Set-Location $Root
 Info "Root: $Root"
 Info "Project: $Project"
 Info "Urls: $Urls"
-Info "Database: $DatabasePath"
+Info "Database provider: $DatabaseProvider"
+if ($DatabaseProvider -eq "SqlServer") {
+    Info "SQL Server connection string: $ConnectionString"
+}
+else {
+    Info "SQLite database: $DatabasePath"
+}
 Info "Output: $AppDir"
 
 if (Test-Path $PublishRoot) {
@@ -64,7 +77,9 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $settings = Get-Content $Template -Raw | ConvertFrom-Json
+$settings.Database.Provider = $DatabaseProvider
 $settings.Database.Path = $DatabasePath
+$settings.Database.ConnectionString = $ConnectionString
 $settings.Jwt.Secret = $JwtSecret
 $settings.Kestrel.Endpoints.Http.Url = $Urls
 

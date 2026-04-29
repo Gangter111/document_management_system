@@ -64,7 +64,7 @@ public class DocumentFormViewModel : BaseViewModel
 
     public bool CanBrowseFile => CanModifyDocument;
 
-    public bool CanAutoFill => false;
+    public bool CanAutoFill => HasFile && CanModifyDocument;
 
     public bool CanSaveDocument => CanModifyDocument;
 
@@ -202,6 +202,7 @@ public class DocumentFormViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(HasFile));
                 OnPropertyChanged(nameof(CanAutoFill));
+                RaiseCommandStatesChanged();
                 CommandManager.InvalidateRequerySuggested();
             }
         }
@@ -231,7 +232,7 @@ public class DocumentFormViewModel : BaseViewModel
         _confirmDialogService = confirmDialogService;
 
         BrowseFileCommand = new RelayCommand(_ => BrowseFile(), _ => CanBrowseFile);
-        AutoFillCommand = new RelayCommand(_ => ShowOcrDisabledMessage(), _ => false);
+        AutoFillCommand = new RelayCommand(async _ => await AutoFillFromPdfAsync(), _ => CanAutoFill);
         SaveCommand = new RelayCommand(async w => await SaveAsync(w), _ => CanSaveDocument);
         DeleteCommand = new RelayCommand(async w => await DeleteAsync(w), _ => CanDelete);
     }
@@ -351,16 +352,80 @@ public class DocumentFormViewModel : BaseViewModel
             SelectedFilePath = dialog.FileName;
 
             _notificationService.ShowInfo(
-                "Đã chọn file PDF. OCR client đã tạm tắt, cần chuyển OCR sang API.",
+                "Đã chọn file PDF. Bấm Tự động điền để trích xuất thông tin.",
                 "Đã chọn tệp");
         }
     }
 
-    private void ShowOcrDisabledMessage()
+    private async Task AutoFillFromPdfAsync()
     {
-        _notificationService.ShowInfo(
-            "OCR local đã bị tắt để giữ đúng kiến trúc client-server. Cần làm OCR qua API.",
-            "OCR chưa khả dụng");
+        if (string.IsNullOrWhiteSpace(SelectedFilePath))
+        {
+            _notificationService.ShowWarning(
+                "Vui lòng chọn file PDF trước.",
+                "Thiếu file PDF");
+            return;
+        }
+
+        try
+        {
+            var result = await _apiService.ExtractPdfAsync(SelectedFilePath);
+
+            ApplyAutoFillResult(result);
+
+            _notificationService.ShowSuccess(
+                "Đã trích xuất thông tin từ PDF.",
+                "Tự động điền");
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                "Không thể trích xuất thông tin từ PDF: " + ex.Message,
+                "Lỗi xử lý PDF");
+        }
+    }
+
+    private void ApplyAutoFillResult(AutoFillDocumentResultDto result)
+    {
+        if (!string.IsNullOrWhiteSpace(result.DocumentNumber))
+        {
+            DocumentNumber = result.DocumentNumber;
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.Title))
+        {
+            Title = result.Title;
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.Summary))
+        {
+            Summary = result.Summary;
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.ContentText))
+        {
+            ContentText = result.ContentText;
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.SenderName))
+        {
+            SenderName = result.SenderName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.ReceiverName))
+        {
+            ReceiverName = result.ReceiverName;
+        }
+
+        if (!string.IsNullOrWhiteSpace(result.UrgencyLevel))
+        {
+            UrgencyLevel = result.UrgencyLevel;
+        }
+
+        if (DateTime.TryParse(result.IssueDate, out var issueDate))
+        {
+            IssueDate = issueDate;
+        }
     }
 
     private async Task SaveAsync(object? parameter)
@@ -561,6 +626,30 @@ public class DocumentFormViewModel : BaseViewModel
         OnPropertyChanged(nameof(CanSaveDocument));
         OnPropertyChanged(nameof(CanDelete));
 
+        RaiseCommandStatesChanged();
         CommandManager.InvalidateRequerySuggested();
+    }
+
+    private void RaiseCommandStatesChanged()
+    {
+        if (BrowseFileCommand is RelayCommand browseFileCommand)
+        {
+            browseFileCommand.RaiseCanExecuteChanged();
+        }
+
+        if (AutoFillCommand is RelayCommand autoFillCommand)
+        {
+            autoFillCommand.RaiseCanExecuteChanged();
+        }
+
+        if (SaveCommand is RelayCommand saveCommand)
+        {
+            saveCommand.RaiseCanExecuteChanged();
+        }
+
+        if (DeleteCommand is RelayCommand deleteCommand)
+        {
+            deleteCommand.RaiseCanExecuteChanged();
+        }
     }
 }

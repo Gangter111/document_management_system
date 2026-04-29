@@ -91,9 +91,13 @@ public class MainViewModel : BaseViewModel
 
     public bool CanViewTasks => false;
 
-    public bool CanViewReports => false;
+    public bool CanViewReports => true;
 
-    public bool CanViewSettings => string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase);
+    public bool CanViewArchive => true;
+
+    public bool CanViewCategories => true;
+
+    public bool CanViewSettings => true;
 
     public bool CanBackup =>
         string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase)
@@ -115,6 +119,14 @@ public class MainViewModel : BaseViewModel
     public ICommand ShowDocumentListCommand { get; }
 
     public ICommand CreateDocumentCommand { get; }
+
+    public ICommand ShowArchiveCommand { get; }
+
+    public ICommand ShowReportsCommand { get; }
+
+    public ICommand ShowCategoriesCommand { get; }
+
+    public ICommand ShowSettingsCommand { get; }
 
     public ICommand BackupCommand { get; }
 
@@ -138,6 +150,10 @@ public class MainViewModel : BaseViewModel
         ShowDashboardCommand = new RelayCommand(_ => ShowDashboard(), _ => CanViewDashboard);
         ShowDocumentListCommand = new RelayCommand(_ => ShowDocuments(), _ => CanViewDocuments);
         CreateDocumentCommand = new RelayCommand(async _ => await CreateDocumentAsync(), _ => CanCreateDocument);
+        ShowArchiveCommand = new RelayCommand(_ => ShowPlaceholder("Lưu trữ", "Các văn bản lưu trữ sẽ được tổng hợp tại đây."));
+        ShowReportsCommand = new RelayCommand(_ => ShowPlaceholder("Báo cáo", "Khu vực báo cáo thống kê văn bản, tình trạng hiệu lực và phòng ban xử lý."));
+        ShowCategoriesCommand = new RelayCommand(_ => ShowPlaceholder("Danh mục", "Quản lý loại văn bản, trạng thái, độ mật và độ khẩn."));
+        ShowSettingsCommand = new RelayCommand(_ => ShowPlaceholder("Hệ thống", "Cấu hình người dùng, phân quyền và tham số vận hành."));
 
         BackupCommand = new RelayCommand(
             async _ => await BackupAsync(),
@@ -174,6 +190,8 @@ public class MainViewModel : BaseViewModel
         OnPropertyChanged(nameof(CanViewDocuments));
         OnPropertyChanged(nameof(CanViewTasks));
         OnPropertyChanged(nameof(CanViewReports));
+        OnPropertyChanged(nameof(CanViewArchive));
+        OnPropertyChanged(nameof(CanViewCategories));
         OnPropertyChanged(nameof(CanViewSettings));
         OnPropertyChanged(nameof(CanBackup));
         OnPropertyChanged(nameof(CanRestore));
@@ -231,6 +249,11 @@ public class MainViewModel : BaseViewModel
                 $"Không thể mở danh sách văn bản: {ex.Message}",
                 "Lỗi");
         }
+    }
+
+    private void ShowPlaceholder(string title, string description)
+    {
+        CurrentView = new PlaceholderViewModel(title, description);
     }
 
     public async Task OpenDocumentAsync(long documentId)
@@ -436,4 +459,17 @@ public class MainViewModel : BaseViewModel
             await listVm.LoadAsync();
         }
     }
+}
+
+public class PlaceholderViewModel : BaseViewModel
+{
+    public PlaceholderViewModel(string title, string description)
+    {
+        Title = title;
+        Description = description;
+    }
+
+    public string Title { get; }
+
+    public string Description { get; }
 }

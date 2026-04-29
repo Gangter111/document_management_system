@@ -12,8 +12,12 @@
         MinWidth="1120"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
-        Background="#FFFFFF"
-        FontFamily="Segoe UI">
+        WindowStyle="None"
+        Background="#EEF6F1"
+        FontFamily="Segoe UI"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        RenderOptions.BitmapScalingMode="HighQuality">
 
     <Window.Resources>
         <SolidColorBrush x:Key="LoginGreenBrush" Color="#087A3D"/>
@@ -133,10 +137,29 @@
             <Setter Property="Foreground" Value="{StaticResource LoginMutedBrush}"/>
             <Setter Property="FontSize" Value="13"/>
         </Style>
+
+        <Style x:Key="LoginIconButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="36"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Foreground" Value="#87918D"/>
+        </Style>
     </Window.Resources>
 
-    <Grid Background="#FFFFFF">
-        <Canvas IsHitTestVisible="False" Opacity="0.88">
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#E5F3EA" Offset="0"/>
+                <GradientStop Color="#FBFEFC" Offset="0.46"/>
+                <GradientStop Color="#EAF5EF" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
+
+        <Canvas IsHitTestVisible="False" Opacity="0.62">
             <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M88,204 L172,166 L260,206 L260,376 L178,414 L88,374 Z"/>
             <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M120,210 L120,360 M148,198 L148,374 M176,186 L176,386 M204,196 L204,398 M232,208 L232,386"/>
             <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M96,488 L232,434 L392,498 L252,618 Z M142,502 L248,466 M158,526 L276,484 M174,552 L304,504"/>
@@ -151,6 +174,25 @@
             <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M958,668 L1066,628"/>
         </Canvas>
 
+        <Grid Height="36"
+              Panel.ZIndex="10"
+              VerticalAlignment="Top"
+              Background="Transparent"
+              MouseLeftButtonDown="TitleDragArea_MouseLeftButtonDown">
+            <Button Width="34"
+                    Height="34"
+                    HorizontalAlignment="Right"
+                    VerticalAlignment="Top"
+                    Margin="0,4,8,0"
+                    Background="Transparent"
+                    BorderBrush="Transparent"
+                    Foreground="#51615A"
+                    Cursor="Hand"
+                    Click="ExitButton_Click">
+                <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+            </Button>
+        </Grid>
+
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="150"/>
@@ -164,15 +206,17 @@
                         Margin="0,0,0,10">
                 <Image Source="pack://application:,,,/Assets/Images/logo-tach.png"
                        Height="104"
-                       Stretch="Uniform"/>
+                       Stretch="Uniform"
+                       RenderOptions.BitmapScalingMode="HighQuality"
+                       SnapsToDevicePixels="True"/>
             </StackPanel>
 
             <Border Grid.Row="1"
                     Width="408"
-                    Height="454"
+                    Height="486"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Top"
-                    Background="#FBFEFC"
+                    Background="#FFFFFC"
                     BorderBrush="#B8DCC8"
                     BorderThickness="1"
                     CornerRadius="20"
@@ -196,7 +240,7 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="12"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="18"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
@@ -264,6 +308,11 @@
                                FontSize="13"/>
 
                     <Grid Grid.Row="8">
+                        <TextBox x:Name="VisiblePasswordTextBox"
+                                 Style="{StaticResource LoginInputTextBoxStyle}"
+                                 Padding="46,0,46,0"
+                                 Visibility="Collapsed"
+                                 TextChanged="VisiblePasswordTextBox_TextChanged"/>
                         <PasswordBox x:Name="PasswordBox"
                                      Style="{StaticResource LoginPasswordBoxStyle}"
                                      PasswordChanged="PasswordBox_PasswordChanged"/>
@@ -281,13 +330,17 @@
                                    Margin="46,0,0,0"
                                    IsHitTestVisible="False"
                                    VerticalAlignment="Center"/>
-                        <materialDesign:PackIcon Kind="EyeOutline"
-                                                 Width="18"
-                                                 Height="18"
-                                                 Foreground="#87918D"
-                                                 HorizontalAlignment="Right"
-                                                 VerticalAlignment="Center"
-                                                 Margin="0,0,14,0"/>
+                        <Button x:Name="TogglePasswordButton"
+                                Style="{StaticResource LoginIconButtonStyle}"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Center"
+                                Margin="0,0,4,0"
+                                Click="TogglePasswordVisibility_Click">
+                            <materialDesign:PackIcon x:Name="TogglePasswordIcon"
+                                                     Kind="EyeOutline"
+                                                     Width="18"
+                                                     Height="18"/>
+                        </Button>
                     </Grid>
 
                     <TextBlock x:Name="ErrorText"
@@ -306,7 +359,8 @@
                     <StackPanel Grid.Row="14"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center"
-                                VerticalAlignment="Bottom">
+                                VerticalAlignment="Center"
+                                Margin="0,2,0,0">
                         <Button Style="{StaticResource GhostLinkButtonStyle}"
                                 Content="Quên mật khẩu?"/>
                         <Border Width="1"
@@ -326,10 +380,6 @@
                                 FontWeight="SemiBold"
                                 Click="ServerSettingsButton_Click"
                                 Content="Máy chủ"/>
-                        <Button Width="0"
-                                Height="0"
-                                Opacity="0"
-                                Click="ExitButton_Click"/>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -352,12 +402,12 @@
                             Orientation="Horizontal"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="ShieldCheckOutline"
+                    <materialDesign:PackIcon Kind="FileSearchOutline"
                                              Width="24"
                                              Height="24"
                                              Foreground="#6A9B7D"
                                              VerticalAlignment="Center"/>
-                    <TextBlock Text="Bảo mật - An toàn - Hiệu quả"
+                    <TextBlock Text="Tra cứu nhanh - Dữ liệu tập trung - Quản lý hiệu lực"
                                Margin="12,0,0,0"
                                Foreground="#7A7F87"
                                FontSize="15"

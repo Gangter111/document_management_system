@@ -14,9 +14,9 @@
     <Color x:Key="ColorDangerDark">#B91C1C</Color>
     <Color x:Key="ColorInfo">#0EA5E9</Color>
 
-    <Color x:Key="ColorBackground">#F6F8F7</Color>
-    <Color x:Key="ColorSurface">#FFFFFF</Color>
-    <Color x:Key="ColorSurfaceMuted">#F9FAFB</Color>
+    <Color x:Key="ColorBackground">#EEF6F1</Color>
+    <Color x:Key="ColorSurface">#FFFFFC</Color>
+    <Color x:Key="ColorSurfaceMuted">#F4FAF6</Color>
 
     <Color x:Key="ColorBorder">#E5E7EB</Color>
     <Color x:Key="ColorBorderStrong">#D1D5DB</Color>

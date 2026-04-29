@@ -16,7 +16,10 @@
         Background="{StaticResource AppBackgroundBrush}"
         TextElement.Foreground="{StaticResource TextBrush}"
         FontFamily="{StaticResource AppFontFamily}"
-        FontSize="13">
+        FontSize="13"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        RenderOptions.BitmapScalingMode="HighQuality">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -27,6 +30,30 @@
 
         <DataTemplate DataType="{x:Type vm:DashboardViewModel}">
             <views:DashboardView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
+            <Grid Background="{StaticResource AppBackgroundBrush}">
+                <Border Width="520"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Style="{StaticResource AppCardStyle}"
+                        Padding="28">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}"
+                                   FontSize="26"
+                                   FontWeight="Bold"
+                                   Foreground="{StaticResource PrimaryBrush}"
+                                   TextAlignment="Center"/>
+                        <TextBlock Text="{Binding Description}"
+                                   Margin="0,14,0,0"
+                                   FontSize="14"
+                                   Foreground="{StaticResource TextMutedBrush}"
+                                   TextWrapping="Wrap"
+                                   TextAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
         </DataTemplate>
 
         <Style x:Key="SidebarButtonStyle" TargetType="RadioButton">
@@ -108,13 +135,27 @@
         </Style>
     </Window.Resources>
 
-    <Grid Background="{StaticResource AppBackgroundBrush}">
+    <Grid>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#EAF5EE" Offset="0"/>
+                <GradientStop Color="#F7FBF8" Offset="0.48"/>
+                <GradientStop Color="#E7F2EC" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="136"/>
+            <ColumnDefinition Width="176"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <Border Grid.Column="0" Background="#004B28">
+        <Border Grid.Column="0">
+            <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                    <GradientStop Color="#063B24" Offset="0"/>
+                    <GradientStop Color="#00552E" Offset="0.42"/>
+                    <GradientStop Color="#004321" Offset="1"/>
+                </LinearGradientBrush>
+            </Border.Background>
             <DockPanel LastChildFill="True">
                 <Button DockPanel.Dock="Bottom"
                         Style="{StaticResource SidebarActionButtonStyle}"
@@ -126,7 +167,7 @@
                                                  Height="15"
                                                  Foreground="#E7F4EC"
                                                  VerticalAlignment="Center"/>
-                        <TextBlock Text="Thu gọn"
+                        <TextBlock Text="Thoát"
                                    Margin="9,0,0,0"
                                    Foreground="#E7F4EC"
                                    FontSize="12"
@@ -135,12 +176,30 @@
                 </Button>
 
                 <StackPanel DockPanel.Dock="Top">
-                    <Border Height="92"
-                            Padding="18,10"
+                    <Border Height="126"
+                            Padding="16,14"
                             BorderBrush="#12683C"
                             BorderThickness="0,0,0,1">
-                        <Image Source="pack://application:,,,/Assets/Images/logo-tach.png"
-                               Stretch="Uniform"/>
+                        <Border Width="136"
+                                Height="92"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Background="#FFFFFC"
+                                BorderBrush="#E2B66C"
+                                BorderThickness="1"
+                                CornerRadius="10"
+                                Padding="10,7">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#00180B"
+                                                  BlurRadius="20"
+                                                  ShadowDepth="4"
+                                                  Opacity="0.32"/>
+                            </Border.Effect>
+                            <Image Source="pack://application:,,,/Assets/Images/logo-tach.png"
+                                   Stretch="Uniform"
+                                   RenderOptions.BitmapScalingMode="HighQuality"
+                                   SnapsToDevicePixels="True"/>
+                        </Border>
                     </Border>
 
                     <RadioButton Style="{StaticResource SidebarButtonStyle}"
@@ -164,35 +223,40 @@
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}"
+                                 Command="{Binding CreateDocumentCommand}"
+                                 Visibility="{Binding CanCreateDocument, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 GroupName="MenuMain">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="PencilBoxOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
                             <TextBlock Text="Soạn thảo" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
-                        <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="CheckboxMarkedCircleOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
-                            <TextBlock Text="Duyệt văn bản" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </RadioButton>
-
-                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}"
+                                 Command="{Binding ShowArchiveCommand}"
+                                 Visibility="{Binding CanViewArchive, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 GroupName="MenuMain">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ArchiveOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
                             <TextBlock Text="Lưu trữ" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}"
+                                 Command="{Binding ShowReportsCommand}"
+                                 Visibility="{Binding CanViewReports, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 GroupName="MenuMain">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
                             <TextBlock Text="Báo cáo" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </RadioButton>
 
-                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}"
+                                 Command="{Binding ShowCategoriesCommand}"
+                                 Visibility="{Binding CanViewCategories, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 GroupName="MenuMain">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="TagMultipleOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
                             <TextBlock Text="Danh mục" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
@@ -201,7 +265,7 @@
 
                     <RadioButton Style="{StaticResource SidebarButtonStyle}"
                                  Visibility="{Binding CanViewSettings, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                 IsEnabled="False"
+                                 Command="{Binding ShowSettingsCommand}"
                                  GroupName="MenuMain">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="CogOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
@@ -239,9 +303,14 @@
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0"
-                    Background="{StaticResource SurfaceBrush}"
                     BorderBrush="{StaticResource BorderBrushDefault}"
                     BorderThickness="0,0,0,1">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                        <GradientStop Color="#FFFFFC" Offset="0"/>
+                        <GradientStop Color="#F6FBF8" Offset="1"/>
+                    </LinearGradientBrush>
+                </Border.Background>
                 <Grid Margin="20,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>

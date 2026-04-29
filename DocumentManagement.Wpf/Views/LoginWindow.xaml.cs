@@ -1,5 +1,7 @@
 using System.Windows;
+using System.Windows.Input;
 using DocumentManagement.Wpf.Services;
+using MaterialDesignThemes.Wpf;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DocumentManagement.Wpf.Views;
@@ -9,6 +11,8 @@ public partial class LoginWindow : Window
     private readonly ApiAuthService _authService;
     private readonly ApiService _apiService;
     private readonly IServiceProvider _serviceProvider;
+    private bool _isPasswordVisible;
+    private bool _isSyncingPassword;
 
     public LoginWindow(
         ApiAuthService authService,
@@ -29,7 +33,7 @@ public partial class LoginWindow : Window
         ErrorText.Text = string.Empty;
 
         var username = UsernameTextBox.Text?.Trim() ?? string.Empty;
-        var password = PasswordBox.Password ?? string.Empty;
+        var password = GetCurrentPassword();
 
         if (string.IsNullOrWhiteSpace(username))
         {
@@ -70,7 +74,71 @@ public partial class LoginWindow : Window
 
     private void PasswordBox_PasswordChanged(object sender, RoutedEventArgs e)
     {
-        PasswordPlaceholder.Visibility = string.IsNullOrEmpty(PasswordBox.Password)
+        if (!_isSyncingPassword)
+        {
+            _isSyncingPassword = true;
+            VisiblePasswordTextBox.Text = PasswordBox.Password;
+            _isSyncingPassword = false;
+        }
+
+        UpdatePasswordPlaceholder();
+    }
+
+    private void VisiblePasswordTextBox_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+    {
+        if (!_isSyncingPassword)
+        {
+            _isSyncingPassword = true;
+            PasswordBox.Password = VisiblePasswordTextBox.Text;
+            _isSyncingPassword = false;
+        }
+
+        UpdatePasswordPlaceholder();
+    }
+
+    private void TogglePasswordVisibility_Click(object sender, RoutedEventArgs e)
+    {
+        _isPasswordVisible = !_isPasswordVisible;
+
+        if (_isPasswordVisible)
+        {
+            VisiblePasswordTextBox.Text = PasswordBox.Password;
+            VisiblePasswordTextBox.Visibility = Visibility.Visible;
+            PasswordBox.Visibility = Visibility.Collapsed;
+            TogglePasswordIcon.Kind = PackIconKind.EyeOffOutline;
+            VisiblePasswordTextBox.Focus();
+            VisiblePasswordTextBox.CaretIndex = VisiblePasswordTextBox.Text.Length;
+        }
+        else
+        {
+            PasswordBox.Password = VisiblePasswordTextBox.Text;
+            PasswordBox.Visibility = Visibility.Visible;
+            VisiblePasswordTextBox.Visibility = Visibility.Collapsed;
+            TogglePasswordIcon.Kind = PackIconKind.EyeOutline;
+            PasswordBox.Focus();
+        }
+
+        UpdatePasswordPlaceholder();
+    }
+
+    private void TitleDragArea_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)
+        {
+            DragMove();
+        }
+    }
+
+    private string GetCurrentPassword()
+    {
+        return _isPasswordVisible
+            ? VisiblePasswordTextBox.Text ?? string.Empty
+            : PasswordBox.Password ?? string.Empty;
+    }
+
+    private void UpdatePasswordPlaceholder()
+    {
+        PasswordPlaceholder.Visibility = string.IsNullOrEmpty(GetCurrentPassword())
             ? Visibility.Visible
             : Visibility.Collapsed;
     }
