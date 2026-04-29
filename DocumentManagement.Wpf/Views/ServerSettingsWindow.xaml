@@ -1,0 +1,95 @@
+<Window x:Class="DocumentManagement.Wpf.Views.ServerSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Title="Cấu hình máy chủ"
+        Width="560"
+        Height="330"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        Background="{StaticResource AppBackgroundBrush}"
+        FontFamily="{StaticResource AppFontFamily}">
+
+    <Grid Margin="22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="18"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="12"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0">
+            <TextBlock Text="Cấu hình máy chủ API"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource TextBrush}"/>
+            <TextBlock Text="Mỗi máy client cần trỏ về cùng một API server để dùng chung dữ liệu."
+                       Margin="0,6,0,0"
+                       Foreground="{StaticResource TextMutedBrush}"
+                       FontSize="13"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2">
+            <TextBlock Text="Server URL"
+                       FontWeight="SemiBold"
+                       Foreground="{StaticResource TextBrush}"
+                       Margin="0,0,0,6"/>
+            <Grid>
+                <TextBox x:Name="ServerUrlTextBox"
+                         Height="42"
+                         Style="{StaticResource AppTextBoxStyle}"
+                         materialDesign:HintAssist.Hint="Ví dụ: http://192.168.1.10:5033/"
+                         materialDesign:HintAssist.IsFloating="False"/>
+            </Grid>
+        </StackPanel>
+
+        <Border Grid.Row="4"
+                Background="#ECFDF5"
+                BorderBrush="#BBF7D0"
+                BorderThickness="1"
+                CornerRadius="8"
+                Padding="12">
+            <StackPanel>
+                <TextBlock Text="Gợi ý triển khai LAN"
+                           FontWeight="SemiBold"
+                           Foreground="#166534"/>
+                <TextBlock Text="Server chạy API trên một máy cố định. Các máy WPF nhập IP hoặc domain nội bộ của server."
+                           Margin="0,5,0,0"
+                           Foreground="#166534"
+                           TextWrapping="Wrap"/>
+            </StackPanel>
+        </Border>
+
+        <TextBlock x:Name="StatusText"
+                   Grid.Row="5"
+                   Margin="0,12,0,0"
+                   TextWrapping="Wrap"
+                   Foreground="{StaticResource TextMutedBrush}"/>
+
+        <Grid Grid.Row="6">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Left">
+                <Button Content="Kiểm tra kết nối"
+                        Width="150"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Click="TestButton_Click"/>
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button Content="Hủy"
+                        Width="92"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        IsCancel="True"
+                        Margin="0,0,10,0"/>
+                <Button Content="Lưu"
+                        Width="110"
+                        Style="{StaticResource SuccessButtonStyle}"
+                        Click="SaveButton_Click"/>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

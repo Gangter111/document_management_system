@@ -72,3 +72,5 @@ D:\QuanLyVanBan\DocumentManagement.Wpf\obj\Debug\net8.0-windows\refint\DocumentM
 D:\QuanLyVanBan\DocumentManagement.Wpf\obj\Debug\net8.0-windows\DocumentManagement.Wpf.pdb
 D:\QuanLyVanBan\DocumentManagement.Wpf\obj\Debug\net8.0-windows\DocumentManagement.Wpf.genruntimeconfig.cache
 D:\QuanLyVanBan\DocumentManagement.Wpf\obj\Debug\net8.0-windows\ref\DocumentManagement.Wpf.dll
+D:\QuanLyVanBan\DocumentManagement.Wpf\obj\Debug\net8.0-windows\Views\ServerSettingsWindow.baml
+D:\QuanLyVanBan\DocumentManagement.Wpf\obj\Debug\net8.0-windows\Views\ServerSettingsWindow.g.cs

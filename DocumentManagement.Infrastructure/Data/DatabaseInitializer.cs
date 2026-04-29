@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS Users (
     Username TEXT NOT NULL UNIQUE,
     PasswordHash TEXT NOT NULL DEFAULT '',
     FullName TEXT NOT NULL DEFAULT '',
+    Department TEXT NOT NULL DEFAULT '',
     IsActive INTEGER NOT NULL DEFAULT 1,
     RoleId INTEGER NOT NULL DEFAULT 0
 );
@@ -127,6 +128,7 @@ CREATE TABLE IF NOT EXISTS document_history (
     {
         EnsureColumnExists(connection, "Users", "PasswordHash", "TEXT NOT NULL DEFAULT ''");
         EnsureColumnExists(connection, "Users", "FullName", "TEXT NOT NULL DEFAULT ''");
+        EnsureColumnExists(connection, "Users", "Department", "TEXT NOT NULL DEFAULT ''");
         EnsureColumnExists(connection, "Users", "IsActive", "INTEGER NOT NULL DEFAULT 1");
         EnsureColumnExists(connection, "Users", "RoleId", "INTEGER NOT NULL DEFAULT 0");
     }
@@ -165,7 +167,7 @@ CREATE TABLE IF NOT EXISTS document_history (
 
     private static void SeedRoles(SqliteConnection connection)
     {
-        var roles = new[] { "Admin", "Manager", "Staff" };
+        var roles = new[] { "Admin", "Manager", "Publisher", "Staff" };
 
         foreach (var role in roles)
         {
@@ -295,6 +297,16 @@ VALUES ($code, $displayName);";
             "task.view",
             "task.create"
         });
+
+        AssignPermissions(connection, "Publisher", new[]
+        {
+            "document.view",
+            "document.create",
+            "document.edit",
+            "task.view",
+            "task.create",
+            "report.view"
+        });
     }
 
     private static void AssignPermissions(
@@ -380,21 +392,32 @@ VALUES ($id, $name, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);";
             username: "admin",
             passwordHash: "admin",
             fullName: "Administrator",
-            roleName: "Admin");
+            roleName: "Admin",
+            department: "Ban Giám đốc");
 
         SeedUser(
             connection,
             username: "manager",
             passwordHash: "manager",
             fullName: "Manager User",
-            roleName: "Manager");
+            roleName: "Manager",
+            department: "Phòng HCNS");
 
         SeedUser(
             connection,
             username: "staff",
             passwordHash: "staff",
             fullName: "Staff User",
-            roleName: "Staff");
+            roleName: "Staff",
+            department: "Phòng Kinh doanh");
+
+        SeedUser(
+            connection,
+            username: "publisher",
+            passwordHash: "publisher",
+            fullName: "Publisher User",
+            roleName: "Publisher",
+            department: "Phòng HCNS");
     }
 
     private static void SeedUser(
@@ -402,17 +425,19 @@ VALUES ($id, $name, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);";
         string username,
         string passwordHash,
         string fullName,
-        string roleName)
+        string roleName,
+        string department)
     {
         var roleId = GetRoleId(connection, roleName);
 
         using var insertCmd = connection.CreateCommand();
         insertCmd.CommandText = @"
-INSERT OR IGNORE INTO Users(Username, PasswordHash, FullName, IsActive, RoleId)
-VALUES ($username, $passwordHash, $fullName, 1, $roleId);";
+INSERT OR IGNORE INTO Users(Username, PasswordHash, FullName, Department, IsActive, RoleId)
+VALUES ($username, $passwordHash, $fullName, $department, 1, $roleId);";
         insertCmd.Parameters.AddWithValue("$username", username);
         insertCmd.Parameters.AddWithValue("$passwordHash", passwordHash);
         insertCmd.Parameters.AddWithValue("$fullName", fullName);
+        insertCmd.Parameters.AddWithValue("$department", department);
         insertCmd.Parameters.AddWithValue("$roleId", roleId);
         insertCmd.ExecuteNonQuery();
 
@@ -421,12 +446,14 @@ VALUES ($username, $passwordHash, $fullName, 1, $roleId);";
 UPDATE Users
 SET PasswordHash = CASE WHEN PasswordHash IS NULL OR TRIM(PasswordHash) = '' THEN $passwordHash ELSE PasswordHash END,
     FullName = CASE WHEN FullName IS NULL OR TRIM(FullName) = '' THEN $fullName ELSE FullName END,
+    Department = CASE WHEN Department IS NULL OR TRIM(Department) = '' THEN $department ELSE Department END,
     IsActive = COALESCE(IsActive, 1),
     RoleId = CASE WHEN RoleId IS NULL OR RoleId = 0 THEN $roleId ELSE RoleId END
 WHERE LOWER(TRIM(Username)) = LOWER(TRIM($username));";
         updateCmd.Parameters.AddWithValue("$username", username);
         updateCmd.Parameters.AddWithValue("$passwordHash", passwordHash);
         updateCmd.Parameters.AddWithValue("$fullName", fullName);
+        updateCmd.Parameters.AddWithValue("$department", department);
         updateCmd.Parameters.AddWithValue("$roleId", roleId);
         updateCmd.ExecuteNonQuery();
     }

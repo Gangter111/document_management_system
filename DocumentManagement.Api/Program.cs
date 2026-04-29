@@ -1,4 +1,5 @@
 using System.Text;
+using DocumentManagement.Api.Health;
 using DocumentManagement.Api.Services;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Services;
@@ -6,19 +7,45 @@ using DocumentManagement.Infrastructure.Data;
 using DocumentManagement.Infrastructure.Repositories;
 using DocumentManagement.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseWindowsService(options =>
+{
+    options.ServiceName = "DocumentManagement.Api";
+});
+
+builder.Host.UseSerilog((context, services, configuration) =>
+{
+    configuration
+        .MinimumLevel.Information()
+        .Enrich.FromLogContext()
+        .WriteTo.Console()
+        .WriteTo.File(
+            path: Path.Combine(AppContext.BaseDirectory, "logs", "api-.log"),
+            rollingInterval: RollingInterval.Day,
+            retainedFileCountLimit: 30);
+});
 
 // =======================
 // DB PATH CHUAN
 // =======================
 var rootPath = Directory.GetCurrentDirectory();
-var databaseDirectory = Path.Combine(rootPath, "database");
-var databasePath = Path.Combine(databaseDirectory, "app.db");
+var configuredDatabasePath = builder.Configuration["Database:Path"];
+var databasePath = string.IsNullOrWhiteSpace(configuredDatabasePath)
+    ? Path.Combine(rootPath, "database", "app.db")
+    : configuredDatabasePath;
 
-Directory.CreateDirectory(databaseDirectory);
+var databaseDirectory = Path.GetDirectoryName(databasePath);
+if (!string.IsNullOrWhiteSpace(databaseDirectory))
+{
+    Directory.CreateDirectory(databaseDirectory);
+}
 
 var connectionString = $"Data Source={databasePath}";
 
@@ -26,6 +53,9 @@ var connectionString = $"Data Source={databasePath}";
 // SERVICES
 // =======================
 builder.Services.AddControllers();
+builder.Services
+    .AddHealthChecks()
+    .AddCheck<SqliteHealthCheck>("sqlite");
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -98,6 +128,9 @@ builder.Services
 
 builder.Services.AddAuthorization();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+
 var app = builder.Build();
 
 // =======================
@@ -112,6 +145,31 @@ using (var scope = app.Services.CreateScope())
 // =======================
 // HTTP PIPELINE
 // =======================
+app.UseSerilogRequestLogging();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        var exception = context.Features.Get<IExceptionHandlerFeature>()?.Error;
+
+        logger.LogError(
+            exception,
+            "Unhandled exception while processing {Method} {Path}",
+            context.Request.Method,
+            context.Request.Path);
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        await context.Response.WriteAsJsonAsync(new
+        {
+            message = "Có lỗi hệ thống. Vui lòng thử lại hoặc liên hệ quản trị viên."
+        });
+    });
+});
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -121,6 +179,11 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 app.Run();
+
+public partial class Program
+{
+}

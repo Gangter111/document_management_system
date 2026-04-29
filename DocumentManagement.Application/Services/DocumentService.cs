@@ -343,6 +343,7 @@ public class DocumentService : IDocumentService
             Action = action,
             OldValues = oldValue == null ? null : SerializeForAudit(oldValue),
             NewValues = newValue == null ? null : SerializeForAudit(newValue),
+            ChangedColumns = GetChangedColumns(oldValue, newValue),
             Username = username,
             CreatedAt = DateTime.UtcNow
         });
@@ -375,9 +376,70 @@ public class DocumentService : IDocumentService
             IsActive = source.IsActive,
             IsExpired = source.IsExpired,
             OcrStatus = source.OcrStatus,
+            CreatedAt = source.CreatedAt,
+            UpdatedAt = source.UpdatedAt,
             CreatedBy = source.CreatedBy,
             UpdatedBy = source.UpdatedBy
         };
+    }
+
+    private static string? GetChangedColumns(Document? oldValue, Document? newValue)
+    {
+        if (oldValue == null && newValue == null)
+        {
+            return null;
+        }
+
+        if (oldValue == null)
+        {
+            return "CREATED";
+        }
+
+        if (newValue == null)
+        {
+            return "DELETED";
+        }
+
+        var changedColumns = new List<string>();
+
+        AddIfChanged(changedColumns, nameof(Document.DocumentType), oldValue.DocumentType, newValue.DocumentType);
+        AddIfChanged(changedColumns, nameof(Document.DocumentNumber), oldValue.DocumentNumber, newValue.DocumentNumber);
+        AddIfChanged(changedColumns, nameof(Document.ReferenceNumber), oldValue.ReferenceNumber, newValue.ReferenceNumber);
+        AddIfChanged(changedColumns, nameof(Document.Title), oldValue.Title, newValue.Title);
+        AddIfChanged(changedColumns, nameof(Document.Summary), oldValue.Summary, newValue.Summary);
+        AddIfChanged(changedColumns, nameof(Document.ContentText), oldValue.ContentText, newValue.ContentText);
+        AddIfChanged(changedColumns, nameof(Document.IssueDate), oldValue.IssueDate, newValue.IssueDate);
+        AddIfChanged(changedColumns, nameof(Document.ReceivedDate), oldValue.ReceivedDate, newValue.ReceivedDate);
+        AddIfChanged(changedColumns, nameof(Document.DueDate), oldValue.DueDate, newValue.DueDate);
+        AddIfChanged(changedColumns, nameof(Document.SenderName), oldValue.SenderName, newValue.SenderName);
+        AddIfChanged(changedColumns, nameof(Document.ReceiverName), oldValue.ReceiverName, newValue.ReceiverName);
+        AddIfChanged(changedColumns, nameof(Document.SignerName), oldValue.SignerName, newValue.SignerName);
+        AddIfChanged(changedColumns, nameof(Document.CategoryId), oldValue.CategoryId, newValue.CategoryId);
+        AddIfChanged(changedColumns, nameof(Document.StatusId), oldValue.StatusId, newValue.StatusId);
+        AddIfChanged(changedColumns, nameof(Document.ConfidentialityLevel), oldValue.ConfidentialityLevel, newValue.ConfidentialityLevel);
+        AddIfChanged(changedColumns, nameof(Document.UrgencyLevel), oldValue.UrgencyLevel, newValue.UrgencyLevel);
+        AddIfChanged(changedColumns, nameof(Document.ProcessingDepartment), oldValue.ProcessingDepartment, newValue.ProcessingDepartment);
+        AddIfChanged(changedColumns, nameof(Document.AssignedTo), oldValue.AssignedTo, newValue.AssignedTo);
+        AddIfChanged(changedColumns, nameof(Document.Notes), oldValue.Notes, newValue.Notes);
+        AddIfChanged(changedColumns, nameof(Document.IsActive), oldValue.IsActive, newValue.IsActive);
+        AddIfChanged(changedColumns, nameof(Document.IsExpired), oldValue.IsExpired, newValue.IsExpired);
+        AddIfChanged(changedColumns, nameof(Document.OcrStatus), oldValue.OcrStatus, newValue.OcrStatus);
+        AddIfChanged(changedColumns, nameof(Document.CreatedAt), oldValue.CreatedAt, newValue.CreatedAt);
+        AddIfChanged(changedColumns, nameof(Document.UpdatedAt), oldValue.UpdatedAt, newValue.UpdatedAt);
+        AddIfChanged(changedColumns, nameof(Document.CreatedBy), oldValue.CreatedBy, newValue.CreatedBy);
+        AddIfChanged(changedColumns, nameof(Document.UpdatedBy), oldValue.UpdatedBy, newValue.UpdatedBy);
+
+        return changedColumns.Count == 0
+            ? null
+            : string.Join(",", changedColumns);
+    }
+
+    private static void AddIfChanged<T>(List<string> changedColumns, string columnName, T oldValue, T newValue)
+    {
+        if (!EqualityComparer<T>.Default.Equals(oldValue, newValue))
+        {
+            changedColumns.Add(columnName);
+        }
     }
 
     private static string SerializeForAudit(Document document)

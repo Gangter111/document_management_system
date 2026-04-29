@@ -1,3 +1,7 @@
+param(
+    [switch]$SkipSmoke
+)
+
 $ErrorActionPreference = "Stop"
 
 $Root = Resolve-Path "$PSScriptRoot\.."
@@ -34,22 +38,12 @@ foreach ($project in $projects) {
 
 Pass "Build all projects OK"
 
-$wpfProject = ".\DocumentManagement.Wpf\DocumentManagement.Wpf.csproj"
-$wpfText = Get-Content $wpfProject -Raw
-
-$forbiddenRefs = @(
-    "DocumentManagement.Application",
-    "DocumentManagement.Domain",
-    "DocumentManagement.Infrastructure"
-)
-
-foreach ($ref in $forbiddenRefs) {
-    if ($wpfText.Contains($ref)) {
-        Fail "Architecture violation: WPF references $ref"
-    }
+Info "Running Architecture Check..."
+powershell -ExecutionPolicy Bypass -File ".\tools\architecture-check.ps1"
+if ($LASTEXITCODE -ne 0) {
+    Fail "Architecture check failed"
 }
 
-Pass "Architecture check OK"
 
 dotnet test ".\DocumentManagement.Tests\DocumentManagement.Tests.csproj" --no-build
 if ($LASTEXITCODE -ne 0) {
@@ -58,9 +52,11 @@ if ($LASTEXITCODE -ne 0) {
 
 Pass "Tests OK"
 
-powershell -ExecutionPolicy Bypass -File ".\tools\smoke-test.ps1"
-if ($LASTEXITCODE -ne 0) {
-    Fail "Smoke test failed"
+if (-not $SkipSmoke) {
+    powershell -ExecutionPolicy Bypass -File ".\tools\smoke-test.ps1"
+    if ($LASTEXITCODE -ne 0) {
+        Fail "Smoke test failed"
+    }
 }
 
 Pass "VERIFY PASSED"

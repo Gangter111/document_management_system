@@ -25,7 +25,7 @@ public class DocumentsControllerTests
         _controller = CreateController("Admin");
     }
 
-    private DocumentsController CreateController(string role)
+    private DocumentsController CreateController(string role, string department = "Phòng HCNS")
     {
         var controller = new DocumentsController(_mockDocumentService.Object);
 
@@ -34,7 +34,8 @@ public class DocumentsControllerTests
                 new[]
                 {
                     new Claim(ClaimTypes.Name, "test-user"),
-                    new Claim(ClaimTypes.Role, role)
+                    new Claim(ClaimTypes.Role, role),
+                    new Claim("department", department)
                 },
                 "TestAuth"));
 
@@ -199,5 +200,87 @@ public class DocumentsControllerTests
         var result = await controller.Delete(999);
 
         Assert.IsType<NotFoundObjectResult>(result);
+    }
+
+    [Fact]
+    public async Task Update_ShouldAllowPublisher()
+    {
+        var controller = CreateController("Publisher");
+
+        var existing = new Document
+        {
+            Id = 7,
+            DocumentNumber = "PUB-001",
+            Title = "Original",
+            ProcessingDepartment = "Phòng HCNS",
+            IsActive = true
+        };
+
+        _mockDocumentService
+            .Setup(s => s.GetByIdAsync(7))
+            .ReturnsAsync(existing);
+
+        _mockDocumentService
+            .Setup(s => s.UpdateAsync(It.IsAny<Document>()))
+            .Returns(Task.CompletedTask);
+
+        var request = new ContractUpdateDocumentRequest
+        {
+            Id = 7,
+            DocumentNumber = "PUB-001",
+            Title = "Publisher updated",
+            ProcessingDepartment = "Phòng HCNS",
+            StatusId = 4
+        };
+
+        var result = await controller.Update(7, request);
+
+        Assert.IsType<NoContentResult>(result);
+        _mockDocumentService.Verify(s => s.UpdateAsync(It.IsAny<Document>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task Update_ShouldBlockPublisher_WhenDepartmentMismatch()
+    {
+        var controller = CreateController("Publisher", "Phòng Kế toán");
+
+        var existing = new Document
+        {
+            Id = 8,
+            DocumentNumber = "PUB-002",
+            Title = "Original",
+            ProcessingDepartment = "Phòng HCNS",
+            IsActive = true
+        };
+
+        _mockDocumentService
+            .Setup(s => s.GetByIdAsync(8))
+            .ReturnsAsync(existing);
+
+        var request = new ContractUpdateDocumentRequest
+        {
+            Id = 8,
+            DocumentNumber = "PUB-002",
+            Title = "Blocked",
+            ProcessingDepartment = "Phòng HCNS",
+            StatusId = 4
+        };
+
+        var result = await controller.Update(8, request);
+
+        var forbidden = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status403Forbidden, forbidden.StatusCode);
+        _mockDocumentService.Verify(s => s.UpdateAsync(It.IsAny<Document>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task Delete_ShouldBlockPublisher()
+    {
+        var controller = CreateController("Publisher");
+
+        var result = await controller.Delete(7);
+
+        var forbidden = Assert.IsType<ObjectResult>(result);
+        Assert.Equal(StatusCodes.Status403Forbidden, forbidden.StatusCode);
     }
 }

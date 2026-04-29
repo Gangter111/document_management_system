@@ -8,10 +8,10 @@
         xmlns:views="clr-namespace:DocumentManagement.Wpf.Views"
         mc:Ignorable="d"
         Title="Phú Gia Group - Hệ thống Quản lý Văn bản"
-        Height="860"
-        Width="1440"
+        Height="820"
+        Width="1360"
         MinHeight="760"
-        MinWidth="1220"
+        MinWidth="1180"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource AppBackgroundBrush}"
         TextElement.Foreground="{StaticResource TextBrush}"
@@ -29,43 +29,30 @@
             <views:DashboardView />
         </DataTemplate>
 
-        <Style x:Key="SidebarSectionTitleStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource TextSoftBrush}"/>
-            <Setter Property="FontSize" Value="11"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Margin" Value="18,0,0,10"/>
-        </Style>
-
-        <Style x:Key="MenuButtonStyle" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="Margin" Value="10,0,10,6"/>
+        <Style x:Key="SidebarButtonStyle" TargetType="RadioButton">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Margin" Value="8,2"/>
+            <Setter Property="Foreground" Value="#E7F4EC"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="RootBorder"
+                        <Border x:Name="Root"
                                 Background="Transparent"
-                                BorderBrush="Transparent"
-                                BorderThickness="1"
-                                CornerRadius="12"
-                                Padding="14,12"
-                                SnapsToDevicePixels="True">
+                                CornerRadius="6"
+                                Padding="12,0">
                             <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
-
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource HoverBrush}"/>
+                                <Setter TargetName="Root" Property="Background" Value="#187A47"/>
                             </Trigger>
-
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
-                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
-                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="#DBEAFE"/>
+                                <Setter TargetName="Root" Property="Background" Value="#1B8B50"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
-
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Opacity" Value="0.45"/>
+                                <Setter Property="Opacity" Value="0.48"/>
                                 <Setter Property="Cursor" Value="Arrow"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -74,567 +61,271 @@
             </Setter>
         </Style>
 
-        <Style x:Key="SystemActionButtonStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="Margin" Value="10,0,10,6"/>
-            <Setter Property="Cursor" Value="Hand"/>
+        <Style x:Key="SidebarActionButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="38"/>
+            <Setter Property="Margin" Value="8,2"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Foreground" Value="#E7F4EC"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="RootBorder"
+                        <Border x:Name="Root"
                                 Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="12"
-                                Padding="14,12"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter VerticalAlignment="Center"
-                                              HorizontalAlignment="Stretch"/>
+                                CornerRadius="6"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter VerticalAlignment="Center"/>
                         </Border>
-
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource HoverBrush}"/>
-                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
+                                <Setter TargetName="Root" Property="Background" Value="#187A47"/>
                             </Trigger>
-
                             <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource PressedBrush}"/>
+                                <Setter TargetName="Root" Property="Background" Value="#0A5C31"/>
                             </Trigger>
-
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="RootBorder" Property="Opacity" Value="0.45"/>
+                                <Setter TargetName="Root" Property="Opacity" Value="0.48"/>
                                 <Setter Property="Cursor" Value="Arrow"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
-        </Style>
-
-        <Style x:Key="RestoreActionButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource SystemActionButtonStyle}">
-            <Setter Property="Foreground" Value="#92400E"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FFFBEB"/>
-                    <Setter Property="BorderBrush" Value="#FDE68A"/>
-                </Trigger>
-            </Style.Triggers>
         </Style>
 
         <Style x:Key="TopIconButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="40"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
+            <Setter Property="Width" Value="34"/>
+            <Setter Property="Height" Value="34"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="10"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="{StaticResource HoverBrush}"/>
-                            </Trigger>
-
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="{StaticResource PressedBrush}"/>
-                            </Trigger>
-
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.45"/>
-                                <Setter Property="Cursor" Value="Arrow"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="ExitButtonStyle" TargetType="Button">
-            <Setter Property="Margin" Value="10,0,10,10"/>
-            <Setter Property="Height" Value="48"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="12"
-                                Padding="14,0"
-                                SnapsToDevicePixels="True">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#FEF2F2"/>
-                                <Setter TargetName="Root" Property="BorderBrush" Value="#FECACA"/>
-                            </Trigger>
-
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="#FEE2E2"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
     </Window.Resources>
 
     <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="272"/>
+            <ColumnDefinition Width="136"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <!-- SIDEBAR -->
-        <Border Grid.Column="0"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrushDefault}"
-                BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Background="#004B28">
             <DockPanel LastChildFill="True">
+                <Button DockPanel.Dock="Bottom"
+                        Style="{StaticResource SidebarActionButtonStyle}"
+                        Click="ExitButton_Click"
+                        Margin="8,0,8,12">
+                    <StackPanel Orientation="Horizontal">
+                        <materialDesign:PackIcon Kind="Logout"
+                                                 Width="15"
+                                                 Height="15"
+                                                 Foreground="#E7F4EC"
+                                                 VerticalAlignment="Center"/>
+                        <TextBlock Text="Thu gọn"
+                                   Margin="9,0,0,0"
+                                   Foreground="#E7F4EC"
+                                   FontSize="12"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
 
-                <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,14">
-                    <Button Click="ExitButton_Click"
-                            Style="{StaticResource ExitButtonStyle}">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="Logout"
-                                                     Foreground="{StaticResource DangerBrush}"
-                                                     Width="18"
-                                                     Height="18"
-                                                     VerticalAlignment="Center"/>
-                            <TextBlock Text="Thoát ứng dụng"
-                                       Margin="12,0,0,0"
-                                       FontWeight="SemiBold"
-                                       Foreground="{StaticResource DangerBrush}"
-                                       VerticalAlignment="Center"/>
+                <StackPanel DockPanel.Dock="Top">
+                    <Border Height="92"
+                            Padding="18,10"
+                            BorderBrush="#12683C"
+                            BorderThickness="0,0,0,1">
+                        <Image Source="pack://application:,,,/Assets/Images/logo-tach.png"
+                               Stretch="Uniform"/>
+                    </Border>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}"
+                                 IsChecked="True"
+                                 Command="{Binding ShowDashboardCommand}"
+                                 Visibility="{Binding CanViewDashboard, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="HomeOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Tổng quan" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}"
+                                 Command="{Binding ShowDocumentListCommand}"
+                                 Visibility="{Binding CanViewDocuments, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileDocumentOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Văn bản" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PencilBoxOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Soạn thảo" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CheckboxMarkedCircleOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Duyệt văn bản" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ArchiveOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Lưu trữ" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="ChartBar" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Báo cáo" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}" IsEnabled="False" GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="TagMultipleOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Danh mục" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <RadioButton Style="{StaticResource SidebarButtonStyle}"
+                                 Visibility="{Binding CanViewSettings, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                 IsEnabled="False"
+                                 GroupName="MenuMain">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CogOutline" Width="15" Height="15" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Hệ thống" Margin="9,0,0,0" Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </RadioButton>
+
+                    <Separator Margin="14,10" Background="#12683C"/>
+
+                    <Button Style="{StaticResource SidebarActionButtonStyle}"
+                            Command="{Binding BackupCommand}"
+                            Visibility="{Binding CanBackup, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="DatabaseArrowUpOutline" Width="15" Height="15" Foreground="#E7F4EC" VerticalAlignment="Center"/>
+                            <TextBlock Text="Backup" Margin="9,0,0,0" Foreground="#E7F4EC" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource SidebarActionButtonStyle}"
+                            Command="{Binding RestoreCommand}"
+                            Visibility="{Binding CanRestore, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="DatabaseRefreshOutline" Width="15" Height="15" Foreground="#E7F4EC" VerticalAlignment="Center"/>
+                            <TextBlock Text="Restore" Margin="9,0,0,0" Foreground="#E7F4EC" FontSize="12" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
-
-                <StackPanel DockPanel.Dock="Top" Margin="18,22,18,18">
-                    <Border Background="{StaticResource SurfaceMutedBrush}"
-                            BorderBrush="{StaticResource BorderBrushDefault}"
-                            BorderThickness="1"
-                            CornerRadius="16"
-                            Padding="16">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <Border Width="42"
-                                        Height="42"
-                                        CornerRadius="12"
-                                        Background="{StaticResource PrimaryLightBrush}">
-                                    <Viewbox Margin="9">
-                                        <materialDesign:PackIcon Kind="FileDocumentMultipleOutline"
-                                                                 Foreground="{StaticResource PrimaryBrush}"/>
-                                    </Viewbox>
-                                </Border>
-
-                                <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="PHÚ GIA GROUP"
-                                               FontSize="15"
-                                               FontWeight="Bold"
-                                               Foreground="{StaticResource TextBrush}"/>
-                                    <TextBlock Text="Document Management"
-                                               FontSize="12"
-                                               Foreground="{StaticResource TextMutedBrush}"/>
-                                </StackPanel>
-                            </StackPanel>
-
-                            <Border Margin="0,14,0,0"
-                                    Background="{StaticResource SurfaceBrush}"
-                                    BorderBrush="{StaticResource BorderBrushDefault}"
-                                    BorderThickness="1"
-                                    CornerRadius="10"
-                                    Padding="10,8">
-                                <TextBlock Text="Hệ thống quản lý văn bản nội bộ"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           FontSize="12"
-                                           TextWrapping="Wrap"/>
-                            </Border>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
-
-                <ScrollViewer VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled">
-                    <StackPanel Margin="0,4,0,0">
-                        <TextBlock Text="ĐIỀU HƯỚNG"
-                                   Style="{StaticResource SidebarSectionTitleStyle}"/>
-
-                        <RadioButton Style="{StaticResource MenuButtonStyle}"
-                                     IsChecked="True"
-                                     Command="{Binding ShowDashboardCommand}"
-                                     Visibility="{Binding CanViewDashboard, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                     GroupName="MenuMain">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ViewDashboardOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"/>
-                                <TextBlock Text="Bảng điều khiển"
-                                           Margin="14,0,0,0"
-                                           VerticalAlignment="Center"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton Style="{StaticResource MenuButtonStyle}"
-                                     Command="{Binding ShowDocumentListCommand}"
-                                     Visibility="{Binding CanViewDocuments, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                     GroupName="MenuMain">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="FileDocumentOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"/>
-                                <TextBlock Text="Quản lý tài liệu"
-                                           Margin="14,0,0,0"
-                                           VerticalAlignment="Center"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton Style="{StaticResource MenuButtonStyle}"
-                                     Visibility="{Binding CanViewTasks, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                     IsEnabled="False"
-                                     GroupName="MenuMain">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ClipboardTextClockOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"/>
-                                <TextBlock Text="Công việc"
-                                           Margin="14,0,0,0"
-                                           VerticalAlignment="Center"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton Style="{StaticResource MenuButtonStyle}"
-                                     Visibility="{Binding CanViewReports, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                     IsEnabled="False"
-                                     GroupName="MenuMain">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="ChartBoxOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"/>
-                                <TextBlock Text="Báo cáo"
-                                           Margin="14,0,0,0"
-                                           VerticalAlignment="Center"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <RadioButton Style="{StaticResource MenuButtonStyle}"
-                                     Visibility="{Binding CanViewSettings, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                     IsEnabled="False"
-                                     GroupName="MenuMain">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="CogOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="{Binding RelativeSource={RelativeSource AncestorType=RadioButton}, Path=Foreground}"/>
-                                <TextBlock Text="Cài đặt"
-                                           Margin="14,0,0,0"
-                                           VerticalAlignment="Center"
-                                           FontWeight="SemiBold"/>
-                            </StackPanel>
-                        </RadioButton>
-
-                        <Separator Margin="18,18,18,16"
-                                   Background="{StaticResource BorderBrushDefault}"/>
-
-                        <TextBlock Text="HỆ THỐNG"
-                                   Style="{StaticResource SidebarSectionTitleStyle}"/>
-
-                        <Button Style="{StaticResource SystemActionButtonStyle}"
-                                Command="{Binding BackupCommand}"
-                                Visibility="{Binding CanBackup, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="DatabaseArrowUpOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="{StaticResource TextBrush}"/>
-                                <StackPanel Margin="14,0,0,0">
-                                    <TextBlock Text="Sao lưu dữ liệu"
-                                               FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextBrush}"/>
-                                    <TextBlock Text="Tạo bản sao an toàn"
-                                               Margin="0,3,0,0"
-                                               FontSize="11"
-                                               Foreground="{StaticResource TextMutedBrush}"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Button>
-
-                        <Button Style="{StaticResource RestoreActionButtonStyle}"
-                                Command="{Binding RestoreCommand}"
-                                Visibility="{Binding CanRestore, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <StackPanel Orientation="Horizontal">
-                                <materialDesign:PackIcon Kind="DatabaseRefreshOutline"
-                                                         Width="18"
-                                                         Height="18"
-                                                         VerticalAlignment="Center"
-                                                         Foreground="#92400E"/>
-                                <StackPanel Margin="14,0,0,0">
-                                    <TextBlock Text="Khôi phục dữ liệu"
-                                               FontWeight="SemiBold"
-                                               Foreground="#92400E"/>
-                                    <TextBlock Text="Ghi đè dữ liệu hiện tại"
-                                               Margin="0,3,0,0"
-                                               FontSize="11"
-                                               Foreground="#B45309"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Button>
-
-                        <Border Margin="10,18,10,10"
-                                Padding="14"
-                                CornerRadius="14"
-                                Background="{StaticResource SurfaceMutedBrush}"
-                                BorderBrush="{StaticResource BorderBrushDefault}"
-                                BorderThickness="1">
-                            <StackPanel>
-                                <TextBlock Text="UI polish phase"
-                                           FontWeight="Bold"
-                                           Foreground="{StaticResource TextBrush}"/>
-                                <TextBlock Text="Shell, sidebar và topbar đã đồng bộ với Dashboard, Document List và Document Form."
-                                           Margin="0,8,0,0"
-                                           Foreground="{StaticResource TextMutedBrush}"
-                                           FontSize="12"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
             </DockPanel>
         </Border>
 
-        <!-- MAIN AREA -->
-        <Grid Grid.Column="1"
-              Background="{StaticResource AppBackgroundBrush}"
-              ClipToBounds="True">
+        <Grid Grid.Column="1">
             <Grid.RowDefinitions>
-                <RowDefinition Height="76"/>
+                <RowDefinition Height="58"/>
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <!-- TOPBAR -->
             <Border Grid.Row="0"
                     Background="{StaticResource SurfaceBrush}"
                     BorderBrush="{StaticResource BorderBrushDefault}"
                     BorderThickness="0,0,0,1">
-                <Grid Margin="24,0">
+                <Grid Margin="20,0">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="460"/>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- QUICK SEARCH -->
-                    <Border Grid.Column="0"
-                            Height="44"
+                    <Border Width="330"
+                            Height="34"
+                            HorizontalAlignment="Right"
                             VerticalAlignment="Center"
-                            Background="{StaticResource SurfaceMutedBrush}"
+                            Margin="0,0,24,0"
+                            Background="#FBFCFB"
                             BorderBrush="{StaticResource BorderBrushDefault}"
                             BorderThickness="1"
-                            CornerRadius="12">
-                        <Grid Margin="14,0">
+                            CornerRadius="6">
+                        <Grid Margin="10,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="24"/>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="22"/>
                             </Grid.ColumnDefinitions>
-
-                            <materialDesign:PackIcon Grid.Column="0"
-                                                     Kind="Magnify"
-                                                     Width="18"
-                                                     Height="18"
-                                                     Foreground="{StaticResource TextSoftBrush}"
-                                                     VerticalAlignment="Center"/>
-
-                            <TextBox Grid.Column="1"
-                                     Margin="10,0,0,0"
-                                     VerticalAlignment="Center"
-                                     Text="{Binding QuickSearchText, UpdateSourceTrigger=PropertyChanged}"
+                            <TextBox Text="{Binding QuickSearchText, UpdateSourceTrigger=PropertyChanged}"
                                      Background="Transparent"
                                      BorderThickness="0"
-                                     FontSize="14"
                                      Foreground="{StaticResource TextBrush}"
-                                     materialDesign:HintAssist.Hint="Tìm theo số hiệu, trích yếu, người gửi..."
+                                     FontSize="12"
+                                     VerticalContentAlignment="Center"
+                                     materialDesign:HintAssist.Hint="Tìm kiếm văn bản, hồ sơ..."
+                                     materialDesign:HintAssist.IsFloating="False"
                                      materialDesign:TextFieldAssist.DecorationVisibility="Hidden"/>
+                            <materialDesign:PackIcon Grid.Column="1"
+                                                     Kind="Magnify"
+                                                     Width="14"
+                                                     Height="14"
+                                                     Foreground="{StaticResource TextMutedBrush}"
+                                                     VerticalAlignment="Center"/>
                         </Grid>
                     </Border>
 
-                    <StackPanel Grid.Column="2"
+                    <StackPanel Grid.Column="1"
                                 Orientation="Horizontal"
-                                HorizontalAlignment="Right"
                                 VerticalAlignment="Center">
-                        <Button Style="{StaticResource TopIconButtonStyle}"
-                                ToolTip="Thông báo">
-                            <materialDesign:PackIcon Kind="BellOutline"
-                                                     Width="18"
-                                                     Height="18"/>
+                        <Button Style="{StaticResource TopIconButtonStyle}" ToolTip="Thông báo">
+                            <materialDesign:PackIcon Kind="BellOutline" Width="18" Height="18"/>
                         </Button>
 
-                        <Button Style="{StaticResource TopIconButtonStyle}"
-                                ToolTip="Dark Mode - làm sau">
-                            <materialDesign:PackIcon Kind="ThemeLightDark"
-                                                     Width="18"
-                                                     Height="18"/>
-                        </Button>
-
-                        <Button Style="{StaticResource TopIconButtonStyle}"
-                                IsEnabled="{Binding CanViewSettings}"
-                                ToolTip="Cài đặt">
-                            <materialDesign:PackIcon Kind="CogOutline"
-                                                     Width="18"
-                                                     Height="18"/>
-                        </Button>
-
-                        <Border Margin="4,0,0,0"
-                                Padding="12,7"
-                                CornerRadius="12"
-                                Background="{StaticResource SurfaceBrush}"
-                                BorderBrush="{StaticResource BorderBrushDefault}"
-                                BorderThickness="1">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="28"
-                                        Height="28"
-                                        CornerRadius="14"
-                                        Background="{StaticResource PrimaryLightBrush}">
-                                    <Viewbox Margin="6">
-                                        <materialDesign:PackIcon Kind="Account"
-                                                                 Foreground="{StaticResource PrimaryBrush}"/>
-                                    </Viewbox>
-                                </Border>
-
-                                <StackPanel Margin="10,0,0,0"
-                                            VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding CurrentDisplayName}"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               Foreground="{StaticResource TextBrush}"/>
-                                    <TextBlock Text="{Binding CurrentRoleName}"
-                                               FontSize="11"
-                                               Foreground="{StaticResource TextMutedBrush}"/>
-                                </StackPanel>
-                            </StackPanel>
+                        <Border Width="30"
+                                Height="30"
+                                CornerRadius="15"
+                                Margin="12,0,10,0"
+                                Background="#5F6864">
+                            <TextBlock Text="NV"
+                                       Foreground="White"
+                                       FontSize="11"
+                                       FontWeight="Bold"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"/>
                         </Border>
+
+                        <StackPanel VerticalAlignment="Center" MinWidth="112">
+                            <TextBlock Text="{Binding CurrentDisplayName}"
+                                       FontSize="12"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource TextBrush}"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding CurrentDepartmentName}"
+                                       FontSize="10"
+                                       Foreground="{StaticResource TextMutedBrush}"/>
+                        </StackPanel>
+
+                        <materialDesign:PackIcon Kind="ChevronDown"
+                                                 Width="16"
+                                                 Height="16"
+                                                 Foreground="{StaticResource TextMutedBrush}"
+                                                 VerticalAlignment="Center"
+                                                 Margin="8,0,0,0"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <!-- CONTENT AREA -->
-            <Grid Grid.Row="1"
-                  Margin="24"
-                  ClipToBounds="True">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-
-                <!-- PAGE HEADER -->
-                <Border Grid.Row="0"
-                        Style="{StaticResource AppCardStyle}"
-                        Padding="20"
-                        Margin="0,0,0,18"
-                        Panel.ZIndex="10">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <StackPanel>
-                            <TextBlock Text="Hệ thống Quản lý Văn bản"
-                                       FontSize="28"
-                                       FontWeight="Bold"
-                                       Foreground="{StaticResource TextBrush}"/>
-                            <TextBlock Text="Quản lý văn bản đến, văn bản đi, workflow duyệt, OCR, phân quyền và sao lưu dữ liệu."
-                                       Margin="0,8,0,0"
-                                       Foreground="{StaticResource TextMutedBrush}"
-                                       FontSize="13"/>
-                        </StackPanel>
-
-                        <StackPanel Grid.Column="1"
-                                    Orientation="Horizontal"
-                                    VerticalAlignment="Center">
-                            <Border Background="#ECFDF5"
-                                    BorderBrush="#BBF7D0"
-                                    BorderThickness="1"
-                                    CornerRadius="999"
-                                    Padding="12,6"
-                                    Margin="0,0,8,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <Ellipse Width="8"
-                                             Height="8"
-                                             Fill="{StaticResource SuccessBrush}"
-                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text=" Hệ thống sẵn sàng"
-                                               Foreground="#166534"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Border>
-
-                            <Button Style="{StaticResource PrimaryButtonStyle}"
-                                    Command="{Binding CreateDocumentCommand}"
-                                    IsEnabled="{Binding CanCreateDocument}">
-                                <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="Plus"
-                                                             Width="16"
-                                                             Height="16"
-                                                             VerticalAlignment="Center"/>
-                                    <TextBlock Text=" Tạo mới"
-                                               FontWeight="SemiBold"
-                                               VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </StackPanel>
-                    </Grid>
-                </Border>
-
-                <!-- VIEW HOST -->
-                <ContentControl Grid.Row="1"
-                                Content="{Binding CurrentView}"
-                                ClipToBounds="True"
-                                HorizontalContentAlignment="Stretch"
-                                VerticalContentAlignment="Stretch"/>
-            </Grid>
+            <ContentControl Grid.Row="1"
+                            Content="{Binding CurrentView}"
+                            ClipToBounds="True"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch"/>
         </Grid>
     </Grid>
 </Window>

@@ -14,26 +14,33 @@ namespace DocumentManagement.Wpf.Services;
 public class ApiService
 {
     private readonly HttpClient _httpClient;
+    private readonly ClientSettingsService _settingsService;
 
-    public ApiService(IConfiguration configuration)
+    public ApiService(ClientSettingsService settingsService)
     {
-        var baseUrl = configuration["Api:BaseUrl"];
-
-        if (string.IsNullOrWhiteSpace(baseUrl))
-        {
-            throw new InvalidOperationException("Thiếu cấu hình Api:BaseUrl trong appsettings.json.");
-        }
-
-        if (!baseUrl.EndsWith('/'))
-        {
-            baseUrl += "/";
-        }
+        _settingsService = settingsService;
 
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(baseUrl),
             Timeout = TimeSpan.FromSeconds(120)
         };
+
+        SetBaseUrl(_settingsService.GetApiBaseUrl());
+    }
+
+    public string BaseUrl => _httpClient.BaseAddress?.ToString() ?? string.Empty;
+
+    public void SetBaseUrl(string baseUrl)
+    {
+        var normalized = ClientSettingsService.NormalizeBaseUrl(baseUrl);
+        _httpClient.BaseAddress = new Uri(normalized);
+    }
+
+    public async Task<bool> CheckHealthAsync(CancellationToken cancellationToken = default)
+    {
+        using var response = await _httpClient.GetAsync("health", cancellationToken);
+
+        return response.IsSuccessStatusCode;
     }
 
     public void SetToken(string? token)

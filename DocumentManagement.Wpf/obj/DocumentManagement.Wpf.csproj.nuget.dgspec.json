@@ -10,7 +10,7 @@
         "projectUniqueName": "D:\\QuanLyVanBan\\DocumentManagement.Contracts\\DocumentManagement.Contracts.csproj",
         "projectName": "DocumentManagement.Contracts",
         "projectPath": "D:\\QuanLyVanBan\\DocumentManagement.Contracts\\DocumentManagement.Contracts.csproj",
-        "packagesPath": "C:\\Users\\Dung\\.nuget\\packages\\",
+        "packagesPath": "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\",
         "outputPath": "D:\\QuanLyVanBan\\DocumentManagement.Contracts\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
@@ -87,7 +87,7 @@
         "projectUniqueName": "D:\\QuanLyVanBan\\DocumentManagement.Wpf\\DocumentManagement.Wpf.csproj",
         "projectName": "DocumentManagement.Wpf",
         "projectPath": "D:\\QuanLyVanBan\\DocumentManagement.Wpf\\DocumentManagement.Wpf.csproj",
-        "packagesPath": "C:\\Users\\Dung\\.nuget\\packages\\",
+        "packagesPath": "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\",
         "outputPath": "D:\\QuanLyVanBan\\DocumentManagement.Wpf\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [

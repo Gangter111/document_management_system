@@ -30,6 +30,7 @@ INSERT INTO audit_logs
     action,
     old_values,
     new_values,
+    changed_columns,
     username,
     created_at
 )
@@ -40,6 +41,7 @@ VALUES
     $action,
     $old_values,
     $new_values,
+    $changed_columns,
     $username,
     $created_at
 );";
@@ -49,6 +51,7 @@ VALUES
         cmd.Parameters.AddWithValue("$action", log.Action);
         cmd.Parameters.AddWithValue("$old_values", log.OldValues ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("$new_values", log.NewValues ?? (object)DBNull.Value);
+        cmd.Parameters.AddWithValue("$changed_columns", log.ChangedColumns ?? (object)DBNull.Value);
         cmd.Parameters.AddWithValue("$username", log.Username);
         cmd.Parameters.AddWithValue("$created_at", log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
 
@@ -70,6 +73,7 @@ SELECT
     action,
     old_values,
     new_values,
+    changed_columns,
     username,
     created_at
 FROM audit_logs
@@ -125,6 +129,7 @@ WHERE entity_name = $entity_name
             Action = reader["action"]?.ToString() ?? string.Empty,
             OldValues = reader["old_values"] == DBNull.Value ? null : reader["old_values"]?.ToString(),
             NewValues = reader["new_values"] == DBNull.Value ? null : reader["new_values"]?.ToString(),
+            ChangedColumns = reader["changed_columns"] == DBNull.Value ? null : reader["changed_columns"]?.ToString(),
             Username = reader["username"]?.ToString() ?? string.Empty,
             CreatedAt = DateTime.Parse(reader["created_at"]?.ToString() ?? DateTime.MinValue.ToString("O"), CultureInfo.InvariantCulture)
         };

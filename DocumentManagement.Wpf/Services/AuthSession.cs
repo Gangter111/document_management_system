@@ -7,6 +7,7 @@ public static class AuthSession
     public static string Username { get; set; } = string.Empty;
     public static string FullName { get; set; } = string.Empty;
     public static string Role { get; set; } = string.Empty;
+    public static string Department { get; set; } = string.Empty;
 
     public static bool IsLoggedIn => !string.IsNullOrWhiteSpace(Token);
 
@@ -17,5 +18,6 @@ public static class AuthSession
         Username = string.Empty;
         FullName = string.Empty;
         Role = string.Empty;
+        Department = string.Empty;
     }
 }

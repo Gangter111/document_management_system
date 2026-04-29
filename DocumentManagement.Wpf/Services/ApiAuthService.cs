@@ -33,6 +33,7 @@ public class ApiAuthService
         AuthSession.Username = response.Username;
         AuthSession.FullName = response.FullName;
         AuthSession.Role = response.Role;
+        AuthSession.Department = response.Department;
 
         _apiService.SetCurrentRole(response.Role);
         _apiService.SetToken(response.Token);

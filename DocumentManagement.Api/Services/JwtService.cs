@@ -14,7 +14,7 @@ public class JwtService
         _configuration = configuration;
     }
 
-    public string GenerateToken(long userId, string username, string fullName, string role)
+    public string GenerateToken(long userId, string username, string fullName, string role, string department)
     {
         var jwt = _configuration.GetSection("Jwt");
 
@@ -29,7 +29,8 @@ public class JwtService
             new Claim(ClaimTypes.Name, username),
             new Claim(ClaimTypes.Role, role),
             new Claim("role", role),
-            new Claim("FullName", fullName)
+            new Claim("FullName", fullName),
+            new Claim("department", department)
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));

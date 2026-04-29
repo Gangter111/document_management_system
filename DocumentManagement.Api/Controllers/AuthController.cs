@@ -66,7 +66,9 @@ public class AuthController : ControllerBase
             ?? GetStringValue(userSession, "Role")
             ?? "STAFF";
 
-        var token = _jwtService.GenerateToken(userId, username, fullName, role);
+        var department = GetStringValue(userSession, "Department") ?? string.Empty;
+
+        var token = _jwtService.GenerateToken(userId, username, fullName, role, department);
 
         return Ok(new LoginResponse
         {
@@ -76,6 +78,7 @@ public class AuthController : ControllerBase
             Username = username,
             FullName = fullName,
             Role = role,
+            Department = department,
             Token = token
         });
     }

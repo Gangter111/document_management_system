@@ -2116,7 +2116,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Dung\\.nuget\\packages\\": {}
+    "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
@@ -2124,7 +2124,7 @@
       "projectUniqueName": "D:\\QuanLyVanBan\\DocumentManagement.Wpf\\DocumentManagement.Wpf.csproj",
       "projectName": "DocumentManagement.Wpf",
       "projectPath": "D:\\QuanLyVanBan\\DocumentManagement.Wpf\\DocumentManagement.Wpf.csproj",
-      "packagesPath": "C:\\Users\\Dung\\.nuget\\packages\\",
+      "packagesPath": "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\",
       "outputPath": "D:\\QuanLyVanBan\\DocumentManagement.Wpf\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [

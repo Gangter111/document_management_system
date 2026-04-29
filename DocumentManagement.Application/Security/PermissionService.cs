@@ -69,6 +69,25 @@ public sealed class PermissionService : IPermissionService
             };
         }
 
+        // ================= PUBLISHER =================
+        if (string.Equals(roleName, "Publisher", StringComparison.OrdinalIgnoreCase))
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                PermissionCodes.DashboardView,
+
+                PermissionCodes.DocumentView,
+                PermissionCodes.DocumentCreate,
+                PermissionCodes.DocumentEdit,
+
+                // BÊN PHÁT HÀNH ĐƯỢC ĐẨY/SỬA THÔNG TIN, KHÔNG DUYỆT/XÓA
+                PermissionCodes.DocumentSubmit,
+
+                PermissionCodes.TaskView,
+                PermissionCodes.ReportView
+            };
+        }
+
         // ================= STAFF =================
         if (string.Equals(roleName, "Staff", StringComparison.OrdinalIgnoreCase))
         {

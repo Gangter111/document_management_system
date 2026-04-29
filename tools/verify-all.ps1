@@ -33,21 +33,56 @@ if ($connections) {
     }
 }
 
+Info "Running build/test verification before starting API..."
+powershell -ExecutionPolicy Bypass -File ".\tools\verify.ps1" -SkipSmoke
+if ($LASTEXITCODE -ne 0) {
+    Fail "verify.ps1 failed"
+}
+
 if (-not (Test-Path $ApiProject)) {
     Fail "API project not found: $ApiProject"
 }
 
 Info "Starting API..."
-$apiProcess = Start-Process powershell `
-    -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", "cd '$Root'; dotnet run --project '$ApiProject' --urls http://localhost:$Port" `
+$apiStdOut = Join-Path $Root "logs\api-verify-out.log"
+$apiStdErr = Join-Path $Root "logs\api-verify-err.log"
+
+Remove-Item -LiteralPath $apiStdOut, $apiStdErr -Force -ErrorAction SilentlyContinue
+
+$apiProcess = Start-Process dotnet `
+    -ArgumentList "run --no-build --project `"$ApiProject`" --urls http://localhost:$Port" `
+    -RedirectStandardOutput $apiStdOut `
+    -RedirectStandardError $apiStdErr `
     -PassThru
 
-Start-Sleep -Seconds 8
+$ready = $false
+for ($i = 1; $i -le 60; $i++) {
+    try {
+        Invoke-WebRequest "http://localhost:$Port/health" -UseBasicParsing -TimeoutSec 2 | Out-Null
+        $ready = $true
+        break
+    }
+    catch {
+        Start-Sleep -Seconds 1
+    }
+}
+
+if (-not $ready) {
+    if (Test-Path $apiStdOut) {
+        Get-Content $apiStdOut -Tail 80
+    }
+
+    if (Test-Path $apiStdErr) {
+        Get-Content $apiStdErr -Tail 80
+    }
+
+    Fail "API did not become ready on port $Port"
+}
 
 try {
-    powershell -ExecutionPolicy Bypass -File ".\tools\verify.ps1"
+    powershell -ExecutionPolicy Bypass -File ".\tools\smoke-test.ps1"
     if ($LASTEXITCODE -ne 0) {
-        Fail "verify.ps1 failed"
+        Fail "Smoke test failed"
     }
 }
 finally {

@@ -5398,6 +5398,7 @@
   },
   "projectFileDependencyGroups": {
     "net8.0": [
+      "BCrypt.Net-Next >= 4.0.3",
       "ClosedXML >= 0.105.0",
       "Dapper >= 2.1.72",
       "DocumentManagement.Application >= 1.0.0",
@@ -5421,7 +5422,7 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Dung\\.nuget\\packages\\": {}
+    "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\": {}
   },
   "project": {
     "version": "1.0.0",
@@ -5429,7 +5430,7 @@
       "projectUniqueName": "D:\\QuanLyVanBan\\DocumentManagement.Infrastructure\\DocumentManagement.Infrastructure.csproj",
       "projectName": "DocumentManagement.Infrastructure",
       "projectPath": "D:\\QuanLyVanBan\\DocumentManagement.Infrastructure\\DocumentManagement.Infrastructure.csproj",
-      "packagesPath": "C:\\Users\\Dung\\.nuget\\packages\\",
+      "packagesPath": "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\",
       "outputPath": "D:\\QuanLyVanBan\\DocumentManagement.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
@@ -5477,6 +5478,10 @@
         "framework": "net8.0",
         "targetAlias": "net8.0",
         "dependencies": {
+          "BCrypt.Net-Next": {
+            "target": "Package",
+            "version": "[4.0.3, )"
+          },
           "ClosedXML": {
             "target": "Package",
             "version": "[0.105.0, )"

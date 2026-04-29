@@ -254,7 +254,9 @@ public class DocumentFormViewModel : BaseViewModel
         SignerName = null;
         ConfidentialityLevel = "NORMAL";
         UrgencyLevel = "NORMAL";
-        ProcessingDepartment = null;
+        ProcessingDepartment = string.IsNullOrWhiteSpace(AuthSession.Department)
+            ? null
+            : AuthSession.Department;
         AssignedTo = null;
         Notes = null;
         CategoryId = null;

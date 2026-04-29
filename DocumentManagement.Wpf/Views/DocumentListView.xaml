@@ -9,280 +9,146 @@
         <conv:HexToBrushConverter x:Key="HexToBrushConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
 
-        <!-- FILTER CONTROLS -->
-        <Style x:Key="FilterTextBoxStyle"
-               TargetType="TextBox"
-               BasedOn="{StaticResource AppTextBoxStyle}">
-            <Setter Property="Height" Value="42"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="FilterComboBoxStyle"
-               TargetType="ComboBox"
-               BasedOn="{StaticResource AppComboBoxStyle}">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="MinHeight" Value="38"/>
-            <Setter Property="Padding" Value="10,0,8,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-        </Style>
-
-        <Style x:Key="FilterComboBoxItemStyle" TargetType="ComboBoxItem">
+        <Style x:Key="FilterTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource AppTextBoxStyle}">
             <Setter Property="Height" Value="34"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="Padding" Value="10,0"/>
         </Style>
 
-        <Style x:Key="FilterDatePickerStyle"
-               TargetType="DatePicker"
-               BasedOn="{StaticResource AppDatePickerStyle}">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="MinHeight" Value="38"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Stretch"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Style x:Key="FilterComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource AppComboBoxStyle}">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="FontSize" Value="12"/>
         </Style>
 
-        <Style x:Key="FilterButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource PrimaryButtonStyle}">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="MinHeight" Value="38"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="14,0"/>
-        </Style>
-
-        <Style x:Key="FilterSecondaryButtonStyle"
-               TargetType="Button"
-               BasedOn="{StaticResource SecondaryButtonStyle}">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="MinHeight" Value="38"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Padding" Value="14,0"/>
-        </Style>
-
-        <!-- TABLE -->
         <Style x:Key="DocumentGridTextStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-
-        <Style x:Key="DocumentGridMutedTextStyle"
-               TargetType="TextBlock"
-               BasedOn="{StaticResource DocumentGridTextStyle}">
-            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
-        </Style>
-
-        <Style x:Key="DocumentGridCenterTextStyle"
-               TargetType="TextBlock"
-               BasedOn="{StaticResource DocumentGridTextStyle}">
-            <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="DocumentGridCellStyle" TargetType="DataGridCell">
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="DataGridCell">
-                        <Border Background="{TemplateBinding Background}"
-                                Padding="{TemplateBinding Padding}">
-                            <ContentPresenter VerticalAlignment="Center"/>
-                        </Border>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DocumentGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
-            <Setter Property="Height" Value="42"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="Background" Value="#F8FAFC"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
             <Setter Property="FontSize" Value="12"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="HorizontalContentAlignment" Value="Left"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
 
-        <Style x:Key="DocumentGridRowStyle" TargetType="DataGridRow">
-            <Setter Property="Height" Value="48"/>
-            <Setter Property="MinHeight" Value="48"/>
+        <Style x:Key="DocumentGridMutedTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DocumentGridTextStyle}">
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        </Style>
+
+        <Style x:Key="ActionIconButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="1,0"/>
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushDefault}"/>
-            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
-
-            <Style.Triggers>
-                <DataTrigger Binding="{Binding IsExpired}" Value="True">
-                    <Setter Property="Background" Value="#FEF2F2"/>
-                    <Setter Property="Foreground" Value="#991B1B"/>
-                </DataTrigger>
-
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#F8FAFC"/>
-                </Trigger>
-
-                <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
-                    <Setter Property="Foreground" Value="{StaticResource PrimaryDarkBrush}"/>
-                </Trigger>
-            </Style.Triggers>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
     </UserControl.Resources>
 
-    <Grid>
+    <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <!-- HEADER + FILTER -->
-        <Border Grid.Row="0"
-                Style="{StaticResource AppCardStyle}"
-                Margin="0,0,0,16">
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="14"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
 
-            <StackPanel>
+            <Grid>
+            <TextBlock Text="DANH SÁCH VĂN BẢN"
+                           FontSize="18"
+                           FontWeight="Bold"
+                           Foreground="{StaticResource TextBrush}"
+                           VerticalAlignment="Center"/>
 
-                <!-- TITLE ROW -->
-                <Grid Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    <Button Command="{Binding AddCommand}"
+                            Style="{StaticResource DangerButtonStyle}"
+                            Height="34"
+                            Padding="12,0"
+                            Margin="0,0,8,0"
+                            Visibility="{Binding CanCreateDocument, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Thêm văn bản" Margin="6,0,0,0" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
 
-                    <StackPanel Grid.Column="0">
-                        <TextBlock Text="Quản lý tài liệu"
-                                   Style="{StaticResource PageTitleTextStyle}"/>
+                    <Button Command="{Binding ExportExcelCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Height="34"
+                            Padding="12,0"
+                            Visibility="{Binding CanExportExcel, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="FileExcelOutline" Width="14" Height="14" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
+                            <TextBlock Text="Xuất Excel" Margin="6,0,0,0" FontSize="12" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
 
-                        <TextBlock Text="Tra cứu và quản lý toàn bộ văn bản nội bộ"
-                                   Margin="0,5,0,0"
-                                   Style="{StaticResource MutedTextStyle}"/>
-                    </StackPanel>
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.5*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
 
-                    <StackPanel Grid.Column="1"
-                                Orientation="Horizontal"
-                                VerticalAlignment="Center">
-
-                        <Button Command="{Binding RefreshCommand}"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Height="40"
-                                Margin="0,0,10,0"
-                                Content="Làm mới"/>
-
-                        <Button Command="{Binding AddCommand}"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                Height="40"
-                                Margin="0,0,10,0"
-                                Content="Tạo mới"
-                                Visibility="{Binding CanCreateDocument, Converter={StaticResource BoolToVisibility}}"/>
-
-                        <Button Command="{Binding ExportExcelCommand}"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Height="40"
-                                Content="Xuất Excel"
-                                Visibility="{Binding CanExportExcel, Converter={StaticResource BoolToVisibility}}"/>
-                    </StackPanel>
-                </Grid>
-
-                <!-- SEARCH -->
-                <TextBox Style="{StaticResource FilterTextBoxStyle}"
-                         Margin="0,0,0,14"
+                <TextBox Grid.Column="0"
+                         Style="{StaticResource FilterTextBoxStyle}"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Tìm kiếm số hiệu, tiêu đề..."
+                         materialDesign:HintAssist.Hint="Tìm kiếm theo số ký hiệu, trích yếu..."
                          materialDesign:HintAssist.IsFloating="False"/>
 
-                <!-- FILTERS -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="1.35*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="1.2*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="1.1*"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="150"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="90"/>
-                        <ColumnDefinition Width="10"/>
-                        <ColumnDefinition Width="100"/>
-                    </Grid.ColumnDefinitions>
+                <ComboBox Grid.Column="2"
+                          Style="{StaticResource FilterComboBoxStyle}"
+                          ItemsSource="{Binding Categories}"
+                          SelectedValue="{Binding SelectedCategoryId}"
+                          DisplayMemberPath="Name"
+                          SelectedValuePath="Id"
+                          materialDesign:HintAssist.Hint="Loại văn bản"
+                          materialDesign:HintAssist.IsFloating="False"/>
 
-                    <ComboBox Grid.Column="0"
-                              Style="{StaticResource FilterComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource FilterComboBoxItemStyle}"
-                              ItemsSource="{Binding Categories}"
-                              SelectedValue="{Binding SelectedCategoryId}"
-                              DisplayMemberPath="Name"
-                              SelectedValuePath="Id"
-                              materialDesign:HintAssist.Hint="Danh mục"
-                              materialDesign:HintAssist.IsFloating="False"/>
+                <ComboBox Grid.Column="4"
+                          Style="{StaticResource FilterComboBoxStyle}"
+                          ItemsSource="{Binding Statuses}"
+                          SelectedValue="{Binding SelectedStatusId}"
+                          DisplayMemberPath="Name"
+                          SelectedValuePath="Id"
+                          materialDesign:HintAssist.Hint="Trạng thái"
+                          materialDesign:HintAssist.IsFloating="False"/>
 
-                    <ComboBox Grid.Column="2"
-                              Style="{StaticResource FilterComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource FilterComboBoxItemStyle}"
-                              ItemsSource="{Binding Statuses}"
-                              SelectedValue="{Binding SelectedStatusId}"
-                              DisplayMemberPath="Name"
-                              SelectedValuePath="Id"
-                              materialDesign:HintAssist.Hint="Trạng thái"
-                              materialDesign:HintAssist.IsFloating="False"/>
+                <ComboBox Grid.Column="6"
+                          Style="{StaticResource FilterComboBoxStyle}"
+                          ItemsSource="{Binding UrgencyOptions}"
+                          SelectedValue="{Binding SelectedUrgency}"
+                          SelectedValuePath="Value"
+                          DisplayMemberPath="Text"
+                          materialDesign:HintAssist.Hint="Độ khẩn"
+                          materialDesign:HintAssist.IsFloating="False"/>
 
-                    <ComboBox Grid.Column="4"
-                              Style="{StaticResource FilterComboBoxStyle}"
-                              ItemContainerStyle="{StaticResource FilterComboBoxItemStyle}"
-                              ItemsSource="{Binding UrgencyOptions}"
-                              SelectedValue="{Binding SelectedUrgency}"
-                              SelectedValuePath="Value"
-                              DisplayMemberPath="Text"
-                              materialDesign:HintAssist.Hint="Độ khẩn"
-                              materialDesign:HintAssist.IsFloating="False"/>
+                <Button Grid.Column="8"
+                        Command="{Binding ClearFiltersCommand}"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Height="34"
+                        Padding="12,0"
+                        Content="Xóa lọc"/>
+            </Grid>
+        </Grid>
 
-                    <DatePicker Grid.Column="6"
-                                Style="{StaticResource FilterDatePickerStyle}"
-                                SelectedDate="{Binding FromDate}"
-                                materialDesign:HintAssist.Hint="Từ ngày"
-                                materialDesign:HintAssist.IsFloating="False"/>
-
-                    <DatePicker Grid.Column="8"
-                                Style="{StaticResource FilterDatePickerStyle}"
-                                SelectedDate="{Binding ToDate}"
-                                materialDesign:HintAssist.Hint="Đến ngày"
-                                materialDesign:HintAssist.IsFloating="False"/>
-
-                    <Button Grid.Column="10"
-                            Command="{Binding RefreshCommand}"
-                            Style="{StaticResource FilterButtonStyle}"
-                            Content="Lọc"/>
-
-                    <Button Grid.Column="12"
-                            Command="{Binding ClearFiltersCommand}"
-                            Style="{StaticResource FilterSecondaryButtonStyle}"
-                            Content="Xóa lọc"/>
-                </Grid>
-
-            </StackPanel>
-        </Border>
-
-        <!-- TABLE -->
         <Border Grid.Row="1"
                 Style="{StaticResource AppCardStyle}"
-                Padding="0"
-                Margin="0,0,0,14">
-
+                Padding="0">
             <Grid>
                 <DataGrid x:Name="DocumentsDataGrid"
                           MouseDoubleClick="DocumentsDataGrid_MouseDoubleClick"
@@ -293,99 +159,69 @@
                           HeadersVisibility="Column"
                           GridLinesVisibility="None"
                           RowHeaderWidth="0"
-                          RowHeight="48"
-                          MinRowHeight="48"
-                          ColumnHeaderHeight="42"
-                          CanUserAddRows="False"
-                          CanUserDeleteRows="False"
-                          CanUserResizeRows="False"
-                          SelectionMode="Single"
-                          SelectionUnit="FullRow"
-                          CellStyle="{StaticResource DocumentGridCellStyle}"
-                          RowStyle="{StaticResource DocumentGridRowStyle}"
-                          ColumnHeaderStyle="{StaticResource DocumentGridColumnHeaderStyle}"
+                          RowHeight="46"
+                          ColumnHeaderHeight="40"
                           EnableRowVirtualization="True"
                           EnableColumnVirtualization="True"
                           VirtualizingPanel.IsVirtualizing="True"
-                          VirtualizingPanel.VirtualizationMode="Recycling"
-                          ScrollViewer.CanContentScroll="True"
-                          ScrollViewer.IsDeferredScrollingEnabled="True">
-
+                          VirtualizingPanel.VirtualizationMode="Recycling">
                     <DataGrid.Columns>
-                        <DataGridTextColumn Header="Số hiệu"
-                                            Width="170"
-                                            Binding="{Binding DocumentNumber}"
-                                            ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
-
-                        <DataGridTextColumn Header="Trích yếu"
-                                            Width="*"
-                                            Binding="{Binding Title}">
+                        <DataGridTextColumn Header="STT" Width="54" Binding="{Binding Id}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
+                        <DataGridTextColumn Header="Số ký hiệu" Width="120" Binding="{Binding DocumentNumber}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
+                        <DataGridTextColumn Header="Trích yếu" Width="*" Binding="{Binding Title}">
                             <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock"
-                                       BasedOn="{StaticResource DocumentGridTextStyle}">
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource DocumentGridTextStyle}">
                                     <Setter Property="FontWeight" Value="SemiBold"/>
                                     <Setter Property="ToolTip" Value="{Binding Title}"/>
                                 </Style>
                             </DataGridTextColumn.ElementStyle>
                         </DataGridTextColumn>
+                        <DataGridTextColumn Header="Loại văn bản" Width="110" Binding="{Binding DocumentType}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
+                        <DataGridTextColumn Header="Cơ quan ban hành" Width="150" Binding="{Binding SenderName}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
+                        <DataGridTextColumn Header="Ngày ban hành" Width="112" Binding="{Binding IssueDate}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
 
-                        <DataGridTemplateColumn Header="Trạng thái" Width="150">
+                        <DataGridTemplateColumn Header="Trạng thái" Width="116">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Grid VerticalAlignment="Center">
-                                        <Border Style="{StaticResource BadgeBorderStyle}"
-                                                Width="104"
-                                                Height="26"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Center"
-                                                Background="{Binding StatusColor, Converter={StaticResource HexToBrushConverter}}">
-                                            <TextBlock Text="{Binding StatusText}"
-                                                       Style="{StaticResource BadgeTextStyle}"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"/>
-                                        </Border>
-                                    </Grid>
+                                    <Border Width="84"
+                                            Height="24"
+                                            CornerRadius="12"
+                                            Background="{Binding StatusColor, Converter={StaticResource HexToBrushConverter}}"
+                                            HorizontalAlignment="Left">
+                                        <TextBlock Text="{Binding StatusText}"
+                                                   Foreground="White"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
 
-                        <DataGridTemplateColumn Header="Độ khẩn" Width="130">
+                        <DataGridTemplateColumn Header="Thao tác" Width="92">
                             <DataGridTemplateColumn.CellTemplate>
                                 <DataTemplate>
-                                    <Grid VerticalAlignment="Center">
-                                        <Border Style="{StaticResource BadgeBorderStyle}"
-                                                Width="104"
-                                                Height="26"
-                                                HorizontalAlignment="Left"
-                                                VerticalAlignment="Center"
-                                                Background="{Binding UrgencyColor, Converter={StaticResource HexToBrushConverter}}">
-                                            <TextBlock Text="{Binding UrgencyText}"
-                                                       Style="{StaticResource BadgeTextStyle}"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"/>
-                                        </Border>
-                                    </Grid>
+                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                        <Button Style="{StaticResource ActionIconButtonStyle}" ToolTip="Xem">
+                                            <materialDesign:PackIcon Kind="EyeOutline" Width="15" Height="15"/>
+                                        </Button>
+                                        <Button Style="{StaticResource ActionIconButtonStyle}" ToolTip="Sửa">
+                                            <materialDesign:PackIcon Kind="PencilOutline" Width="15" Height="15"/>
+                                        </Button>
+                                        <Button Style="{StaticResource ActionIconButtonStyle}" ToolTip="Khác">
+                                            <materialDesign:PackIcon Kind="DotsVertical" Width="15" Height="15"/>
+                                        </Button>
+                                    </StackPanel>
                                 </DataTemplate>
                             </DataGridTemplateColumn.CellTemplate>
                         </DataGridTemplateColumn>
-
-                        <DataGridTextColumn Header="Hạn xử lý"
-                                            Width="130"
-                                            Binding="{Binding DueDate}"
-                                            ElementStyle="{StaticResource DocumentGridCenterTextStyle}"/>
-
-                        <DataGridTextColumn Header="Ngày ban hành"
-                                            Width="140"
-                                            Binding="{Binding IssueDate}"
-                                            ElementStyle="{StaticResource DocumentGridCenterTextStyle}"/>
                     </DataGrid.Columns>
                 </DataGrid>
 
-                <!-- EMPTY STATE -->
                 <Border>
                     <Border.Style>
-                        <Style TargetType="Border"
-                               BasedOn="{StaticResource EmptyStateContainerStyle}">
+                        <Style TargetType="Border" BasedOn="{StaticResource EmptyStateContainerStyle}">
                             <Setter Property="Visibility" Value="Visible"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding HasDocuments}" Value="True">
@@ -397,79 +233,64 @@
                             </Style.Triggers>
                         </Style>
                     </Border.Style>
-
-                    <StackPanel HorizontalAlignment="Center"
-                                VerticalAlignment="Center">
-                        <TextBlock Text="Chưa có dữ liệu"
-                                   Style="{StaticResource EmptyStateTitleTextStyle}"/>
-
-                        <TextBlock Text="Không tìm thấy văn bản phù hợp với điều kiện hiện tại."
-                                   Style="{StaticResource EmptyStateDescriptionTextStyle}"/>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="Chưa có dữ liệu" Style="{StaticResource EmptyStateTitleTextStyle}"/>
+                        <TextBlock Text="Không tìm thấy văn bản phù hợp với điều kiện hiện tại." Style="{StaticResource EmptyStateDescriptionTextStyle}"/>
                     </StackPanel>
                 </Border>
             </Grid>
         </Border>
 
-        <!-- FOOTER -->
-        <Grid Grid.Row="2">
+        <Grid Grid.Row="2" Margin="0,12,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Vertical">
-                <TextBlock Text="{Binding StatusMessage}"
-                           VerticalAlignment="Center"
-                           Style="{StaticResource SmallMutedTextStyle}"/>
+            <TextBlock Text="{Binding TotalCount, StringFormat=Hiển thị dữ liệu trong tổng số {0} văn bản}"
+                       FontSize="11"
+                       Foreground="{StaticResource TextMutedBrush}"
+                       VerticalAlignment="Center"/>
 
-                <TextBlock Text="{Binding TotalCount, StringFormat=Tổng bản ghi: {0}}"
-                           Margin="0,4,0,0"
-                           Style="{StaticResource SmallMutedTextStyle}"/>
-            </StackPanel>
-
-            <StackPanel Grid.Column="1"
-                        Orientation="Horizontal"
-                        VerticalAlignment="Center">
-
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                 <Button Command="{Binding PreviousPageCommand}"
                         Style="{StaticResource SecondaryButtonStyle}"
-                        Height="38"
-                        Margin="0,0,8,0"
-                        Content="Trước"
-                        IsEnabled="{Binding CanGoPrevious}"/>
+                        Height="32"
+                        Width="34"
+                        Padding="0"
+                        IsEnabled="{Binding CanGoPrevious}">
+                    <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16"/>
+                </Button>
 
-                <Border Padding="14,10"
-                        Background="{StaticResource SurfaceMutedBrush}"
+                <Border MinWidth="80"
+                        Height="32"
+                        CornerRadius="6"
+                        Background="{StaticResource SurfaceBrush}"
                         BorderBrush="{StaticResource BorderBrushDefault}"
                         BorderThickness="1"
-                        CornerRadius="10"
-                        Margin="0,0,8,0">
-                    <TextBlock Text="{Binding PageDisplayText}"
-                               Foreground="{StaticResource TextBrush}"/>
+                        Margin="8,0"
+                        Padding="12,0">
+                    <TextBlock Text="{Binding PageDisplayText}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
                 </Border>
 
                 <Button Command="{Binding NextPageCommand}"
                         Style="{StaticResource SecondaryButtonStyle}"
-                        Height="38"
-                        Content="Sau"
-                        IsEnabled="{Binding CanGoNext}"/>
+                        Height="32"
+                        Width="34"
+                        Padding="0"
+                        IsEnabled="{Binding CanGoNext}">
+                    <materialDesign:PackIcon Kind="ChevronRight" Width="16" Height="16"/>
+                </Button>
             </StackPanel>
         </Grid>
 
-        <!-- LOADING -->
-        <Grid Style="{StaticResource LoadingOverlayGridStyle}"
+        <Grid Grid.RowSpan="3"
+              Style="{StaticResource LoadingOverlayGridStyle}"
               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
-
             <Border Style="{StaticResource LoadingCardStyle}">
-                <StackPanel HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                    <ProgressBar Width="140"
-                                 Height="6"
-                                 Margin="0,30,0,20"
-                                 IsIndeterminate="True"/>
-
-                    <TextBlock Text="Đang tải dữ liệu..."
-                               Style="{StaticResource LoadingTextStyle}"/>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ProgressBar Width="140" Height="6" IsIndeterminate="True" Margin="0,0,0,18"/>
+                    <TextBlock Text="Đang tải dữ liệu..." Style="{StaticResource LoadingTextStyle}"/>
                 </StackPanel>
             </Border>
         </Grid>

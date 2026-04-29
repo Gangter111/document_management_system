@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET8_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 D:\QuanLyVanBan\DocumentManagement.Wpf\App.xaml
-9202299273
-222051695778
-33-694823380
-2301348385512
-Themes\CommonStates.xaml;Themes\GlobalTheme.xaml;Views\ConfirmDialogWindow.xaml;Views\DashboardView.xaml;Views\DocumentDetailWindow.xaml;Views\DocumentFormWindow.xaml;Views\DocumentListView.xaml;Views\LoginWindow.xaml;Views\MainWindow.xaml;
+101683473554
+222145765797
+35-729211845
+230-1018510201
+Themes\CommonStates.xaml;Themes\GlobalTheme.xaml;Views\ConfirmDialogWindow.xaml;Views\DashboardView.xaml;Views\DocumentDetailWindow.xaml;Views\DocumentFormWindow.xaml;Views\DocumentListView.xaml;Views\LoginWindow.xaml;Views\MainWindow.xaml;Views\ServerSettingsWindow.xaml;
 
 False
 

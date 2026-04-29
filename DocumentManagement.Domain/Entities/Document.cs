@@ -43,8 +43,8 @@ public class Document
 
     public string OcrStatus { get; set; } = "PENDING";
 
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 
     public string? CreatedBy { get; set; }
     public string? UpdatedBy { get; set; }

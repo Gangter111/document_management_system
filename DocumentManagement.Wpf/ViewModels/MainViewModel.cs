@@ -73,6 +73,18 @@ public class MainViewModel : BaseViewModel
         }
     }
 
+    public string CurrentDepartmentName
+    {
+        get
+        {
+            var department = _authService.CurrentUser?.Department;
+
+            return string.IsNullOrWhiteSpace(department)
+                ? "Chưa cấu hình phòng ban"
+                : department;
+        }
+    }
+
     public bool CanViewDashboard => _permissionService.CanViewDashboard();
 
     public bool CanViewDocuments => _permissionService.CanViewDocuments();
@@ -151,6 +163,7 @@ public class MainViewModel : BaseViewModel
     {
         OnPropertyChanged(nameof(CurrentDisplayName));
         OnPropertyChanged(nameof(CurrentRoleName));
+        OnPropertyChanged(nameof(CurrentDepartmentName));
     }
 
     public void RefreshPermissions()

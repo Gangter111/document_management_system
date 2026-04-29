@@ -1,42 +1,158 @@
-﻿using DocumentManagement.Application.Interfaces;
+using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Models;
+using DocumentManagement.Infrastructure.Data;
 
 namespace DocumentManagement.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
-    public UserSession? CurrentUser { get; private set; }
+    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly ICurrentUserService _currentUserService;
+    private UserSession? _currentUser;
 
-    public Task<UserSession?> LoginAsync(string username, string password)
+    public AuthService(
+        SqliteConnectionFactory connectionFactory,
+        ICurrentUserService currentUserService)
     {
-        var roles = username.ToLowerInvariant() switch
+        _connectionFactory = connectionFactory;
+        _currentUserService = currentUserService;
+    }
+
+    public UserSession? CurrentUser => _currentUser ?? GetUserFromClaims();
+
+    public async Task<UserSession?> LoginAsync(string username, string password)
+    {
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            "admin" => new List<string> { "ADMIN" },
-            "manager" => new List<string> { "MANAGER" },
-            _ => new List<string> { "STAFF" }
-        };
+            return null;
+        }
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+SELECT
+    u.Id,
+    u.Username,
+    u.PasswordHash,
+    u.FullName,
+    u.Department,
+    r.Name AS RoleName
+FROM Users u
+LEFT JOIN Roles r ON r.Id = u.RoleId
+WHERE LOWER(TRIM(u.Username)) = LOWER(TRIM($username))
+  AND u.IsActive = 1
+LIMIT 1;";
+        cmd.Parameters.AddWithValue("$username", username);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+        {
+            return null;
+        }
+
+        var passwordHash = reader["PasswordHash"]?.ToString() ?? string.Empty;
+
+        if (!VerifyPassword(password, passwordHash))
+        {
+            return null;
+        }
+
+        var role = NormalizeRole(reader["RoleName"]?.ToString());
 
         var session = new UserSession
         {
-            Id = 1,
-            Username = username,
-            DisplayName = username,
-            Roles = roles,
+            Id = Convert.ToInt64(reader["Id"]),
+            Username = reader["Username"]?.ToString() ?? username,
+            DisplayName = reader["FullName"]?.ToString() ?? username,
+            Department = reader["Department"]?.ToString() ?? string.Empty,
+            Roles = new List<string> { role },
             MustChangePassword = false
         };
 
-        CurrentUser = session;
+        _currentUser = session;
 
-        return Task.FromResult<UserSession?>(session);
+        return session;
     }
 
-    public Task<bool> ChangePasswordAsync(long userId, string newPassword)
+    public async Task<bool> ChangePasswordAsync(long userId, string newPassword)
     {
-        return Task.FromResult(true);
+        if (userId <= 0 || string.IsNullOrWhiteSpace(newPassword))
+        {
+            return false;
+        }
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+UPDATE Users
+SET PasswordHash = $passwordHash
+WHERE Id = $userId
+  AND IsActive = 1;";
+        cmd.Parameters.AddWithValue("$passwordHash", BCrypt.Net.BCrypt.HashPassword(newPassword));
+        cmd.Parameters.AddWithValue("$userId", userId);
+
+        var affected = await cmd.ExecuteNonQueryAsync();
+
+        return affected > 0;
     }
 
     public void Logout()
     {
-        CurrentUser = null;
+        _currentUser = null;
+    }
+
+    private static bool VerifyPassword(string password, string passwordHash)
+    {
+        if (string.IsNullOrWhiteSpace(passwordHash))
+        {
+            return false;
+        }
+
+        try
+        {
+            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string NormalizeRole(string? roleName)
+    {
+        return roleName?.Trim().ToUpperInvariant() switch
+        {
+            "ADMIN" => "ADMIN",
+            "MANAGER" => "MANAGER",
+            "PUBLISHER" => "PUBLISHER",
+            _ => "STAFF"
+        };
+    }
+
+    private UserSession? GetUserFromClaims()
+    {
+        if (string.IsNullOrWhiteSpace(_currentUserService.Username))
+        {
+            return null;
+        }
+
+        var userId = long.TryParse(_currentUserService.UserId, out var parsedUserId)
+            ? parsedUserId
+            : 0;
+
+        return new UserSession
+        {
+            Id = userId,
+            Username = _currentUserService.Username,
+            DisplayName = _currentUserService.Username,
+            Department = _currentUserService.Department ?? string.Empty,
+            Roles = new List<string> { NormalizeRole(_currentUserService.Role) },
+            MustChangePassword = false
+        };
     }
 }

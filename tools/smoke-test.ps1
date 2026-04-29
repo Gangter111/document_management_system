@@ -182,6 +182,14 @@ catch {
 }
 
 try {
+    Invoke-WebRequest "$ApiBase/health" -UseBasicParsing | Out-Null
+    Pass "Health OK"
+}
+catch {
+    Fail "Health FAILED"
+}
+
+try {
     $adminToken = Login "admin" "admin123"
     Pass "Admin login JWT OK"
 }
@@ -206,6 +214,14 @@ catch {
 }
 
 try {
+    $publisherToken = Login "publisher" "publisher123"
+    Pass "Publisher login JWT OK"
+}
+catch {
+    Fail "Publisher login FAILED"
+}
+
+try {
     Invoke-ApiJson "GET" "$ApiBase/api/dashboard" $adminToken | Out-Null
     Pass "Dashboard OK"
 }
@@ -227,6 +243,7 @@ $createBody = @{
     documentNumber = "AUTO-$stamp"
     title = "Smoke Test Document $stamp"
     summary = "Created by smoke-test.ps1"
+    processingDepartment = "Phòng HCNS"
 }
 
 try {
@@ -252,6 +269,7 @@ try {
         documentNumber = "AUTO-$stamp"
         title = "Smoke Test Staff Update Blocked $stamp"
         summary = "Staff update should be blocked"
+        processingDepartment = "Phòng HCNS"
     } 403 | Out-Null
 
     Pass "Staff update blocked 403 OK"
@@ -261,11 +279,36 @@ catch {
 }
 
 try {
+    Invoke-ApiJson "PUT" "$ApiBase/api/documents/$documentId" $publisherToken @{
+        id = $documentId
+        documentNumber = "AUTO-$stamp"
+        title = "Smoke Test Publisher Updated $stamp"
+        summary = "Updated by publisher"
+        processingDepartment = "Phòng HCNS"
+    } | Out-Null
+
+    Pass "Publisher update OK"
+}
+catch {
+    Write-Host $_ -ForegroundColor Red
+    Fail "Publisher update FAILED"
+}
+
+try {
+    Invoke-ApiJson "DELETE" "$ApiBase/api/documents/$documentId" $publisherToken $null 403 | Out-Null
+    Pass "Publisher delete blocked 403 OK"
+}
+catch {
+    Fail "Publisher delete permission FAILED"
+}
+
+try {
     Invoke-ApiJson "PUT" "$ApiBase/api/documents/$documentId" $managerToken @{
         id = $documentId
         documentNumber = "AUTO-$stamp"
         title = "Smoke Test Manager Updated $stamp"
         summary = "Updated by manager"
+        processingDepartment = "Phòng HCNS"
     } | Out-Null
 
     Pass "Manager update OK"

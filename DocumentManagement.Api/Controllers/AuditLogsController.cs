@@ -46,6 +46,7 @@ public class AuditLogsController : ControllerBase
             Action = log.Action,
             OldValues = log.OldValues,
             NewValues = log.NewValues,
+            ChangedColumns = log.ChangedColumns,
             Username = log.Username,
             CreatedAt = log.CreatedAt
         };

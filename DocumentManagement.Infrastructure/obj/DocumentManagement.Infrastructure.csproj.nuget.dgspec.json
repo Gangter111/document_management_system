@@ -10,7 +10,7 @@
         "projectUniqueName": "D:\\QuanLyVanBan\\DocumentManagement.Application\\DocumentManagement.Application.csproj",
         "projectName": "DocumentManagement.Application",
         "projectPath": "D:\\QuanLyVanBan\\DocumentManagement.Application\\DocumentManagement.Application.csproj",
-        "packagesPath": "C:\\Users\\Dung\\.nuget\\packages\\",
+        "packagesPath": "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\",
         "outputPath": "D:\\QuanLyVanBan\\DocumentManagement.Application\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
@@ -101,7 +101,7 @@
         "projectUniqueName": "D:\\QuanLyVanBan\\DocumentManagement.Domain\\DocumentManagement.Domain.csproj",
         "projectName": "DocumentManagement.Domain",
         "projectPath": "D:\\QuanLyVanBan\\DocumentManagement.Domain\\DocumentManagement.Domain.csproj",
-        "packagesPath": "C:\\Users\\Dung\\.nuget\\packages\\",
+        "packagesPath": "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\",
         "outputPath": "D:\\QuanLyVanBan\\DocumentManagement.Domain\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
@@ -178,7 +178,7 @@
         "projectUniqueName": "D:\\QuanLyVanBan\\DocumentManagement.Infrastructure\\DocumentManagement.Infrastructure.csproj",
         "projectName": "DocumentManagement.Infrastructure",
         "projectPath": "D:\\QuanLyVanBan\\DocumentManagement.Infrastructure\\DocumentManagement.Infrastructure.csproj",
-        "packagesPath": "C:\\Users\\Dung\\.nuget\\packages\\",
+        "packagesPath": "D:\\QuanLyVanBan\\.dotnet-home\\.nuget\\packages\\",
         "outputPath": "D:\\QuanLyVanBan\\DocumentManagement.Infrastructure\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
@@ -226,6 +226,10 @@
           "framework": "net8.0",
           "targetAlias": "net8.0",
           "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
             "ClosedXML": {
               "target": "Package",
               "version": "[0.105.0, )"

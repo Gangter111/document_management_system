@@ -85,6 +85,7 @@ public partial class App : Application
 
         services.AddSingleton<IConfiguration>(_configuration);
 
+        services.AddSingleton<ClientSettingsService>();
         services.AddSingleton<ApiService>();
         services.AddSingleton<ApiAuthService>();
         services.AddSingleton<ClientPermissionService>();
@@ -99,6 +100,7 @@ public partial class App : Application
         services.AddTransient<DashboardViewModel>();
 
         services.AddTransient<LoginWindow>();
+        services.AddTransient<ServerSettingsWindow>();
         services.AddTransient<MainWindow>();
     }
 

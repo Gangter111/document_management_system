@@ -116,13 +116,6 @@ public class DocumentsController : ControllerBase
     [HttpPut("{id:long}")]
     public async Task<IActionResult> Update(long id, [FromBody] UpdateDocumentRequest request)
     {
-        var permissionResult = RequireUpdatePermission();
-
-        if (permissionResult != null)
-        {
-            return permissionResult;
-        }
-
         if (id != request.Id)
         {
             return BadRequest("Id trên URL không khớp với Id trong dữ liệu.");
@@ -143,6 +136,13 @@ public class DocumentsController : ControllerBase
         if (existing == null || !existing.IsActive)
         {
             return NotFound("Không tìm thấy văn bản hoặc văn bản đã bị xóa.");
+        }
+
+        var permissionResult = RequireUpdatePermission(existing);
+
+        if (permissionResult != null)
+        {
+            return permissionResult;
         }
 
         ApplyUpdate(existing, request);
@@ -189,7 +189,7 @@ public class DocumentsController : ControllerBase
             return Unauthorized("Thiếu thông tin vai trò người dùng.");
         }
 
-        if (IsAdmin(role) || IsManager(role) || IsStaff(role))
+        if (IsAdmin(role) || IsManager(role) || IsPublisher(role) || IsStaff(role))
         {
             return null;
         }
@@ -197,7 +197,7 @@ public class DocumentsController : ControllerBase
         return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền tạo văn bản.");
     }
 
-    private ActionResult? RequireUpdatePermission()
+    private ActionResult? RequireUpdatePermission(Document document)
     {
         var role = GetCurrentRole();
 
@@ -206,9 +206,31 @@ public class DocumentsController : ControllerBase
             return Unauthorized("Thiếu thông tin vai trò người dùng.");
         }
 
-        if (IsAdmin(role) || IsManager(role))
+        if (IsAdmin(role) || IsManager(role) || IsPublisher(role))
         {
-            return null;
+            if (IsAdmin(role))
+            {
+                return null;
+            }
+
+            var userDepartment = GetCurrentDepartment();
+
+            if (string.IsNullOrWhiteSpace(userDepartment))
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, "Người dùng chưa được cấu hình phòng ban.");
+            }
+
+            if (string.Equals(
+                    document.ProcessingDepartment?.Trim(),
+                    userDepartment.Trim(),
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                "Bạn chỉ được sửa văn bản thuộc phòng ban của mình.");
         }
 
         return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền sửa văn bản.");
@@ -245,6 +267,12 @@ public class DocumentsController : ControllerBase
                ?? "system";
     }
 
+    private string GetCurrentDepartment()
+    {
+        return User.FindFirst("department")?.Value
+               ?? string.Empty;
+    }
+
     private static bool IsAdmin(string role)
     {
         return string.Equals(role, "ADMIN", StringComparison.OrdinalIgnoreCase)
@@ -256,6 +284,12 @@ public class DocumentsController : ControllerBase
     {
         return string.Equals(role, "MANAGER", StringComparison.OrdinalIgnoreCase)
                || string.Equals(role, "Manager", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsPublisher(string role)
+    {
+        return string.Equals(role, "PUBLISHER", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(role, "Publisher", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsStaff(string role)

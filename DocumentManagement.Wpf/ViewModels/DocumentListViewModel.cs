@@ -254,13 +254,24 @@ public class DocumentListViewModel : BaseViewModel
 
         ClearFiltersCommand = new RelayCommand(async _ =>
         {
-            SearchText = null;
-            SelectedCategoryId = 0;
-            SelectedStatusId = 0;
-            SelectedUrgency = null;
-            FromDate = null;
-            ToDate = null;
-            PageNumber = 1;
+            _searchCts?.Cancel(); // Hủy bỏ mọi tác vụ tìm kiếm đang chờ (nếu có)
+
+            // Cập nhật trực tiếp backing field để tránh trigger side-effect gọi API nhiều lần
+            _searchText = null;
+            _selectedCategoryId = 0;
+            _selectedStatusId = 0;
+            _selectedUrgency = null;
+            _fromDate = null;
+            _toDate = null;
+            _pageNumber = 1;
+
+            OnPropertyChanged(nameof(SearchText));
+            OnPropertyChanged(nameof(SelectedCategoryId));
+            OnPropertyChanged(nameof(SelectedStatusId));
+            OnPropertyChanged(nameof(SelectedUrgency));
+            OnPropertyChanged(nameof(FromDate));
+            OnPropertyChanged(nameof(ToDate));
+            OnPropertyChanged(nameof(PageNumber));
 
             await SearchAsync();
 
