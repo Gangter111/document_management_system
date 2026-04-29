@@ -1,17 +1,20 @@
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Models;
 using DocumentManagement.Infrastructure.Data;
-using Microsoft.Data.Sqlite;
 
 namespace DocumentManagement.Infrastructure.Repositories;
 
 public class DashboardRepository : IDashboardRepository
 {
-    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDatabaseDialect _dialect;
 
-    public DashboardRepository(SqliteConnectionFactory connectionFactory)
+    public DashboardRepository(
+        IDbConnectionFactory connectionFactory,
+        IDatabaseDialect dialect)
     {
         _connectionFactory = connectionFactory;
+        _dialect = dialect;
     }
 
     public async Task<DashboardSummaryModel> GetSummaryAsync()
@@ -30,13 +33,18 @@ SELECT
     SUM(CASE WHEN status_id = 5 THEN 1 ELSE 0 END) as rejected,
     SUM(CASE 
         WHEN due_date IS NOT NULL 
-        AND DATE(due_date) < DATE('now') 
+        AND due_date < CONVERT(varchar(10), GETDATE(), 23)
         AND status_id != 3 THEN 1 
         ELSE 0 
     END) as overdue
 FROM documents
-WHERE is_active = 1;
-";
+WHERE is_active = 1;";
+
+        if (_connectionFactory.Provider == DatabaseProvider.Sqlite)
+        {
+            command.CommandText = command.CommandText
+                .Replace("due_date < CONVERT(varchar(10), GETDATE(), 23)", "DATE(due_date) < DATE('now')");
+        }
 
         using var reader = await command.ExecuteReaderAsync();
 
@@ -63,8 +71,9 @@ WHERE is_active = 1;
         await connection.OpenAsync();
 
         using var command = connection.CreateCommand();
-        command.CommandText = @"
-SELECT 
+
+        var baseSql = @"
+SELECT
     d.id,
     d.document_number,
     d.title,
@@ -72,12 +81,16 @@ SELECT
     d.due_date,
     d.updated_at
 FROM documents d
-LEFT JOIN document_statuses s ON d.status_id = s.id
-ORDER BY DATETIME(COALESCE(d.updated_at, d.created_at)) DESC
-LIMIT $top;
-";
+LEFT JOIN document_statuses s ON d.status_id = s.id";
 
-        command.Parameters.AddWithValue("$top", top);
+        command.CommandText = _dialect.ApplyPaging(
+            baseSql,
+            $"ORDER BY {_dialect.DateTimeSortExpression("COALESCE(d.updated_at, d.created_at)")} DESC",
+            "@top",
+            "@offset");
+
+        command.AddParameter("top", top);
+        command.AddParameter("offset", 0);
 
         using var reader = await command.ExecuteReaderAsync();
 
@@ -112,8 +125,7 @@ SELECT
 FROM document_statuses s
 LEFT JOIN documents d ON d.status_id = s.id AND d.is_active = 1
 GROUP BY s.id, s.name
-ORDER BY s.id;
-";
+ORDER BY s.id;";
 
         using var reader = await command.ExecuteReaderAsync();
 

@@ -6,12 +6,12 @@ namespace DocumentManagement.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {
-    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
     private readonly ICurrentUserService _currentUserService;
     private UserSession? _currentUser;
 
     public AuthService(
-        SqliteConnectionFactory connectionFactory,
+        IDbConnectionFactory connectionFactory,
         ICurrentUserService currentUserService)
     {
         _connectionFactory = connectionFactory;
@@ -31,7 +31,20 @@ public class AuthService : IAuthService
         await connection.OpenAsync();
 
         await using var cmd = connection.CreateCommand();
-        cmd.CommandText = @"
+        cmd.CommandText = _connectionFactory.Provider == DatabaseProvider.SqlServer
+            ? @"
+SELECT TOP 1
+    u.Id,
+    u.Username,
+    u.PasswordHash,
+    u.FullName,
+    u.Department,
+    r.Name AS RoleName
+FROM Users u
+LEFT JOIN Roles r ON r.Id = u.RoleId
+WHERE LOWER(TRIM(u.Username)) = LOWER(TRIM(@username))
+  AND u.IsActive = 1;"
+            : @"
 SELECT
     u.Id,
     u.Username,
@@ -41,10 +54,10 @@ SELECT
     r.Name AS RoleName
 FROM Users u
 LEFT JOIN Roles r ON r.Id = u.RoleId
-WHERE LOWER(TRIM(u.Username)) = LOWER(TRIM($username))
+WHERE LOWER(TRIM(u.Username)) = LOWER(TRIM(@username))
   AND u.IsActive = 1
 LIMIT 1;";
-        cmd.Parameters.AddWithValue("$username", username);
+        cmd.AddParameter("username", username);
 
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -90,11 +103,11 @@ LIMIT 1;";
         await using var cmd = connection.CreateCommand();
         cmd.CommandText = @"
 UPDATE Users
-SET PasswordHash = $passwordHash
-WHERE Id = $userId
+SET PasswordHash = @passwordHash
+WHERE Id = @userId
   AND IsActive = 1;";
-        cmd.Parameters.AddWithValue("$passwordHash", BCrypt.Net.BCrypt.HashPassword(newPassword));
-        cmd.Parameters.AddWithValue("$userId", userId);
+        cmd.AddParameter("passwordHash", BCrypt.Net.BCrypt.HashPassword(newPassword));
+        cmd.AddParameter("userId", userId);
 
         var affected = await cmd.ExecuteNonQueryAsync();
 

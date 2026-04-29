@@ -6,11 +6,15 @@ namespace DocumentManagement.Infrastructure.Repositories;
 
 public class AttachmentRepository : IAttachmentRepository
 {
-    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDatabaseDialect _dialect;
 
-    public AttachmentRepository(SqliteConnectionFactory connectionFactory)
+    public AttachmentRepository(
+        IDbConnectionFactory connectionFactory,
+        IDatabaseDialect dialect)
     {
         _connectionFactory = connectionFactory;
+        _dialect = dialect;
     }
 
     public async Task<long> CreateAsync(DocumentAttachment attachment)
@@ -20,28 +24,27 @@ public class AttachmentRepository : IAttachmentRepository
 
         using var command = connection.CreateCommand();
 
-        command.CommandText = @"
+        command.CommandText = $@"
 INSERT INTO document_attachments (
     document_id, original_file_name, stored_file_name, stored_file_path,
     file_extension, mime_type, file_size, file_hash, extracted_text, upload_date
 )
 VALUES (
-    $document_id, $original_file_name, $stored_file_name, $stored_file_path,
-    $file_extension, $mime_type, $file_size, $file_hash, $extracted_text, $upload_date
+    @document_id, @original_file_name, @stored_file_name, @stored_file_path,
+    @file_extension, @mime_type, @file_size, @file_hash, @extracted_text, @upload_date
 );
-SELECT last_insert_rowid();
-";
+{_dialect.IdentitySelectSql}";
 
-        command.Parameters.AddWithValue("$document_id", attachment.DocumentId);
-        command.Parameters.AddWithValue("$original_file_name", attachment.OriginalFileName);
-        command.Parameters.AddWithValue("$stored_file_name", attachment.StoredFileName);
-        command.Parameters.AddWithValue("$stored_file_path", attachment.StoredFilePath);
-        command.Parameters.AddWithValue("$file_extension", (object?)attachment.FileExtension ?? DBNull.Value);
-        command.Parameters.AddWithValue("$mime_type", (object?)attachment.MimeType ?? DBNull.Value);
-        command.Parameters.AddWithValue("$file_size", attachment.FileSize);
-        command.Parameters.AddWithValue("$file_hash", (object?)attachment.FileHash ?? DBNull.Value);
-        command.Parameters.AddWithValue("$extracted_text", (object?)attachment.ExtractedText ?? DBNull.Value);
-        command.Parameters.AddWithValue("$upload_date", attachment.UploadDate);
+        command.AddParameter("document_id", attachment.DocumentId);
+        command.AddParameter("original_file_name", attachment.OriginalFileName);
+        command.AddParameter("stored_file_name", attachment.StoredFileName);
+        command.AddParameter("stored_file_path", attachment.StoredFilePath);
+        command.AddParameter("file_extension", attachment.FileExtension);
+        command.AddParameter("mime_type", attachment.MimeType);
+        command.AddParameter("file_size", attachment.FileSize);
+        command.AddParameter("file_hash", attachment.FileHash);
+        command.AddParameter("extracted_text", attachment.ExtractedText);
+        command.AddParameter("upload_date", attachment.UploadDate);
 
         var result = await command.ExecuteScalarAsync();
         return Convert.ToInt64(result ?? 0L);
@@ -56,9 +59,9 @@ SELECT last_insert_rowid();
         command.CommandText = @"
 SELECT *
 FROM document_attachments
-WHERE document_id = $documentId
+WHERE document_id = @documentId
 ORDER BY upload_date DESC;";
-        command.Parameters.AddWithValue("$documentId", documentId);
+        command.AddParameter("documentId", documentId);
 
         using var reader = await command.ExecuteReaderAsync();
         var result = new List<DocumentAttachment>();
@@ -90,8 +93,8 @@ ORDER BY upload_date DESC;";
         await connection.OpenAsync();
 
         using var command = connection.CreateCommand();
-        command.CommandText = "DELETE FROM document_attachments WHERE id = $id;";
-        command.Parameters.AddWithValue("$id", id);
+        command.CommandText = "DELETE FROM document_attachments WHERE id = @id;";
+        command.AddParameter("id", id);
 
         var rows = await command.ExecuteNonQueryAsync();
         return rows > 0;

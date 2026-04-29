@@ -33,21 +33,40 @@ builder.Host.UseSerilog((context, services, configuration) =>
 });
 
 // =======================
-// DB PATH CHUAN
+// DATABASE PROVIDER
 // =======================
+var databaseOptions = builder.Configuration.GetSection("Database").Get<DatabaseOptions>() ?? new DatabaseOptions();
+var databaseProvider = databaseOptions.GetProvider();
 var rootPath = Directory.GetCurrentDirectory();
-var configuredDatabasePath = builder.Configuration["Database:Path"];
-var databasePath = string.IsNullOrWhiteSpace(configuredDatabasePath)
-    ? Path.Combine(rootPath, "database", "app.db")
-    : configuredDatabasePath;
 
-var databaseDirectory = Path.GetDirectoryName(databasePath);
-if (!string.IsNullOrWhiteSpace(databaseDirectory))
+IDbConnectionFactory connectionFactory;
+IDatabaseDialect databaseDialect;
+
+if (databaseProvider == DatabaseProvider.SqlServer)
 {
-    Directory.CreateDirectory(databaseDirectory);
-}
+    if (string.IsNullOrWhiteSpace(databaseOptions.ConnectionString))
+    {
+        throw new InvalidOperationException("Thiếu cấu hình Database:ConnectionString cho SQL Server.");
+    }
 
-var connectionString = $"Data Source={databasePath}";
+    connectionFactory = new SqlServerConnectionFactory(databaseOptions.ConnectionString);
+    databaseDialect = new SqlServerDialect();
+}
+else
+{
+    var databasePath = string.IsNullOrWhiteSpace(databaseOptions.Path)
+        ? Path.Combine(rootPath, "database", "app.db")
+        : databaseOptions.Path;
+
+    var databaseDirectory = Path.GetDirectoryName(databasePath);
+    if (!string.IsNullOrWhiteSpace(databaseDirectory))
+    {
+        Directory.CreateDirectory(databaseDirectory);
+    }
+
+    connectionFactory = new SqliteConnectionFactory($"Data Source={databasePath}");
+    databaseDialect = new SqliteDialect();
+}
 
 // =======================
 // SERVICES
@@ -55,7 +74,7 @@ var connectionString = $"Data Source={databasePath}";
 builder.Services.AddControllers();
 builder.Services
     .AddHealthChecks()
-    .AddCheck<SqliteHealthCheck>("sqlite");
+    .AddCheck<DatabaseHealthCheck>("database");
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -89,14 +108,20 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
-builder.Services.AddSingleton(new SqliteConnectionFactory(connectionString));
+builder.Services.AddSingleton(connectionFactory);
+builder.Services.AddSingleton(databaseDialect);
 
 builder.Services.AddScoped<IDocumentRepository, DocumentRepository>();
 builder.Services.AddScoped<IHistoryRepository, HistoryRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
+builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
 
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+builder.Services.AddSingleton<IFileStorageService>(_ =>
+    new LocalFileStorageService(Path.Combine(rootPath, "storage", "attachments")));
 
 builder.Services.AddScoped<JwtService>();
 
@@ -138,8 +163,20 @@ var app = builder.Build();
 // =======================
 using (var scope = app.Services.CreateScope())
 {
-    var connectionFactory = scope.ServiceProvider.GetRequiredService<SqliteConnectionFactory>();
-    DatabaseMigrator.Migrate(connectionFactory);
+    var activeConnectionFactory = scope.ServiceProvider.GetRequiredService<IDbConnectionFactory>();
+
+    if (activeConnectionFactory is SqlServerConnectionFactory sqlServerConnectionFactory)
+    {
+        SqlServerDatabaseMigrator.Migrate(sqlServerConnectionFactory);
+    }
+    else if (activeConnectionFactory is SqliteConnectionFactory sqliteConnectionFactory)
+    {
+        DatabaseMigrator.Migrate(sqliteConnectionFactory);
+    }
+    else
+    {
+        throw new InvalidOperationException("Database provider không được hỗ trợ.");
+    }
 }
 
 // =======================

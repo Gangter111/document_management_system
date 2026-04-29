@@ -3,11 +3,11 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace DocumentManagement.Api.Health;
 
-public sealed class SqliteHealthCheck : IHealthCheck
+public sealed class DatabaseHealthCheck : IHealthCheck
 {
-    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
 
-    public SqliteHealthCheck(SqliteConnectionFactory connectionFactory)
+    public DatabaseHealthCheck(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
@@ -27,12 +27,12 @@ public sealed class SqliteHealthCheck : IHealthCheck
             var result = await command.ExecuteScalarAsync(cancellationToken);
 
             return Convert.ToInt32(result) == 1
-                ? HealthCheckResult.Healthy("SQLite database is reachable.")
-                : HealthCheckResult.Unhealthy("SQLite database returned an unexpected result.");
+                ? HealthCheckResult.Healthy($"{_connectionFactory.Provider} database is reachable.")
+                : HealthCheckResult.Unhealthy($"{_connectionFactory.Provider} database returned an unexpected result.");
         }
         catch (Exception ex)
         {
-            return HealthCheckResult.Unhealthy("SQLite database health check failed.", ex);
+            return HealthCheckResult.Unhealthy($"{_connectionFactory.Provider} database health check failed.", ex);
         }
     }
 }

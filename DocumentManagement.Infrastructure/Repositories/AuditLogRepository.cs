@@ -1,16 +1,16 @@
-﻿using System.Globalization;
+using System.Data.Common;
+using System.Globalization;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Domain.Entities;
 using DocumentManagement.Infrastructure.Data;
-using Microsoft.Data.Sqlite;
 
 namespace DocumentManagement.Infrastructure.Repositories;
 
 public class AuditLogRepository : IAuditLogRepository
 {
-    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
 
-    public AuditLogRepository(SqliteConnectionFactory connectionFactory)
+    public AuditLogRepository(IDbConnectionFactory connectionFactory)
     {
         _connectionFactory = connectionFactory;
     }
@@ -36,24 +36,24 @@ INSERT INTO audit_logs
 )
 VALUES
 (
-    $entity_name,
-    $entity_id,
-    $action,
-    $old_values,
-    $new_values,
-    $changed_columns,
-    $username,
-    $created_at
+    @entity_name,
+    @entity_id,
+    @action,
+    @old_values,
+    @new_values,
+    @changed_columns,
+    @username,
+    @created_at
 );";
 
-        cmd.Parameters.AddWithValue("$entity_name", log.EntityName);
-        cmd.Parameters.AddWithValue("$entity_id", log.EntityId);
-        cmd.Parameters.AddWithValue("$action", log.Action);
-        cmd.Parameters.AddWithValue("$old_values", log.OldValues ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("$new_values", log.NewValues ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("$changed_columns", log.ChangedColumns ?? (object)DBNull.Value);
-        cmd.Parameters.AddWithValue("$username", log.Username);
-        cmd.Parameters.AddWithValue("$created_at", log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
+        cmd.AddParameter("entity_name", log.EntityName);
+        cmd.AddParameter("entity_id", log.EntityId);
+        cmd.AddParameter("action", log.Action);
+        cmd.AddParameter("old_values", log.OldValues);
+        cmd.AddParameter("new_values", log.NewValues);
+        cmd.AddParameter("changed_columns", log.ChangedColumns);
+        cmd.AddParameter("username", log.Username);
+        cmd.AddParameter("created_at", log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss"));
 
         await cmd.ExecuteNonQueryAsync();
     }
@@ -77,12 +77,12 @@ SELECT
     username,
     created_at
 FROM audit_logs
-WHERE entity_name = $entity_name
-  AND entity_id = $entity_id
+WHERE entity_name = @entity_name
+  AND entity_id = @entity_id
 ORDER BY id ASC;";
 
-        cmd.Parameters.AddWithValue("$entity_name", entityName);
-        cmd.Parameters.AddWithValue("$entity_id", entityId);
+        cmd.AddParameter("entity_name", entityName);
+        cmd.AddParameter("entity_id", entityId);
 
         using var reader = await cmd.ExecuteReaderAsync();
 
@@ -106,20 +106,20 @@ ORDER BY id ASC;";
         cmd.CommandText = @"
 SELECT COUNT(*)
 FROM audit_logs
-WHERE entity_name = $entity_name
-  AND entity_id = $entity_id
-  AND action = $action;";
+WHERE entity_name = @entity_name
+  AND entity_id = @entity_id
+  AND action = @action;";
 
-        cmd.Parameters.AddWithValue("$entity_name", entityName);
-        cmd.Parameters.AddWithValue("$entity_id", entityId);
-        cmd.Parameters.AddWithValue("$action", action);
+        cmd.AddParameter("entity_name", entityName);
+        cmd.AddParameter("entity_id", entityId);
+        cmd.AddParameter("action", action);
 
         var result = await cmd.ExecuteScalarAsync();
 
         return Convert.ToInt32(result ?? 0);
     }
 
-    private static AuditLog Map(SqliteDataReader reader)
+    private static AuditLog Map(DbDataReader reader)
     {
         return new AuditLog
         {

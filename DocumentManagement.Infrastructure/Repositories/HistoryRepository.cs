@@ -6,11 +6,15 @@ namespace DocumentManagement.Infrastructure.Repositories;
 
 public class HistoryRepository : IHistoryRepository
 {
-    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDatabaseDialect _dialect;
 
-    public HistoryRepository(SqliteConnectionFactory connectionFactory)
+    public HistoryRepository(
+        IDbConnectionFactory connectionFactory,
+        IDatabaseDialect dialect)
     {
         _connectionFactory = connectionFactory;
+        _dialect = dialect;
     }
 
     public async Task AddAsync(
@@ -26,7 +30,7 @@ public class HistoryRepository : IHistoryRepository
 
         using var command = connection.CreateCommand();
 
-        command.CommandText = @"
+        command.CommandText = $@"
 INSERT INTO document_history
 (
     document_id,
@@ -39,21 +43,21 @@ INSERT INTO document_history
 )
 VALUES
 (
-    $document_id,
-    $action_type,
-    $action_description,
-    $old_value,
-    $new_value,
-    CURRENT_TIMESTAMP,
-    $action_by
+    @document_id,
+    @action_type,
+    @action_description,
+    @old_value,
+    @new_value,
+    {_dialect.CurrentTimestampSql},
+    @action_by
 );";
 
-        command.Parameters.AddWithValue("$document_id", (object?)documentId ?? DBNull.Value);
-        command.Parameters.AddWithValue("$action_type", actionType);
-        command.Parameters.AddWithValue("$action_description", (object?)actionDescription ?? DBNull.Value);
-        command.Parameters.AddWithValue("$old_value", (object?)oldValue ?? DBNull.Value);
-        command.Parameters.AddWithValue("$new_value", (object?)newValue ?? DBNull.Value);
-        command.Parameters.AddWithValue("$action_by", (object?)actionBy ?? DBNull.Value);
+        command.AddParameter("document_id", documentId);
+        command.AddParameter("action_type", actionType);
+        command.AddParameter("action_description", actionDescription);
+        command.AddParameter("old_value", oldValue);
+        command.AddParameter("new_value", newValue);
+        command.AddParameter("action_by", actionBy);
 
         await command.ExecuteNonQueryAsync();
     }
@@ -78,10 +82,10 @@ SELECT
     action_at,
     action_by
 FROM document_history
-WHERE document_id = $document_id
+WHERE document_id = @document_id
 ORDER BY action_at DESC, id DESC;";
 
-        command.Parameters.AddWithValue("$document_id", documentId);
+        command.AddParameter("document_id", documentId);
 
         using var reader = await command.ExecuteReaderAsync();
 

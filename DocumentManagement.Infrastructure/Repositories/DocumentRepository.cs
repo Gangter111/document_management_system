@@ -1,21 +1,25 @@
 using System.Globalization;
 using System.Reflection;
+using System.Data.Common;
 using System.Text;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Models;
 using DocumentManagement.Domain.Entities;
 using DocumentManagement.Infrastructure.Data;
-using Microsoft.Data.Sqlite;
 
 namespace DocumentManagement.Infrastructure.Repositories;
 
 public class DocumentRepository : IDocumentRepository
 {
-    private readonly SqliteConnectionFactory _connectionFactory;
+    private readonly IDbConnectionFactory _connectionFactory;
+    private readonly IDatabaseDialect _dialect;
 
-    public DocumentRepository(SqliteConnectionFactory connectionFactory)
+    public DocumentRepository(
+        IDbConnectionFactory connectionFactory,
+        IDatabaseDialect dialect)
     {
         _connectionFactory = connectionFactory;
+        _dialect = dialect;
     }
 
     public async Task<long> CreateAsync(Document document)
@@ -23,7 +27,7 @@ public class DocumentRepository : IDocumentRepository
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        var columns = await GetDocumentColumnsAsync(connection);
+        var columns = await _dialect.GetColumnsAsync(connection, "documents");
         var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
         var values = BuildDocumentColumnValues(document, now, includeId: false, includeCreatedAt: true);
@@ -41,14 +45,14 @@ INSERT INTO documents
 )
 VALUES
 (
-    {string.Join(",\n    ", insertColumns.Select(x => "$" + x.Key))}
+    {string.Join(",\n    ", insertColumns.Select(x => "@" + x.Key))}
 );
 
-SELECT last_insert_rowid();";
+{_dialect.IdentitySelectSql}";
 
         foreach (var item in insertColumns)
         {
-            command.Parameters.AddWithValue("$" + item.Key, ToDbValue(item.Value));
+            command.AddParameter(item.Key, item.Value);
         }
 
         var result = await command.ExecuteScalarAsync();
@@ -61,7 +65,7 @@ SELECT last_insert_rowid();";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        var columns = await GetDocumentColumnsAsync(connection);
+        var columns = await _dialect.GetColumnsAsync(connection, "documents");
         var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
         var values = BuildDocumentColumnValues(document, now, includeId: false, includeCreatedAt: false);
@@ -75,15 +79,15 @@ SELECT last_insert_rowid();";
         command.CommandText = $@"
 UPDATE documents
 SET
-    {string.Join(",\n    ", updateColumns.Select(x => $"{x.Key} = ${x.Key}"))}
-WHERE id = $id;";
+    {string.Join(",\n    ", updateColumns.Select(x => $"{x.Key} = @{x.Key}"))}
+WHERE id = @id;";
 
         foreach (var item in updateColumns)
         {
-            command.Parameters.AddWithValue("$" + item.Key, ToDbValue(item.Value));
+            command.AddParameter(item.Key, item.Value);
         }
 
-        command.Parameters.AddWithValue("$id", document.Id);
+        command.AddParameter("id", document.Id);
 
         var rows = await command.ExecuteNonQueryAsync();
 
@@ -95,7 +99,7 @@ WHERE id = $id;";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        var columns = await GetDocumentColumnsAsync(connection);
+        var columns = await _dialect.GetColumnsAsync(connection, "documents");
 
         using var command = connection.CreateCommand();
 
@@ -104,17 +108,17 @@ WHERE id = $id;";
             command.CommandText = @"
 UPDATE documents
 SET is_active = 0,
-    updated_at = $updated_at
-WHERE id = $id;";
+    updated_at = @updated_at
+WHERE id = @id;";
 
-            command.Parameters.AddWithValue("$updated_at", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            command.AddParameter("updated_at", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         }
         else
         {
-            command.CommandText = "DELETE FROM documents WHERE id = $id;";
+            command.CommandText = "DELETE FROM documents WHERE id = @id;";
         }
 
-        command.Parameters.AddWithValue("$id", id);
+        command.AddParameter("id", id);
 
         var rows = await command.ExecuteNonQueryAsync();
 
@@ -128,8 +132,8 @@ WHERE id = $id;";
 
         using var command = connection.CreateCommand();
 
-        command.CommandText = "SELECT * FROM documents WHERE id = $id;";
-        command.Parameters.AddWithValue("$id", id);
+        command.CommandText = "SELECT * FROM documents WHERE id = @id;";
+        command.AddParameter("id", id);
 
         using var reader = await command.ExecuteReaderAsync();
 
@@ -146,7 +150,7 @@ WHERE id = $id;";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        var columns = await GetDocumentColumnsAsync(connection);
+        var columns = await _dialect.GetColumnsAsync(connection, "documents");
 
         using var command = connection.CreateCommand();
 
@@ -155,7 +159,7 @@ WHERE id = $id;";
             : string.Empty;
 
         var orderBy = columns.Contains("updated_at") && columns.Contains("created_at")
-            ? "ORDER BY DATETIME(COALESCE(updated_at, created_at)) DESC"
+            ? $"ORDER BY {_dialect.DateTimeSortExpression("COALESCE(updated_at, created_at)")} DESC"
             : "ORDER BY id DESC";
 
         command.CommandText = $@"
@@ -188,7 +192,7 @@ FROM documents
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
-        var columns = await GetDocumentColumnsAsync(connection);
+        var columns = await _dialect.GetColumnsAsync(connection, "documents");
 
         var where = new StringBuilder("WHERE 1 = 1");
 
@@ -203,17 +207,17 @@ FROM documents
 
             if (columns.Contains("title"))
             {
-                keywordParts.Add("title LIKE $keyword");
+                keywordParts.Add("title LIKE @keyword");
             }
 
             if (columns.Contains("document_number"))
             {
-                keywordParts.Add("document_number LIKE $keyword");
+                keywordParts.Add("document_number LIKE @keyword");
             }
 
             if (columns.Contains("sender_name"))
             {
-                keywordParts.Add("sender_name LIKE $keyword");
+                keywordParts.Add("sender_name LIKE @keyword");
             }
 
             if (keywordParts.Count > 0)
@@ -226,27 +230,27 @@ FROM documents
 
         if (request.CategoryId.HasValue && columns.Contains("category_id"))
         {
-            where.Append(" AND category_id = $categoryId");
+            where.Append(" AND category_id = @categoryId");
         }
 
         if (request.StatusId.HasValue && columns.Contains("status_id"))
         {
-            where.Append(" AND status_id = $statusId");
+            where.Append(" AND status_id = @statusId");
         }
 
         if (!string.IsNullOrWhiteSpace(request.UrgencyLevel) && columns.Contains("urgency_level"))
         {
-            where.Append(" AND urgency_level = $urgencyLevel");
+            where.Append(" AND urgency_level = @urgencyLevel");
         }
 
         if (!string.IsNullOrWhiteSpace(request.FromDate) && columns.Contains("issue_date"))
         {
-            where.Append(" AND issue_date >= $fromDate");
+            where.Append(" AND issue_date >= @fromDate");
         }
 
         if (!string.IsNullOrWhiteSpace(request.ToDate) && columns.Contains("issue_date"))
         {
-            where.Append(" AND issue_date <= $toDate");
+            where.Append(" AND issue_date <= @toDate");
         }
 
         using var countCommand = connection.CreateCommand();
@@ -259,22 +263,22 @@ FROM documents
         var pageSize = request.PageSize <= 0 ? 100 : request.PageSize;
 
         var orderBy = columns.Contains("updated_at") && columns.Contains("created_at")
-            ? "ORDER BY DATETIME(COALESCE(updated_at, created_at)) DESC"
+            ? $"ORDER BY {_dialect.DateTimeSortExpression("COALESCE(updated_at, created_at)")} DESC"
             : "ORDER BY id DESC";
 
         using var command = connection.CreateCommand();
 
-        command.CommandText = $@"
+        var sql = $@"
 SELECT *
 FROM documents
-{where}
-{orderBy}
-LIMIT $pageSize OFFSET $offset;";
+{where}";
+
+        command.CommandText = _dialect.ApplyPaging(sql, orderBy, "@pageSize", "@offset");
 
         BindSearch(command, request, columns);
 
-        command.Parameters.AddWithValue("$pageSize", pageSize);
-        command.Parameters.AddWithValue("$offset", (pageNumber - 1) * pageSize);
+        command.AddParameter("pageSize", pageSize);
+        command.AddParameter("offset", (pageNumber - 1) * pageSize);
 
         using var reader = await command.ExecuteReaderAsync();
 
@@ -352,29 +356,6 @@ ORDER BY id;";
         return items;
     }
 
-    private static async Task<HashSet<string>> GetDocumentColumnsAsync(SqliteConnection connection)
-    {
-        using var command = connection.CreateCommand();
-
-        command.CommandText = "PRAGMA table_info(documents);";
-
-        using var reader = await command.ExecuteReaderAsync();
-
-        var columns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        while (await reader.ReadAsync())
-        {
-            var name = reader["name"]?.ToString();
-
-            if (!string.IsNullOrWhiteSpace(name))
-            {
-                columns.Add(name);
-            }
-        }
-
-        return columns;
-    }
-
     private static Dictionary<string, object?> BuildDocumentColumnValues(
         Document document,
         string now,
@@ -423,42 +404,42 @@ ORDER BY id;";
     }
 
     private static void BindSearch(
-        SqliteCommand command,
+        DbCommand command,
         DocumentSearchRequest request,
         HashSet<string> columns)
     {
         if (!string.IsNullOrWhiteSpace(request.Keyword))
         {
-            command.Parameters.AddWithValue("$keyword", $"%{request.Keyword.Trim()}%");
+            command.AddParameter("keyword", $"%{request.Keyword.Trim()}%");
         }
 
         if (request.CategoryId.HasValue && columns.Contains("category_id"))
         {
-            command.Parameters.AddWithValue("$categoryId", request.CategoryId.Value);
+            command.AddParameter("categoryId", request.CategoryId.Value);
         }
 
         if (request.StatusId.HasValue && columns.Contains("status_id"))
         {
-            command.Parameters.AddWithValue("$statusId", request.StatusId.Value);
+            command.AddParameter("statusId", request.StatusId.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(request.UrgencyLevel) && columns.Contains("urgency_level"))
         {
-            command.Parameters.AddWithValue("$urgencyLevel", request.UrgencyLevel.Trim());
+            command.AddParameter("urgencyLevel", request.UrgencyLevel.Trim());
         }
 
         if (!string.IsNullOrWhiteSpace(request.FromDate) && columns.Contains("issue_date"))
         {
-            command.Parameters.AddWithValue("$fromDate", request.FromDate.Trim());
+            command.AddParameter("fromDate", request.FromDate.Trim());
         }
 
         if (!string.IsNullOrWhiteSpace(request.ToDate) && columns.Contains("issue_date"))
         {
-            command.Parameters.AddWithValue("$toDate", request.ToDate.Trim());
+            command.AddParameter("toDate", request.ToDate.Trim());
         }
     }
 
-    private static Document Map(SqliteDataReader reader)
+    private static Document Map(DbDataReader reader)
     {
         var document = new Document();
 
@@ -494,7 +475,7 @@ ORDER BY id;";
     }
 
     private static void SetPropertyIfColumnExists(
-        SqliteDataReader reader,
+        DbDataReader reader,
         object target,
         string columnName,
         string propertyName)
@@ -514,7 +495,7 @@ ORDER BY id;";
         SetPropertyIfExists(target, propertyName, value);
     }
 
-    private static bool ColumnExists(SqliteDataReader reader, string columnName)
+    private static bool ColumnExists(DbDataReader reader, string columnName)
     {
         for (var i = 0; i < reader.FieldCount; i++)
         {
@@ -525,11 +506,6 @@ ORDER BY id;";
         }
 
         return false;
-    }
-
-    private static object ToDbValue(object? value)
-    {
-        return value ?? DBNull.Value;
     }
 
     private static void SetPropertyIfExists(object obj, string propertyName, object? value)

@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using DocumentManagement.Infrastructure.Data;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
-using System.Text.RegularExpressions;
 
 namespace DocumentManagement.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]")]
 public class BackupController : ControllerBase
 {
@@ -24,9 +27,14 @@ public class BackupController : ControllerBase
     {
         var role = GetRole();
 
-        if (!IsAdmin(role) && !IsManager(role))
+        if (!IsAdmin(role))
         {
             return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền sao lưu dữ liệu.");
+        }
+
+        if (!IsSqliteProvider())
+        {
+            return BadRequest("Backup trực tiếp qua API chỉ hỗ trợ SQLite. SQL Server cần dùng maintenance job hoặc script backup riêng.");
         }
 
         var databasePath = ResolveDatabasePath();
@@ -61,6 +69,11 @@ public class BackupController : ControllerBase
         if (!IsAdmin(role))
         {
             return StatusCode(StatusCodes.Status403Forbidden, "Chỉ Admin được khôi phục dữ liệu.");
+        }
+
+        if (!IsSqliteProvider())
+        {
+            return BadRequest("Restore trực tiếp qua API chỉ hỗ trợ SQLite. SQL Server cần dùng quy trình restore riêng trên máy chủ database.");
         }
 
         if (file == null || file.Length <= 0)
@@ -130,10 +143,20 @@ public class BackupController : ControllerBase
     [HttpGet("health")]
     public IActionResult Health()
     {
+        if (!IsSqliteProvider())
+        {
+            return Ok(new
+            {
+                provider = DatabaseProvider.SqlServer.ToString(),
+                backupMode = "external"
+            });
+        }
+
         var databasePath = ResolveDatabasePath();
 
         return Ok(new
         {
+            provider = DatabaseProvider.Sqlite.ToString(),
             databasePath,
             exists = System.IO.File.Exists(databasePath)
         });
@@ -141,12 +164,9 @@ public class BackupController : ControllerBase
 
     private string GetRole()
     {
-        if (Request.Headers.TryGetValue("X-User-Role", out var roleHeader))
-        {
-            return roleHeader.ToString();
-        }
-
-        return string.Empty;
+        return User.FindFirst(ClaimTypes.Role)?.Value
+               ?? User.FindFirst("role")?.Value
+               ?? string.Empty;
     }
 
     private static bool IsAdmin(string role)
@@ -154,45 +174,35 @@ public class BackupController : ControllerBase
         return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static bool IsManager(string role)
-    {
-        return string.Equals(role, "Manager", StringComparison.OrdinalIgnoreCase);
-    }
-
     private string ResolveDatabasePath()
     {
-        var connectionString = _configuration.GetConnectionString("DefaultConnection");
-
-        if (string.IsNullOrWhiteSpace(connectionString))
+        var databasePath = _configuration["Database:Path"];
+        if (string.IsNullOrWhiteSpace(databasePath))
         {
-            throw new InvalidOperationException("Thiếu ConnectionStrings:DefaultConnection.");
+            databasePath = Path.Combine("database", "app.db");
         }
 
-        var match = Regex.Match(
-            connectionString,
-            @"Data Source\s*=\s*(?<path>[^;]+)",
-            RegexOptions.IgnoreCase);
-
-        if (!match.Success)
+        if (Path.IsPathRooted(databasePath))
         {
-            throw new InvalidOperationException("Connection string không có Data Source.");
+            return databasePath;
         }
 
-        var dataSource = match.Groups["path"].Value.Trim();
-
-        if (Path.IsPathRooted(dataSource))
-        {
-            return dataSource;
-        }
-
-        var contentRootPath = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, dataSource));
+        var contentRootPath = Path.GetFullPath(Path.Combine(_environment.ContentRootPath, databasePath));
 
         if (System.IO.File.Exists(contentRootPath))
         {
             return contentRootPath;
         }
 
-        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, dataSource));
+        return Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, databasePath));
+    }
+
+    private bool IsSqliteProvider()
+    {
+        var provider = _configuration.GetSection("Database").Get<DatabaseOptions>()?.GetProvider()
+                       ?? DatabaseProvider.Sqlite;
+
+        return provider == DatabaseProvider.Sqlite;
     }
 
     private static async Task CreateSqliteBackupAsync(string sourceDatabasePath, string backupPath)
