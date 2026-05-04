@@ -1,9 +1,11 @@
 .vs/
+.dotnet-home/
 bin/
 obj/
 
 logs/
 *.log
+keys/
 
 *.db
 *.sqlite

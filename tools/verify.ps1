@@ -12,6 +12,15 @@ function Info($msg) { Write-Host "[INFO] $msg" -ForegroundColor Cyan }
 
 Set-Location $Root
 
+if (-not $env:DOTNET_CLI_HOME) {
+    $env:DOTNET_CLI_HOME = Join-Path $Root ".dotnet-home"
+}
+
+$env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE = "1"
+
+New-Item -ItemType Directory -Path $env:DOTNET_CLI_HOME -Force | Out-Null
+dotnet build-server shutdown | Out-Null
+
 Write-Host "=== VERIFY START ==="
 
 $projects = @(
@@ -30,7 +39,7 @@ foreach ($project in $projects) {
     }
 
     Info "Building $project"
-    dotnet build $project
+    dotnet build $project -m:1
     if ($LASTEXITCODE -ne 0) {
         Fail "Build failed: $project"
     }
