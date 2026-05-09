@@ -1,13 +1,16 @@
 ﻿using System.Collections;
 using DocumentManagement.Api.Services;
 using DocumentManagement.Application.Interfaces;
+using DocumentManagement.Api.Security;
 using DocumentManagement.Contracts.Auth;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocumentManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
@@ -20,6 +23,7 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("login")]
+    [AllowAnonymous]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
@@ -86,6 +90,20 @@ public class AuthController : ControllerBase
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {
+        var currentUserId = User.GetUserId();
+
+        if (currentUserId <= 0)
+        {
+            return Unauthorized("Không xác định được người dùng hiện tại.");
+        }
+
+        if (request.UserId != currentUserId && !User.IsAdmin())
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                "Bạn không có quyền đổi mật khẩu của người dùng khác.");
+        }
+
         if (request.UserId <= 0)
         {
             return BadRequest("UserId không hợp lệ.");
@@ -94,6 +112,11 @@ public class AuthController : ControllerBase
         if (string.IsNullOrWhiteSpace(request.NewPassword))
         {
             return BadRequest("Mật khẩu mới không được để trống.");
+        }
+
+        if (request.NewPassword.Length < 8)
+        {
+            return BadRequest("Mật khẩu mới phải có tối thiểu 8 ký tự.");
         }
 
         var success = await _authService.ChangePasswordAsync(

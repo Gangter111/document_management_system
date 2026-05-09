@@ -54,6 +54,26 @@ public class ClientPermissionService
         return IsAdmin || IsManager || IsPublisher;
     }
 
+    public bool CanViewReports()
+    {
+        return IsAdmin || IsManager || IsPublisher;
+    }
+
+    public bool CanViewArchive()
+    {
+        return IsAdmin || IsManager || IsPublisher || IsStaff;
+    }
+
+    public bool CanManageCatalog()
+    {
+        return IsAdmin || IsManager;
+    }
+
+    public bool CanManageSystem()
+    {
+        return IsAdmin;
+    }
+
     public bool CanBackup()
     {
         return IsAdmin;

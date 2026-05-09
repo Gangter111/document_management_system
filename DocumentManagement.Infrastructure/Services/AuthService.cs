@@ -92,7 +92,7 @@ LIMIT 1;";
 
     public async Task<bool> ChangePasswordAsync(long userId, string newPassword)
     {
-        if (userId <= 0 || string.IsNullOrWhiteSpace(newPassword))
+        if (userId <= 0 || string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
         {
             return false;
         }

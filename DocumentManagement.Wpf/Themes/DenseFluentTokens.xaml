@@ -1,0 +1,55 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Dense Fluent tokens converted from dense-fluent-cognitive-refinement-v9.html -->
+    <Color x:Key="DenseColorBackground">#FAFAFA</Color>
+    <Color x:Key="DenseColorSurface">#FFFFFF</Color>
+    <Color x:Key="DenseColorChrome">#F6F7F8</Color>
+    <Color x:Key="DenseColorChromeSoft">#F1F2F3</Color>
+    <Color x:Key="DenseColorText">#111111</Color>
+    <Color x:Key="DenseColorMuted">#6B6B6B</Color>
+    <Color x:Key="DenseColorSoft">#8A8A8A</Color>
+    <Color x:Key="DenseColorBorder">#E5E5E5</Color>
+    <Color x:Key="DenseColorBorderStrong">#D8DADC</Color>
+    <Color x:Key="DenseColorBrand">#087A3D</Color>
+    <Color x:Key="DenseColorAccent">#2F6FEB</Color>
+    <Color x:Key="DenseColorSuccess">#17A34A</Color>
+    <Color x:Key="DenseColorWarning">#EAB308</Color>
+    <Color x:Key="DenseColorDanger">#DC2626</Color>
+    <Color x:Key="DenseColorDangerSoft">#FEF2F2</Color>
+    <Color x:Key="DenseColorDangerText">#991B1B</Color>
+    <Color x:Key="DenseColorWarningSoft">#FEF3C7</Color>
+    <Color x:Key="DenseColorWarningBorder">#FDE68A</Color>
+    <Color x:Key="DenseColorWarningText">#92400E</Color>
+    <Color x:Key="DenseColorInfoSoft">#EFF6FF</Color>
+    <Color x:Key="DenseColorInfoText">#1E40AF</Color>
+    <Color x:Key="DenseColorRowHover">#F7F9FD</Color>
+    <Color x:Key="DenseColorRowSelected">#EFF5FF</Color>
+    <Color x:Key="DenseColorMode">#F6FAF8</Color>
+
+    <SolidColorBrush x:Key="DenseBackgroundBrush" Color="{StaticResource DenseColorBackground}"/>
+    <SolidColorBrush x:Key="DenseSurfaceBrush" Color="{StaticResource DenseColorSurface}"/>
+    <SolidColorBrush x:Key="DenseChromeBrush" Color="{StaticResource DenseColorChrome}"/>
+    <SolidColorBrush x:Key="DenseChromeSoftBrush" Color="{StaticResource DenseColorChromeSoft}"/>
+    <SolidColorBrush x:Key="DenseTextBrush" Color="{StaticResource DenseColorText}"/>
+    <SolidColorBrush x:Key="DenseMutedBrush" Color="{StaticResource DenseColorMuted}"/>
+    <SolidColorBrush x:Key="DenseSoftTextBrush" Color="{StaticResource DenseColorSoft}"/>
+    <SolidColorBrush x:Key="DenseBorderBrush" Color="{StaticResource DenseColorBorder}"/>
+    <SolidColorBrush x:Key="DenseBorderStrongBrush" Color="{StaticResource DenseColorBorderStrong}"/>
+    <SolidColorBrush x:Key="DenseBrandBrush" Color="{StaticResource DenseColorBrand}"/>
+    <SolidColorBrush x:Key="DenseAccentBrush" Color="{StaticResource DenseColorAccent}"/>
+    <SolidColorBrush x:Key="DenseSuccessBrush" Color="{StaticResource DenseColorSuccess}"/>
+    <SolidColorBrush x:Key="DenseWarningBrush" Color="{StaticResource DenseColorWarning}"/>
+    <SolidColorBrush x:Key="DenseDangerBrush" Color="{StaticResource DenseColorDanger}"/>
+    <SolidColorBrush x:Key="DenseDangerSoftBrush" Color="{StaticResource DenseColorDangerSoft}"/>
+    <SolidColorBrush x:Key="DenseDangerTextBrush" Color="{StaticResource DenseColorDangerText}"/>
+    <SolidColorBrush x:Key="DenseWarningSoftBrush" Color="{StaticResource DenseColorWarningSoft}"/>
+    <SolidColorBrush x:Key="DenseWarningBorderBrush" Color="{StaticResource DenseColorWarningBorder}"/>
+    <SolidColorBrush x:Key="DenseWarningTextBrush" Color="{StaticResource DenseColorWarningText}"/>
+    <SolidColorBrush x:Key="DenseInfoSoftBrush" Color="{StaticResource DenseColorInfoSoft}"/>
+    <SolidColorBrush x:Key="DenseInfoTextBrush" Color="{StaticResource DenseColorInfoText}"/>
+    <SolidColorBrush x:Key="DenseRowHoverBrush" Color="{StaticResource DenseColorRowHover}"/>
+    <SolidColorBrush x:Key="DenseRowSelectedBrush" Color="{StaticResource DenseColorRowSelected}"/>
+    <SolidColorBrush x:Key="DenseModeBrush" Color="{StaticResource DenseColorMode}"/>
+
+</ResourceDictionary>

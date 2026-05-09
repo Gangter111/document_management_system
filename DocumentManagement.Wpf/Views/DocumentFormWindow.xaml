@@ -8,74 +8,13 @@
         MinWidth="920"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
-        Background="{StaticResource AppBackgroundBrush}"
-        FontFamily="{StaticResource AppFontFamily}"
-        FontSize="13">
+        Style="{StaticResource DenseFormWindowStyle}">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
-
-        <Style x:Key="LabelStyle" TargetType="TextBlock">
-            <Setter Property="Margin" Value="0,0,0,6"/>
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-
-        <Style x:Key="RequiredLabelStyle"
-               TargetType="TextBlock"
-               BasedOn="{StaticResource LabelStyle}">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-        </Style>
-
-        <Style x:Key="FormFieldPanelStyle" TargetType="StackPanel">
-            <Setter Property="Margin" Value="0,0,0,14"/>
-        </Style>
-
-        <Style x:Key="LeftFormFieldPanelStyle"
-               TargetType="StackPanel"
-               BasedOn="{StaticResource FormFieldPanelStyle}">
-            <Setter Property="Margin" Value="0,0,10,14"/>
-        </Style>
-
-        <Style x:Key="RightFormFieldPanelStyle"
-               TargetType="StackPanel"
-               BasedOn="{StaticResource FormFieldPanelStyle}">
-            <Setter Property="Margin" Value="10,0,0,14"/>
-        </Style>
-
-        <Style x:Key="BadgeBaseStyle" TargetType="Border">
-            <Setter Property="CornerRadius" Value="999"/>
-            <Setter Property="Padding" Value="12,6"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="ReadonlyBadgeStyle"
-               TargetType="Border"
-               BasedOn="{StaticResource BadgeBaseStyle}">
-            <Setter Property="Background" Value="#FEF3C7"/>
-            <Setter Property="BorderBrush" Value="#FDE68A"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
-        </Style>
-
-        <Style x:Key="ApiModeBadgeStyle"
-               TargetType="Border"
-               BasedOn="{StaticResource BadgeBaseStyle}">
-            <Setter Property="Background" Value="#ECFDF5"/>
-            <Setter Property="BorderBrush" Value="#BBF7D0"/>
-        </Style>
-
-        <Style x:Key="FileNameTextStyle" TargetType="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-            <Setter Property="MaxWidth" Value="360"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
-            <Setter Property="FontStyle" Value="Italic"/>
-        </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
+    <Grid Style="{StaticResource DenseFormRootGridStyle}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -84,9 +23,7 @@
 
         <!-- HEADER -->
         <Border Grid.Row="0"
-                Style="{StaticResource AppCardStyle}"
-                Padding="18"
-                Margin="0,0,0,14">
+                Style="{StaticResource DenseFormHeaderPanelStyle}">
 
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -96,9 +33,7 @@
 
                 <StackPanel>
                     <TextBlock Text="Thông tin văn bản"
-                               FontSize="24"
-                               FontWeight="Bold"
-                               Foreground="{StaticResource TextBrush}"/>
+                               Style="{StaticResource DenseFormTitleTextStyle}"/>
 
                 </StackPanel>
 
@@ -106,12 +41,10 @@
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
 
-                    <Border Style="{StaticResource ReadonlyBadgeStyle}"
+                    <Border Style="{StaticResource DenseReadonlyBadgeStyle}"
                             Visibility="{Binding IsReadOnlyMode, Converter={StaticResource BoolToVisibility}}">
                         <TextBlock Text="Chế độ xem"
-                                   Foreground="#92400E"
-                                   FontWeight="SemiBold"
-                                   FontSize="12"/>
+                                   Style="{StaticResource DenseReadonlyBadgeTextStyle}"/>
                     </Border>
 
                 </StackPanel>
@@ -120,8 +53,7 @@
 
         <!-- BODY -->
         <Border Grid.Row="1"
-                Style="{StaticResource AppCardStyle}"
-                Padding="16">
+                Style="{StaticResource DenseFormBodyPanelStyle}">
 
             <Grid>
                 <Grid.RowDefinitions>
@@ -131,9 +63,7 @@
 
                 <!-- UPLOAD -->
                 <Border Grid.Row="0"
-                        Style="{StaticResource SoftCardStyle}"
-                        Padding="12"
-                        Margin="0,0,0,14">
+                        Style="{StaticResource DenseFormUploadPanelStyle}">
 
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -145,19 +75,13 @@
 
                         <TextBlock Grid.Column="0"
                                    Text="File PDF:"
-                                   VerticalAlignment="Center"
-                                   Margin="0,0,10,0"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextBrush}"/>
+                                   Style="{StaticResource DenseFormUploadLabelTextStyle}"/>
 
                         <Button Grid.Column="1"
                                 Content="Chọn file"
-                                Width="104"
-                                Height="36"
-                                Style="{StaticResource SecondaryButtonStyle}"
+                                Style="{StaticResource DenseFormUploadSecondaryButtonStyle}"
                                 Command="{Binding BrowseFileCommand}"
-                                IsEnabled="{Binding CanBrowseFile}"
-                                Margin="0,0,12,0"/>
+                                IsEnabled="{Binding CanBrowseFile}"/>
 
                         <TextBlock Grid.Column="2"
                                    Text="{Binding SelectedFilePath}"
@@ -165,9 +89,7 @@
 
                         <Button Grid.Column="3"
                                 Content="Tự động điền từ PDF"
-                                Width="180"
-                                Height="36"
-                                Style="{StaticResource PrimaryButtonStyle}"
+                                Style="{StaticResource DenseFormPrimaryButtonStyle}"
                                 Command="{Binding AutoFillCommand}"
                                 IsEnabled="{Binding CanAutoFill}"/>
                     </Grid>
@@ -175,9 +97,7 @@
 
                 <!-- FORM -->
                 <ScrollViewer Grid.Row="1"
-                              VerticalScrollBarVisibility="Auto"
-                              HorizontalScrollBarVisibility="Disabled"
-                              Padding="0,0,6,0">
+                              Style="{StaticResource DenseFormScrollViewerStyle}">
 
                     <Grid IsEnabled="{Binding CanModifyDocument}">
                         <Grid.ColumnDefinitions>
@@ -205,7 +125,7 @@
                             <TextBlock Text="Loại văn bản" Style="{StaticResource LabelStyle}"/>
                             <ComboBox SelectedValue="{Binding DocumentType}"
                                       SelectedValuePath="Tag"
-                                      Style="{StaticResource AppComboBoxStyle}">
+                                      Style="{StaticResource DenseFormComboBoxStyle}">
                                 <ComboBoxItem Content="Văn bản đến" Tag="INCOMING"/>
                                 <ComboBoxItem Content="Văn bản đi" Tag="OUTGOING"/>
                             </ComboBox>
@@ -216,7 +136,7 @@
                                     Style="{StaticResource RightFormFieldPanelStyle}">
                             <TextBlock Text="Số hiệu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
                             <TextBox Text="{Binding DocumentNumber, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="1"
@@ -224,8 +144,7 @@
                                     Style="{StaticResource FormFieldPanelStyle}">
                             <TextBlock Text="Tiêu đề / Trích yếu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
                             <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
-                                     FontWeight="SemiBold"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTitleInputTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2"
@@ -233,7 +152,7 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Số ký hiệu / Số phụ" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding ReferenceNumber}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2"
@@ -244,7 +163,7 @@
                                       SelectedValue="{Binding CategoryId}"
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
-                                      Style="{StaticResource AppComboBoxStyle}"/>
+                                      Style="{StaticResource DenseFormComboBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="3"
@@ -252,7 +171,7 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Ngày ban hành" Style="{StaticResource LabelStyle}"/>
                             <DatePicker SelectedDate="{Binding IssueDate}"
-                                        Style="{StaticResource AppDatePickerStyle}"/>
+                                        Style="{StaticResource DenseFormDatePickerStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="3"
@@ -264,7 +183,7 @@
                                       SelectedValuePath="Id"
                                       DisplayMemberPath="Name"
                                       IsEnabled="False"
-                                      Style="{StaticResource AppComboBoxStyle}"/>
+                                      Style="{StaticResource DenseFormComboBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="4"
@@ -272,7 +191,7 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Ngày nhận" Style="{StaticResource LabelStyle}"/>
                             <DatePicker SelectedDate="{Binding ReceivedDate}"
-                                        Style="{StaticResource AppDatePickerStyle}"/>
+                                        Style="{StaticResource DenseFormDatePickerStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="4"
@@ -280,7 +199,7 @@
                                     Style="{StaticResource RightFormFieldPanelStyle}">
                             <TextBlock Text="Hạn xử lý" Style="{StaticResource LabelStyle}"/>
                             <DatePicker SelectedDate="{Binding DueDate}"
-                                        Style="{StaticResource AppDatePickerStyle}"/>
+                                        Style="{StaticResource DenseFormDatePickerStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="5"
@@ -288,7 +207,7 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Cơ quan ban hành / Người gửi" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding SenderName}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="5"
@@ -296,7 +215,7 @@
                                     Style="{StaticResource RightFormFieldPanelStyle}">
                             <TextBlock Text="Nơi nhận / Người nhận" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding ReceiverName}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="6"
@@ -304,7 +223,7 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Người ký" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding SignerName}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="6"
@@ -312,7 +231,7 @@
                                     Style="{StaticResource RightFormFieldPanelStyle}">
                             <TextBlock Text="Phòng ban chủ trì" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding ProcessingDepartment}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="7"
@@ -320,7 +239,7 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Người được giao xử lý" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding AssignedTo}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="7"
@@ -329,7 +248,7 @@
                             <TextBlock Text="Độ mật" Style="{StaticResource LabelStyle}"/>
                             <ComboBox SelectedValue="{Binding ConfidentialityLevel}"
                                       SelectedValuePath="Tag"
-                                      Style="{StaticResource AppComboBoxStyle}">
+                                      Style="{StaticResource DenseFormComboBoxStyle}">
                                 <ComboBoxItem Content="Bình thường" Tag="NORMAL"/>
                                 <ComboBoxItem Content="Mật" Tag="CONFIDENTIAL"/>
                                 <ComboBoxItem Content="Tối mật" Tag="SECRET"/>
@@ -343,7 +262,7 @@
                             <TextBlock Text="Độ khẩn" Style="{StaticResource LabelStyle}"/>
                             <ComboBox SelectedValue="{Binding UrgencyLevel}"
                                       SelectedValuePath="Tag"
-                                      Style="{StaticResource AppComboBoxStyle}">
+                                      Style="{StaticResource DenseFormComboBoxStyle}">
                                 <ComboBoxItem Content="Bình thường" Tag="NORMAL"/>
                                 <ComboBoxItem Content="Khẩn" Tag="URGENT"/>
                                 <ComboBoxItem Content="Hỏa tốc" Tag="VERY_URGENT"/>
@@ -355,7 +274,7 @@
                                     Style="{StaticResource RightFormFieldPanelStyle}">
                             <TextBlock Text="Ghi chú" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding Notes}"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="9"
@@ -367,7 +286,7 @@
                                      TextWrapping="Wrap"
                                      AcceptsReturn="True"
                                      VerticalContentAlignment="Top"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormMultilineTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="10"
@@ -380,7 +299,7 @@
                                      AcceptsReturn="True"
                                      VerticalContentAlignment="Top"
                                      VerticalScrollBarVisibility="Auto"
-                                     Style="{StaticResource AppTextBoxStyle}"/>
+                                     Style="{StaticResource DenseFormMultilineTextBoxStyle}"/>
                         </StackPanel>
                     </Grid>
                 </ScrollViewer>
@@ -389,18 +308,13 @@
 
         <!-- FOOTER -->
         <Border Grid.Row="2"
-                Padding="0,14,0,0"
-                BorderBrush="{StaticResource BorderBrushDefault}"
-                BorderThickness="0,1,0,0"
-                Margin="0,14,0,0">
+                Style="{StaticResource DenseFormFooterStyle}">
 
             <DockPanel LastChildFill="False">
 
                 <Button Content="Xóa văn bản"
                         DockPanel.Dock="Left"
-                        Width="130"
-                        Height="40"
-                        Style="{StaticResource DangerButtonStyle}"
+                        Style="{StaticResource DenseFormDangerButtonStyle}"
                         Command="{Binding DeleteCommand}"
                         IsEnabled="{Binding CanDelete}"
                         Visibility="{Binding CanDelete, Converter={StaticResource BoolToVisibility}}"
@@ -410,12 +324,11 @@
                             DockPanel.Dock="Right"
                             HorizontalAlignment="Right">
 
-                    <Button Width="100"
-                            Height="40"
+                    <Button
                             IsCancel="True"
-                            Margin="0,0,10,0">
+                            >
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                            <Style TargetType="Button" BasedOn="{StaticResource DenseFormCancelButtonStyle}">
                                 <Setter Property="Content" Value="Hủy bỏ"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
@@ -427,9 +340,7 @@
                     </Button>
 
                     <Button Content="Lưu văn bản"
-                            Width="150"
-                            Height="40"
-                            Style="{StaticResource SuccessButtonStyle}"
+                            Style="{StaticResource DenseFormPrimaryButtonStyle}"
                             Command="{Binding SaveCommand}"
                             IsEnabled="{Binding CanSaveDocument}"
                             Visibility="{Binding CanSaveDocument, Converter={StaticResource BoolToVisibility}}"

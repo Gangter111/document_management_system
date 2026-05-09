@@ -332,10 +332,12 @@ ORDER BY name;";
         using var connection = _connectionFactory.CreateConnection();
         await connection.OpenAsync();
 
+        var columns = await _dialect.GetColumnsAsync(connection, "document_statuses");
+
         using var command = connection.CreateCommand();
 
-        command.CommandText = @"
-SELECT id, name
+        command.CommandText = $@"
+SELECT id, {(columns.Contains("code") ? "code" : "''")} AS code, name
 FROM document_statuses
 WHERE is_active = 1
 ORDER BY id;";
@@ -349,6 +351,7 @@ ORDER BY id;";
             items.Add(new StatusModel
             {
                 Id = Convert.ToInt64(reader["id"]),
+                Code = reader["code"]?.ToString() ?? string.Empty,
                 Name = reader["name"]?.ToString() ?? string.Empty
             });
         }

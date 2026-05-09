@@ -13,283 +13,73 @@
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         WindowStyle="None"
-        Background="#EEF6F1"
-        FontFamily="Segoe UI"
+        Style="{StaticResource DenseLoginWindowStyle}"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         RenderOptions.BitmapScalingMode="HighQuality">
 
-    <Window.Resources>
-        <SolidColorBrush x:Key="LoginGreenBrush" Color="#087A3D"/>
-        <SolidColorBrush x:Key="LoginGreenDarkBrush" Color="#00652E"/>
-        <SolidColorBrush x:Key="LoginRedBrush" Color="#DC1515"/>
-        <SolidColorBrush x:Key="LoginTextBrush" Color="#1F2937"/>
-        <SolidColorBrush x:Key="LoginMutedBrush" Color="#7A7F87"/>
-        <SolidColorBrush x:Key="LoginLineBrush" Color="#D7ECE0"/>
-        <SolidColorBrush x:Key="LoginInputBorderBrush" Color="#BFDCCB"/>
-        <SolidColorBrush x:Key="LoginDecorBrush" Color="#DCEFE5"/>
-
-        <LinearGradientBrush x:Key="LoginButtonBrush" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#0AA04B" Offset="0"/>
-            <GradientStop Color="#006C32" Offset="1"/>
-        </LinearGradientBrush>
-
-        <Style x:Key="LoginInputTextBoxStyle" TargetType="TextBox">
-            <Setter Property="Height" Value="48"/>
-            <Setter Property="Foreground" Value="{StaticResource LoginTextBrush}"/>
-            <Setter Property="Background" Value="#FCFEFD"/>
-            <Setter Property="BorderBrush" Value="{StaticResource LoginInputBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="46,0,14,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="CaretBrush" Value="{StaticResource LoginGreenBrush}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource LoginGreenBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="LoginPasswordBoxStyle" TargetType="PasswordBox">
-            <Setter Property="Height" Value="48"/>
-            <Setter Property="Foreground" Value="{StaticResource LoginTextBrush}"/>
-            <Setter Property="Background" Value="#FCFEFD"/>
-            <Setter Property="BorderBrush" Value="{StaticResource LoginInputBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Padding" Value="46,0,46,0"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="PasswordBox">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="8">
-                            <ScrollViewer x:Name="PART_ContentHost"
-                                          Margin="{TemplateBinding Padding}"
-                                          VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                                <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource LoginGreenBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="LoginPrimaryButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="52"/>
-            <Setter Property="Background" Value="{StaticResource LoginButtonBrush}"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="FontSize" Value="15"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.92"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Opacity" Value="0.82"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="GhostLinkButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="{StaticResource LoginMutedBrush}"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-
-        <Style x:Key="LoginIconButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="36"/>
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Foreground" Value="#87918D"/>
-        </Style>
-    </Window.Resources>
-
-    <Grid>
-        <Grid.Background>
-            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                <GradientStop Color="#E5F3EA" Offset="0"/>
-                <GradientStop Color="#FBFEFC" Offset="0.46"/>
-                <GradientStop Color="#EAF5EF" Offset="1"/>
-            </LinearGradientBrush>
-        </Grid.Background>
-
-        <Canvas IsHitTestVisible="False" Opacity="0.62">
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M88,204 L172,166 L260,206 L260,376 L178,414 L88,374 Z"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M120,210 L120,360 M148,198 L148,374 M176,186 L176,386 M204,196 L204,398 M232,208 L232,386"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M96,488 L232,434 L392,498 L252,618 Z M142,502 L248,466 M158,526 L276,484 M174,552 L304,504"/>
-            <Ellipse Canvas.Left="196" Canvas.Top="552" Width="54" Height="34" Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4"/>
-
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M820,188 L1048,224 L1018,418 L788,382 Z M844,220 L964,238 L946,350 L826,330 Z"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M792,384 L1002,420 L920,456 L710,418 Z"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M965,294 A35,35 0 1 1 964,295 M988,326 L1020,364"/>
-
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M804,520 L986,468 L1062,506 L884,570 Z M804,520 L804,596 L884,646 L1062,578 L1062,506 M884,570 L884,646"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M916,618 L1050,670"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M958,668 L1066,628"/>
-        </Canvas>
-
-        <Grid Height="36"
-              Panel.ZIndex="10"
-              VerticalAlignment="Top"
-              Background="Transparent"
+    <Grid Style="{StaticResource DenseLoginRootGridStyle}">
+        <Grid Style="{StaticResource DenseLoginDragBarStyle}"
               MouseLeftButtonDown="TitleDragArea_MouseLeftButtonDown">
-            <Button Width="34"
-                    Height="34"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Top"
-                    Margin="0,4,8,0"
-                    Background="Transparent"
-                    BorderBrush="Transparent"
-                    Foreground="#51615A"
-                    Cursor="Hand"
+            <Button Style="{StaticResource DenseLoginCloseButtonStyle}"
                     Click="ExitButton_Click">
-                <materialDesign:PackIcon Kind="Close" Width="18" Height="18"/>
+                <materialDesign:PackIcon Kind="Close"
+                                         Width="17"
+                                         Height="17"
+                                         VerticalAlignment="Center"
+                                         Foreground="{StaticResource DenseMutedBrush}"/>
             </Button>
         </Grid>
 
         <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="150"/>
+                <RowDefinition Height="126"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="64"/>
+                <RowDefinition Height="52"/>
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Bottom"
-                        Margin="0,0,0,10">
-                <Image Source="pack://application:,,,/Assets/Images/logo-tach.png"
-                       Height="104"
-                       Stretch="Uniform"
-                       RenderOptions.BitmapScalingMode="HighQuality"
-                       SnapsToDevicePixels="True"/>
-            </StackPanel>
+            <Image Grid.Row="0"
+                   Source="pack://application:,,,/Assets/Images/logo-tach.png"
+                   Style="{StaticResource DenseLoginLogoImageStyle}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Bottom"/>
 
-            <Border Grid.Row="1"
-                    Width="408"
-                    Height="486"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Top"
-                    Background="#FFFFFC"
-                    BorderBrush="#B8DCC8"
-                    BorderThickness="1"
-                    CornerRadius="20"
-                    Padding="36,30">
-                <Border.Effect>
-                    <DropShadowEffect Color="#9ABAA8" BlurRadius="22" ShadowDepth="0" Opacity="0.14"/>
-                </Border.Effect>
-
+            <Border Grid.Row="1" Style="{StaticResource DenseLoginCardStyle}">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="24"/>
+                        <RowDefinition Height="22"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="6"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="18"/>
+                        <RowDefinition Height="14"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="8"/>
+                        <RowDefinition Height="6"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="18"/>
+                        <RowDefinition Height="14"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="12"/>
+                        <RowDefinition Height="10"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="18"/>
+                        <RowDefinition Height="16"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0" HorizontalAlignment="Center">
-                        <TextBlock Text="LOGIN"
-                                   Foreground="{StaticResource LoginGreenBrush}"
-                                   FontSize="38"
-                                   FontWeight="Bold"
-                                   TextAlignment="Center"/>
-                        <TextBlock Text="HỆ THỐNG QUẢN LÝ VĂN BẢN"
-                                   Foreground="{StaticResource LoginMutedBrush}"
-                                   FontSize="15"
-                                   FontWeight="SemiBold"
-                                   TextAlignment="Center"
-                                   Margin="0,4,0,0"/>
-                        <TextBlock x:Name="ServerUrlText"
-                                   Foreground="#87918D"
-                                   FontSize="11"
-                                   TextAlignment="Center"
-                                   TextTrimming="CharacterEllipsis"
-                                   Margin="0,8,0,0"
-                                   MaxWidth="320"/>
+                        <TextBlock Text="LOGIN" Style="{StaticResource DenseLoginTitleTextStyle}"/>
+                        <TextBlock Text="HỆ THỐNG QUẢN LÝ VĂN BẢN" Style="{StaticResource DenseLoginSubtitleTextStyle}"/>
+                        <TextBlock x:Name="ServerUrlText" Style="{StaticResource DenseLoginServerTextStyle}"/>
                     </StackPanel>
 
-                    <TextBlock Grid.Row="2"
-                               Text="Email"
-                               Foreground="{StaticResource LoginGreenBrush}"
-                               FontWeight="SemiBold"
-                               FontSize="13"/>
+                    <TextBlock Grid.Row="2" Text="Email" Style="{StaticResource DenseLoginLabelTextStyle}"/>
 
                     <Grid Grid.Row="4">
                         <TextBox x:Name="UsernameTextBox"
                                  Style="{StaticResource LoginInputTextBoxStyle}"
                                  ToolTip="Nhập email hoặc tên đăng nhập"/>
-                        <materialDesign:PackIcon Kind="EmailOutline"
-                                                 Width="18"
-                                                 Height="18"
-                                                 Foreground="#87918D"
-                                                 HorizontalAlignment="Left"
-                                                 VerticalAlignment="Center"
-                                                 Margin="14,0,0,0"/>
-                        <TextBlock Text="Nhập email của bạn"
-                                   Foreground="#9AA3A0"
-                                   FontSize="14"
-                                   Margin="46,0,0,0"
-                                   IsHitTestVisible="False"
-                                   VerticalAlignment="Center">
+                        <materialDesign:PackIcon Kind="EmailOutline" Style="{StaticResource DenseInputIconStyle}"/>
+                        <TextBlock Text="Nhập email của bạn">
                             <TextBlock.Style>
-                                <Style TargetType="TextBlock">
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource DenseLoginPlaceholderTextStyle}">
                                     <Setter Property="Visibility" Value="Collapsed"/>
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding Text, ElementName=UsernameTextBox}" Value="">
@@ -301,55 +91,32 @@
                         </TextBlock>
                     </Grid>
 
-                    <TextBlock Grid.Row="6"
-                               Text="Password"
-                               Foreground="{StaticResource LoginGreenBrush}"
-                               FontWeight="SemiBold"
-                               FontSize="13"/>
+                    <TextBlock Grid.Row="6" Text="Password" Style="{StaticResource DenseLoginLabelTextStyle}"/>
 
                     <Grid Grid.Row="8">
                         <TextBox x:Name="VisiblePasswordTextBox"
-                                 Style="{StaticResource LoginInputTextBoxStyle}"
-                                 Padding="46,0,46,0"
+                                 Style="{StaticResource DenseLoginVisiblePasswordTextBoxStyle}"
                                  Visibility="Collapsed"
                                  TextChanged="VisiblePasswordTextBox_TextChanged"/>
                         <PasswordBox x:Name="PasswordBox"
                                      Style="{StaticResource LoginPasswordBoxStyle}"
                                      PasswordChanged="PasswordBox_PasswordChanged"/>
-                        <materialDesign:PackIcon Kind="LockOutline"
-                                                 Width="18"
-                                                 Height="18"
-                                                 Foreground="#87918D"
-                                                 HorizontalAlignment="Left"
-                                                 VerticalAlignment="Center"
-                                                 Margin="14,0,0,0"/>
+                        <materialDesign:PackIcon Kind="LockOutline" Style="{StaticResource DenseInputIconStyle}"/>
                         <TextBlock x:Name="PasswordPlaceholder"
                                    Text="Nhập mật khẩu của bạn"
-                                   Foreground="#9AA3A0"
-                                   FontSize="14"
-                                   Margin="46,0,0,0"
-                                   IsHitTestVisible="False"
-                                   VerticalAlignment="Center"/>
+                                   Style="{StaticResource DenseLoginPlaceholderTextStyle}"/>
                         <Button x:Name="TogglePasswordButton"
                                 Style="{StaticResource LoginIconButtonStyle}"
                                 HorizontalAlignment="Right"
                                 VerticalAlignment="Center"
-                                Margin="0,0,4,0"
                                 Click="TogglePasswordVisibility_Click">
                             <materialDesign:PackIcon x:Name="TogglePasswordIcon"
                                                      Kind="EyeOutline"
-                                                     Width="18"
-                                                     Height="18"/>
+                                                     Style="{StaticResource DenseShellTopIconStyle}"/>
                         </Button>
                     </Grid>
 
-                    <TextBlock x:Name="ErrorText"
-                               Grid.Row="10"
-                               Foreground="#DC2626"
-                               FontSize="12"
-                               FontWeight="SemiBold"
-                               TextWrapping="Wrap"
-                               TextAlignment="Center"/>
+                    <TextBlock x:Name="ErrorText" Grid.Row="10" Style="{StaticResource DenseLoginErrorTextStyle}"/>
 
                     <Button Grid.Row="12"
                             Style="{StaticResource LoginPrimaryButtonStyle}"
@@ -359,62 +126,26 @@
                     <StackPanel Grid.Row="14"
                                 Orientation="Horizontal"
                                 HorizontalAlignment="Center"
-                                VerticalAlignment="Center"
-                                Margin="0,2,0,0">
+                                VerticalAlignment="Center">
+                        <Button Style="{StaticResource GhostLinkButtonStyle}" Content="Quên mật khẩu?"/>
+                        <Border Style="{StaticResource DenseVerticalDividerStyle}"/>
+                        <Button Style="{StaticResource GhostLinkButtonStyle}" Content="Đăng ký tài khoản"/>
+                        <Border Style="{StaticResource DenseVerticalDividerStyle}"/>
                         <Button Style="{StaticResource GhostLinkButtonStyle}"
-                                Content="Quên mật khẩu?"/>
-                        <Border Width="1"
-                                Height="16"
-                                Background="#D7DDE0"
-                                Margin="16,0"/>
-                        <Button Style="{StaticResource GhostLinkButtonStyle}"
-                                Foreground="{StaticResource LoginGreenBrush}"
-                                FontWeight="SemiBold"
-                                Content="Đăng ký tài khoản"/>
-                        <Border Width="1"
-                                Height="16"
-                                Background="#D7DDE0"
-                                Margin="16,0"/>
-                        <Button Style="{StaticResource GhostLinkButtonStyle}"
-                                Foreground="{StaticResource LoginGreenBrush}"
-                                FontWeight="SemiBold"
                                 Click="ServerSettingsButton_Click"
                                 Content="Máy chủ"/>
                     </StackPanel>
                 </Grid>
             </Border>
 
-            <Grid Grid.Row="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="2"/>
-                    <RowDefinition Height="*"/>
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="190"/>
-                    </Grid.ColumnDefinitions>
-                    <Border Background="{StaticResource LoginGreenBrush}"/>
-                    <Border Grid.Column="1" Background="{StaticResource LoginRedBrush}"/>
-                </Grid>
-
-                <StackPanel Grid.Row="1"
-                            Orientation="Horizontal"
-                            HorizontalAlignment="Center"
-                            VerticalAlignment="Center">
-                    <materialDesign:PackIcon Kind="FileSearchOutline"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="#6A9B7D"
-                                             VerticalAlignment="Center"/>
-                    <TextBlock Text="Tra cứu nhanh - Dữ liệu tập trung - Quản lý hiệu lực"
-                               Margin="12,0,0,0"
-                               Foreground="#7A7F87"
-                               FontSize="15"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center"/>
-                </StackPanel>
-            </Grid>
+            <StackPanel Grid.Row="2"
+                        Orientation="Horizontal"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <materialDesign:PackIcon Kind="FileSearchOutline" Style="{StaticResource DenseShellSearchIconStyle}"/>
+                <TextBlock Text="Tra cứu nhanh - Dữ liệu tập trung - Quản lý hiệu lực"
+                           Style="{StaticResource DenseLoginFooterTextStyle}"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

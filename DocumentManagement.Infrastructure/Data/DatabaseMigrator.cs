@@ -119,6 +119,9 @@ CREATE TABLE IF NOT EXISTS document_categories (
 );";
 
         cmd.ExecuteNonQuery();
+
+        ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS idx_document_categories_name ON document_categories(name);");
+        ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS idx_document_categories_is_active ON document_categories(is_active);");
     }
 
     private static void EnsureStatusesTable(SqliteConnection connection)
@@ -128,11 +131,16 @@ CREATE TABLE IF NOT EXISTS document_categories (
         cmd.CommandText = @"
 CREATE TABLE IF NOT EXISTS document_statuses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    code TEXT,
     name TEXT NOT NULL,
     is_active INTEGER NOT NULL DEFAULT 1
 );";
 
         cmd.ExecuteNonQuery();
+
+        EnsureColumn(connection, "document_statuses", "code", "TEXT");
+        ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS idx_document_statuses_code ON document_statuses(code);");
+        ExecuteNonQuery(connection, "CREATE INDEX IF NOT EXISTS idx_document_statuses_is_active ON document_statuses(is_active);");
     }
 
     private static void EnsureHistoryTable(SqliteConnection connection)
@@ -249,6 +257,7 @@ CREATE TABLE IF NOT EXISTS Users (
 
         if (count > 0)
         {
+            NormalizeStatuses(connection);
             return;
         }
 
@@ -279,14 +288,27 @@ INSERT INTO document_categories (id, name, is_active) VALUES
         using var cmd = connection.CreateCommand();
 
         cmd.CommandText = @"
-INSERT INTO document_statuses (id, name, is_active) VALUES
-(1, 'Bản nháp', 1),
-(2, 'Chờ duyệt', 1),
-(3, 'Đã ban hành', 1),
-(4, 'Đang xử lý', 1),
-(5, 'Hoàn thành', 1);";
+INSERT INTO document_statuses (id, code, name, is_active) VALUES
+(1, 'DRAFT', 'Bản nháp', 1),
+(2, 'PENDING_APPROVAL', 'Chờ duyệt', 1),
+(3, 'APPROVED', 'Đã duyệt', 1),
+(4, 'ISSUED', 'Đã ban hành', 1),
+(5, 'ARCHIVED', 'Đã lưu trữ', 1),
+(6, 'REJECTED', 'Bị từ chối', 1);";
 
         cmd.ExecuteNonQuery();
+
+        NormalizeStatuses(connection);
+    }
+
+    private static void NormalizeStatuses(SqliteConnection connection)
+    {
+        ExecuteNonQuery(connection, "UPDATE document_statuses SET code = 'DRAFT', name = 'Bản nháp' WHERE id = 1;");
+        ExecuteNonQuery(connection, "UPDATE document_statuses SET code = 'PENDING_APPROVAL' WHERE id = 2;");
+        ExecuteNonQuery(connection, "UPDATE document_statuses SET code = 'APPROVED' WHERE id = 3;");
+        ExecuteNonQuery(connection, "UPDATE document_statuses SET code = 'ISSUED', name = 'Đã ban hành' WHERE id = 4;");
+        ExecuteNonQuery(connection, "UPDATE document_statuses SET code = 'ARCHIVED', name = 'Đã lưu trữ' WHERE id = 5;");
+        ExecuteNonQuery(connection, "INSERT OR IGNORE INTO document_statuses (id, code, name, is_active) VALUES (6, 'REJECTED', 'Bị từ chối', 1);");
     }
 
     private static void SeedRoles(SqliteConnection connection)

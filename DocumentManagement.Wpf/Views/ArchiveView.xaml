@@ -1,0 +1,155 @@
+<UserControl x:Class="DocumentManagement.Wpf.Views.ArchiveView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:conv="clr-namespace:DocumentManagement.Wpf.Converters">
+
+    <UserControl.Resources>
+        <conv:HexToBrushConverter x:Key="HexToBrushConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+    </UserControl.Resources>
+
+    <Grid Style="{StaticResource DenseDocumentListRootGridStyle}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Style="{StaticResource DenseDocumentListHeaderGridStyle}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="8"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid>
+                <TextBlock Text="LƯU TRỮ VĂN BẢN"
+                           Style="{StaticResource DenseDocumentListTitleTextStyle}"/>
+
+                <StackPanel Style="{StaticResource DenseDocumentToolbarStackStyle}">
+                    <Button Command="{Binding RefreshCommand}"
+                            Style="{StaticResource DenseToolbarButtonStyle}">
+                        <StackPanel Style="{StaticResource DenseInlineIconTextStackStyle}">
+                            <materialDesign:PackIcon Kind="Refresh" Style="{StaticResource DenseAccentButtonIconStyle}"/>
+                            <TextBlock Text="Làm mới" Style="{StaticResource DenseButtonTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RestoreSelectedCommand}"
+                            Style="{StaticResource DenseToolbarButtonStyle}"
+                            Visibility="{Binding CanRestoreArchive, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Style="{StaticResource DenseInlineIconTextStackStyle}">
+                            <materialDesign:PackIcon Kind="ArchiveArrowUpOutline" Style="{StaticResource DenseAccentButtonIconStyle}"/>
+                            <TextBlock Text="Khôi phục" Style="{StaticResource DenseButtonTextStyle}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="2" Style="{StaticResource DenseDocumentFilterGridStyle}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.5*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox Grid.Column="0"
+                         Style="{StaticResource DenseFilterTextBoxStyle}"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Tìm kiếm văn bản lưu trữ..."
+                         materialDesign:HintAssist.IsFloating="False"/>
+
+                <TextBlock Grid.Column="2"
+                           Text="{Binding StatusMessage}"
+                           Style="{StaticResource DenseFooterMutedTextStyle}"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource DenseTablePanelStyle}">
+            <Grid>
+                <DataGrid ItemsSource="{Binding Documents}"
+                          SelectedItem="{Binding SelectedDocument}"
+                          MouseDoubleClick="DocumentsDataGrid_MouseDoubleClick"
+                          Style="{StaticResource DenseDocumentDataGridStyle}"
+                          AutoGenerateColumns="False"
+                          HeadersVisibility="Column"
+                          GridLinesVisibility="None"
+                          RowHeaderWidth="0"
+                          RowHeight="38"
+                          ColumnHeaderHeight="34">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="STT" Width="48" Binding="{Binding Id}" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                        <DataGridTextColumn Header="Số ký hiệu" Width="126" Binding="{Binding DocumentNumber}" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                        <DataGridTextColumn Header="Trích yếu" Width="*" Binding="{Binding Title}" ElementStyle="{StaticResource DenseDocumentTitleGridTextStyle}"/>
+                        <DataGridTextColumn Header="Cơ quan ban hành" Width="170" Binding="{Binding SenderName}" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                        <DataGridTextColumn Header="Ngày ban hành" Width="120" Binding="{Binding IssueDate}" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                        <DataGridTemplateColumn Header="Trạng thái" Width="118">
+                            <DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource DenseStatusBadgeStyle}"
+                                            Background="{Binding StatusColor, Converter={StaticResource HexToBrushConverter}}">
+                                        <TextBlock Text="{Binding StatusText}" Style="{StaticResource DenseStatusBadgeTextStyle}"/>
+                                    </Border>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Border>
+                    <Border.Style>
+                        <Style TargetType="Border" BasedOn="{StaticResource EmptyStateContainerStyle}">
+                            <Setter Property="Visibility" Value="Visible"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasDocuments}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <StackPanel Style="{StaticResource DenseCenteredStateStackStyle}">
+                        <TextBlock Text="Chưa có dữ liệu lưu trữ" Style="{StaticResource DenseEmptyStateTitleTextStyle}"/>
+                        <TextBlock Text="Văn bản đã lưu trữ sẽ xuất hiện tại đây." Style="{StaticResource DenseEmptyStateDescriptionTextStyle}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Style="{StaticResource DenseDocumentFooterGridStyle}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Text="{Binding TotalCount, StringFormat=Hiển thị tổng số {0} văn bản lưu trữ}"
+                       Style="{StaticResource DenseFooterMutedTextStyle}"/>
+
+            <StackPanel Grid.Column="1" Style="{StaticResource DensePagerStackStyle}">
+                <Button Command="{Binding PreviousPageCommand}" Style="{StaticResource DensePagerIconButtonStyle}" IsEnabled="{Binding CanGoPrevious}">
+                    <materialDesign:PackIcon Kind="ChevronLeft" Style="{StaticResource DenseShellChevronIconStyle}"/>
+                </Button>
+                <Border Style="{StaticResource DensePagerPillStyle}">
+                    <TextBlock Text="{Binding PageDisplayText}" Style="{StaticResource DensePagerTextStyle}"/>
+                </Border>
+                <Button Command="{Binding NextPageCommand}" Style="{StaticResource DensePagerIconButtonStyle}" IsEnabled="{Binding CanGoNext}">
+                    <materialDesign:PackIcon Kind="ChevronRight" Style="{StaticResource DenseShellChevronIconStyle}"/>
+                </Button>
+            </StackPanel>
+        </Grid>
+
+        <Grid Grid.RowSpan="3"
+              Style="{StaticResource LoadingOverlayGridStyle}"
+              Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+            <Border Style="{StaticResource LoadingCardStyle}">
+                <StackPanel Style="{StaticResource DenseCenteredStateStackStyle}">
+                    <ProgressBar Style="{StaticResource DenseLoadingProgressBarStyle}" IsIndeterminate="True"/>
+                    <TextBlock Text="Đang tải dữ liệu..." Style="{StaticResource LoadingTextStyle}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

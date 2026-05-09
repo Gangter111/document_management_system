@@ -1,4 +1,4 @@
-﻿<Window x:Class="DocumentManagement.Wpf.Views.ConfirmDialogWindow"
+<Window x:Class="DocumentManagement.Wpf.Views.ConfirmDialogWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Xác nhận"
@@ -8,23 +8,10 @@
         ResizeMode="NoResize"
         WindowStyle="None"
         AllowsTransparency="True"
-        Background="Transparent"
-        FontFamily="{StaticResource AppFontFamily}"
-        FontSize="13"
+        Style="{StaticResource DenseDialogWindowStyle}"
         ShowInTaskbar="False">
 
-    <Border Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{StaticResource BorderBrushDefault}"
-            BorderThickness="1"
-            CornerRadius="18"
-            Padding="0">
-        <Border.Effect>
-            <DropShadowEffect Color="#000000"
-                              BlurRadius="24"
-                              ShadowDepth="4"
-                              Opacity="0.18"/>
-        </Border.Effect>
-
+    <Border Style="{StaticResource DenseDialogRootCardStyle}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -32,11 +19,7 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <!-- HEADER -->
-            <Border Grid.Row="0"
-                    Padding="20,18"
-                    BorderBrush="{StaticResource BorderBrushDefault}"
-                    BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Style="{StaticResource DenseDialogHeaderStyle}">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>
@@ -44,76 +27,42 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border x:Name="IconBackground"
-                            Width="38"
-                            Height="38"
-                            CornerRadius="19"
-                            Background="#FEF3C7"
-                            VerticalAlignment="Center">
+                    <Border x:Name="IconBackground" Style="{StaticResource DenseDialogIconBackgroundStyle}">
                         <TextBlock x:Name="IconText"
                                    Text="!"
-                                   Foreground="#92400E"
-                                   FontSize="20"
-                                   FontWeight="Bold"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
+                                   Style="{StaticResource DenseDialogIconTextStyle}"/>
                     </Border>
 
                     <StackPanel Grid.Column="1"
-                                Margin="12,0,0,0"
-                                VerticalAlignment="Center">
+                                Style="{StaticResource DenseDialogTitleStackStyle}">
                         <TextBlock x:Name="TitleTextBlock"
                                    Text="Xác nhận"
-                                   FontSize="18"
-                                   FontWeight="Bold"
-                                   Foreground="{StaticResource TextBrush}"/>
-
+                                   Style="{StaticResource DenseDialogTitleTextStyle}"/>
                         <TextBlock Text="Vui lòng kiểm tra kỹ trước khi tiếp tục."
-                                   Margin="0,4,0,0"
-                                   Foreground="{StaticResource TextMutedBrush}"
-                                   FontSize="12"/>
+                                   Style="{StaticResource DenseDialogSubtitleTextStyle}"/>
                     </StackPanel>
 
                     <Button Grid.Column="2"
                             Content="×"
-                            Width="32"
-                            Height="32"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Foreground="{StaticResource TextMutedBrush}"
-                            FontSize="20"
-                            FontWeight="Bold"
-                            Cursor="Hand"
+                            Style="{StaticResource DenseDialogCloseButtonStyle}"
                             IsCancel="True"
                             Click="CancelButton_Click"/>
                 </Grid>
             </Border>
 
-            <!-- BODY -->
-            <Border Grid.Row="1"
-                    Padding="20">
+            <Border Grid.Row="1" Style="{StaticResource DenseDialogBodyStyle}">
                 <TextBlock x:Name="MessageTextBlock"
-                           TextWrapping="Wrap"
-                           Foreground="{StaticResource TextBrush}"
-                           FontSize="14"
-                           LineHeight="21"/>
+                           Style="{StaticResource DenseDialogMessageTextStyle}"/>
             </Border>
 
-            <!-- FOOTER -->
-            <Border Grid.Row="2"
-                    Padding="20,0,20,20">
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right">
+            <Border Grid.Row="2" Style="{StaticResource DenseDialogFooterStyle}">
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button x:Name="CancelButton"
-                            Width="110"
-                            Margin="0,0,10,0"
-                            Style="{StaticResource SecondaryButtonStyle}"
+                            Style="{StaticResource DenseDialogCancelButtonStyle}"
                             IsCancel="True"
                             Click="CancelButton_Click"/>
-
                     <Button x:Name="ConfirmButton"
-                            Width="130"
-                            Style="{StaticResource PrimaryButtonStyle}"
+                            Style="{StaticResource DenseDialogConfirmButtonStyle}"
                             IsDefault="True"
                             Click="ConfirmButton_Click"/>
                 </StackPanel>

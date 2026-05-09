@@ -19,6 +19,11 @@ public class JwtService
         var jwt = _configuration.GetSection("Jwt");
 
         var secret = jwt["Secret"] ?? throw new Exception("JWT Secret is missing.");
+
+        if (secret.Length < 32)
+        {
+            throw new InvalidOperationException("Jwt:Secret phải có tối thiểu 32 ký tự.");
+        }
         var issuer = jwt["Issuer"];
         var audience = jwt["Audience"];
         var minutes = int.Parse(jwt["AccessTokenMinutes"] ?? "60");

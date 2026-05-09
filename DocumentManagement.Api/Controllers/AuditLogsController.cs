@@ -1,12 +1,15 @@
 ﻿using DocumentManagement.Application.Interfaces;
+using DocumentManagement.Api.Security;
 using DocumentManagement.Contracts.AuditLogs;
 using DocumentManagement.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocumentManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/audit-logs")]
+[Authorize]
 public class AuditLogsController : ControllerBase
 {
     private readonly IAuditLogRepository _auditLogRepository;
@@ -21,6 +24,11 @@ public class AuditLogsController : ControllerBase
         [FromQuery] string entityName,
         [FromQuery] long entityId)
     {
+        if (!User.IsAdmin())
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền xem nhật ký kiểm toán.");
+        }
+
         if (string.IsNullOrWhiteSpace(entityName))
         {
             return BadRequest("entityName không được để trống.");

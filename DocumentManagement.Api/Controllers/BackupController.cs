@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using DocumentManagement.Api.Security;
 using DocumentManagement.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +11,8 @@ namespace DocumentManagement.Api.Controllers;
 [Route("api/[controller]")]
 public class BackupController : ControllerBase
 {
+    private static readonly SemaphoreSlim BackupRestoreLock = new(1, 1);
+
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
 
@@ -23,11 +25,9 @@ public class BackupController : ControllerBase
     }
 
     [HttpGet("download")]
-    public async Task<IActionResult> Download()
+    public async Task<IActionResult> Download(CancellationToken cancellationToken)
     {
-        var role = GetRole();
-
-        if (!IsAdmin(role))
+        if (!User.IsAdmin())
         {
             return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền sao lưu dữ liệu.");
         }
@@ -44,29 +44,34 @@ public class BackupController : ControllerBase
             return NotFound($"Không tìm thấy database: {databasePath}");
         }
 
-        var backupDir = Path.Combine(_environment.ContentRootPath, "backups");
-        Directory.CreateDirectory(backupDir);
+        await BackupRestoreLock.WaitAsync(cancellationToken);
 
-        var fileName = $"document_management_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db";
-        var backupPath = Path.Combine(backupDir, fileName);
+        try
+        {
+            var backupDir = Path.Combine(_environment.ContentRootPath, "backups");
+            Directory.CreateDirectory(backupDir);
 
-        await CreateSqliteBackupAsync(databasePath, backupPath);
+            var fileName = $"document_management_backup_{DateTime.Now:yyyyMMdd_HHmmss}.db";
+            var backupPath = Path.Combine(backupDir, fileName);
 
-        var bytes = await System.IO.File.ReadAllBytesAsync(backupPath);
+            await CreateSqliteBackupAsync(databasePath, backupPath, cancellationToken);
 
-        return File(
-            bytes,
-            "application/octet-stream",
-            fileName);
+            return PhysicalFile(
+                backupPath,
+                "application/octet-stream",
+                fileName);
+        }
+        finally
+        {
+            BackupRestoreLock.Release();
+        }
     }
 
     [HttpPost("restore")]
     [RequestSizeLimit(200_000_000)]
-    public async Task<IActionResult> Restore(IFormFile file)
+    public async Task<IActionResult> Restore(IFormFile file, CancellationToken cancellationToken)
     {
-        var role = GetRole();
-
-        if (!IsAdmin(role))
+        if (!User.IsAdmin())
         {
             return StatusCode(StatusCodes.Status403Forbidden, "Chỉ Admin được khôi phục dữ liệu.");
         }
@@ -106,12 +111,14 @@ public class BackupController : ControllerBase
 
         await using (var stream = System.IO.File.Create(uploadedPath))
         {
-            await file.CopyToAsync(stream);
+            await file.CopyToAsync(stream, cancellationToken);
         }
+
+        await BackupRestoreLock.WaitAsync(cancellationToken);
 
         try
         {
-            await ValidateSqliteDatabaseAsync(uploadedPath);
+            await ValidateSqliteDatabaseAsync(uploadedPath, cancellationToken);
 
             var safetyBackupPath = Path.Combine(
                 databaseDir,
@@ -119,8 +126,10 @@ public class BackupController : ControllerBase
 
             if (System.IO.File.Exists(databasePath))
             {
-                await CreateSqliteBackupAsync(databasePath, safetyBackupPath);
+                await CreateSqliteBackupAsync(databasePath, safetyBackupPath, cancellationToken);
             }
+
+            SqliteConnection.ClearAllPools();
 
             System.IO.File.Copy(uploadedPath, databasePath, overwrite: true);
 
@@ -134,15 +143,25 @@ public class BackupController : ControllerBase
                 safetyBackup = safetyBackupPath
             });
         }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
         finally
         {
             DeleteIfExists(uploadedPath);
+            BackupRestoreLock.Release();
         }
     }
 
     [HttpGet("health")]
     public IActionResult Health()
     {
+        if (!User.IsAdmin())
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "Chỉ Admin được xem trạng thái backup.");
+        }
+
         if (!IsSqliteProvider())
         {
             return Ok(new
@@ -157,21 +176,8 @@ public class BackupController : ControllerBase
         return Ok(new
         {
             provider = DatabaseProvider.Sqlite.ToString(),
-            databasePath,
             exists = System.IO.File.Exists(databasePath)
         });
-    }
-
-    private string GetRole()
-    {
-        return User.FindFirst(ClaimTypes.Role)?.Value
-               ?? User.FindFirst("role")?.Value
-               ?? string.Empty;
-    }
-
-    private static bool IsAdmin(string role)
-    {
-        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase);
     }
 
     private string ResolveDatabasePath()
@@ -205,7 +211,7 @@ public class BackupController : ControllerBase
         return provider == DatabaseProvider.Sqlite;
     }
 
-    private static async Task CreateSqliteBackupAsync(string sourceDatabasePath, string backupPath)
+    private static async Task CreateSqliteBackupAsync(string sourceDatabasePath, string backupPath, CancellationToken cancellationToken = default)
     {
         DeleteIfExists(backupPath);
 
@@ -222,24 +228,25 @@ public class BackupController : ControllerBase
         }.ToString();
 
         await using var connection = new SqliteConnection(connectionString);
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
 
         await using var command = connection.CreateCommand();
         command.CommandText = $"VACUUM INTO '{backupPath.Replace("'", "''")}';";
 
-        await command.ExecuteNonQueryAsync();
+        await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
-    private static async Task ValidateSqliteDatabaseAsync(string databasePath)
+    private static async Task ValidateSqliteDatabaseAsync(string databasePath, CancellationToken cancellationToken = default)
     {
         var connectionString = new SqliteConnectionStringBuilder
         {
             DataSource = databasePath,
-            Mode = SqliteOpenMode.ReadOnly
+            Mode = SqliteOpenMode.ReadOnly,
+            Pooling = false
         }.ToString();
 
         await using var connection = new SqliteConnection(connectionString);
-        await connection.OpenAsync();
+        await connection.OpenAsync(cancellationToken);
 
         await using var command = connection.CreateCommand();
 
@@ -247,22 +254,11 @@ public class BackupController : ControllerBase
 SELECT COUNT(*)
 FROM sqlite_master
 WHERE type = 'table'
-  AND name = 'documents';";
+  AND name IN ('documents', 'Users', 'Roles', 'document_categories', 'document_statuses');";
 
-        var result = await command.ExecuteScalarAsync();
+        var result = await command.ExecuteScalarAsync(cancellationToken);
         var count = Convert.ToInt32(result ?? 0);
 
-        if (count <= 0)
+        if (count < 5)
         {
-            throw new InvalidOperationException("File khôi phục không phải database hợp lệ của hệ thống.");
-        }
-    }
-
-    private static void DeleteIfExists(string path)
-    {
-        if (System.IO.File.Exists(path))
-        {
-            System.IO.File.Delete(path);
-        }
-    }
-}
+          

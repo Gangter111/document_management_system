@@ -1,4 +1,4 @@
-﻿using System.Security.Claims;
+using DocumentManagement.Api.Security;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Common;
 using DocumentManagement.Contracts.Documents;
@@ -110,7 +110,7 @@ public class DocumentsController : ControllerBase
         }
 
         var document = ToEntity(request);
-        document.CreatedBy = GetCurrentUsername();
+        document.CreatedBy = User.GetUsername();
 
         var id = await _documentService.CreateAsync(document);
 
@@ -119,7 +119,7 @@ public class DocumentsController : ControllerBase
 
     [HttpPost("extract-pdf")]
     [RequestSizeLimit(20 * 1024 * 1024)]
-    public async Task<ActionResult<AutoFillDocumentResultDto>> ExtractPdf(IFormFile file)
+    public async Task<ActionResult<AutoFillDocumentResultDto>> ExtractPdf(IFormFile file, CancellationToken cancellationToken)
     {
         var permissionResult = RequireCreatePermission();
 
@@ -147,7 +147,7 @@ public class DocumentsController : ControllerBase
         {
             await using (var stream = System.IO.File.Create(tempPath))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(stream, cancellationToken);
             }
 
             if (_ocrService == null)
@@ -217,8 +217,15 @@ public class DocumentsController : ControllerBase
             return permissionResult;
         }
 
+        var departmentScopeResult = RequireDepartmentAssignmentScope(request.ProcessingDepartment);
+
+        if (departmentScopeResult != null)
+        {
+            return departmentScopeResult;
+        }
+
         ApplyUpdate(existing, request);
-        existing.UpdatedBy = GetCurrentUsername();
+        existing.UpdatedBy = User.GetUsername();
 
         await _documentService.UpdateAsync(existing);
 
@@ -252,16 +259,66 @@ public class DocumentsController : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("{id:long}/archive")]
+    public async Task<IActionResult> Archive(long id)
+    {
+        var existing = await _documentService.GetByIdAsync(id);
+
+        if (existing == null || !existing.IsActive)
+        {
+            return NotFound("Không tìm thấy văn bản.");
+        }
+
+        var permissionResult = RequireUpdatePermission(existing);
+
+        if (permissionResult != null)
+        {
+            return permissionResult;
+        }
+
+        existing.Archive(User.GetUsername());
+        existing.UpdatedBy = User.GetUsername();
+
+        await _documentService.UpdateAsync(existing);
+
+        return NoContent();
+    }
+
+    [HttpPost("{id:long}/restore-from-archive")]
+    public async Task<IActionResult> RestoreFromArchive(long id)
+    {
+        var existing = await _documentService.GetByIdAsync(id);
+
+        if (existing == null || !existing.IsActive)
+        {
+            return NotFound("Không tìm thấy văn bản.");
+        }
+
+        var permissionResult = RequireUpdatePermission(existing);
+
+        if (permissionResult != null)
+        {
+            return permissionResult;
+        }
+
+        existing.MarkAsIssued(User.GetUsername());
+        existing.UpdatedBy = User.GetUsername();
+
+        await _documentService.UpdateAsync(existing);
+
+        return NoContent();
+    }
+
     private ActionResult? RequireCreatePermission()
     {
-        var role = GetCurrentRole();
+        var role = User.GetRole();
 
         if (string.IsNullOrWhiteSpace(role))
         {
             return Unauthorized("Thiếu thông tin vai trò người dùng.");
         }
 
-        if (IsAdmin(role) || IsManager(role) || IsPublisher(role) || IsStaff(role))
+        if (User.HasAnyRole("Admin", "Manager", "Publisher", "Staff"))
         {
             return null;
         }
@@ -271,21 +328,21 @@ public class DocumentsController : ControllerBase
 
     private ActionResult? RequireUpdatePermission(Document document)
     {
-        var role = GetCurrentRole();
+        var role = User.GetRole();
 
         if (string.IsNullOrWhiteSpace(role))
         {
             return Unauthorized("Thiếu thông tin vai trò người dùng.");
         }
 
-        if (IsAdmin(role) || IsManager(role) || IsPublisher(role))
+        if (User.HasAnyRole("Admin", "Manager", "Publisher"))
         {
-            if (IsAdmin(role))
+            if (User.IsAdmin())
             {
                 return null;
             }
 
-            var userDepartment = GetCurrentDepartment();
+            var userDepartment = User.GetDepartment();
 
             if (string.IsNullOrWhiteSpace(userDepartment))
             {
@@ -310,14 +367,14 @@ public class DocumentsController : ControllerBase
 
     private ActionResult? RequireDeletePermission()
     {
-        var role = GetCurrentRole();
+        var role = User.GetRole();
 
         if (string.IsNullOrWhiteSpace(role))
         {
             return Unauthorized("Thiếu thông tin vai trò người dùng.");
         }
 
-        if (IsAdmin(role))
+        if (User.IsAdmin())
         {
             return null;
         }
@@ -325,49 +382,31 @@ public class DocumentsController : ControllerBase
         return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền xóa văn bản.");
     }
 
-    private string GetCurrentRole()
+    private ActionResult? RequireDepartmentAssignmentScope(string? requestedDepartment)
     {
-        return User.FindFirst(ClaimTypes.Role)?.Value
-               ?? User.FindFirst("role")?.Value
-               ?? string.Empty;
-    }
+        if (User.IsAdmin())
+        {
+            return null;
+        }
 
-    private string GetCurrentUsername()
-    {
-        return User.FindFirst(ClaimTypes.Name)?.Value
-               ?? User.Identity?.Name
-               ?? "system";
-    }
+        var userDepartment = User.GetDepartment();
 
-    private string GetCurrentDepartment()
-    {
-        return User.FindFirst("department")?.Value
-               ?? string.Empty;
-    }
+        if (string.IsNullOrWhiteSpace(userDepartment))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, "Người dùng chưa được cấu hình phòng ban.");
+        }
 
-    private static bool IsAdmin(string role)
-    {
-        return string.Equals(role, "ADMIN", StringComparison.OrdinalIgnoreCase)
-               || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
-               || string.Equals(role, "Administrator", StringComparison.OrdinalIgnoreCase);
-    }
+        if (string.Equals(
+                requestedDepartment?.Trim(),
+                userDepartment.Trim(),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
 
-    private static bool IsManager(string role)
-    {
-        return string.Equals(role, "MANAGER", StringComparison.OrdinalIgnoreCase)
-               || string.Equals(role, "Manager", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsPublisher(string role)
-    {
-        return string.Equals(role, "PUBLISHER", StringComparison.OrdinalIgnoreCase)
-               || string.Equals(role, "Publisher", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static bool IsStaff(string role)
-    {
-        return string.Equals(role, "STAFF", StringComparison.OrdinalIgnoreCase)
-               || string.Equals(role, "Staff", StringComparison.OrdinalIgnoreCase);
+        return StatusCode(
+            StatusCodes.Status403Forbidden,
+            "Bạn không được chuyển văn bản sang phòng ban khác.");
     }
 
     private static DocumentDto ToDto(Document document)

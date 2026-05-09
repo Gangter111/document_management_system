@@ -64,6 +64,31 @@ public class ApiService
         }
     }
 
+    private static async Task EnsureSuccessWithMessageAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        var message = await response.Content.ReadAsStringAsync();
+        message = string.IsNullOrWhiteSpace(message)
+            ? $"API trả về lỗi {(int)response.StatusCode}."
+            : message.Trim('"');
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            throw new UnauthorizedAccessException(message);
+        }
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            throw new InvalidOperationException(message);
+        }
+
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<LoginResponse> LoginAsync(string username, string password)
     {
         var request = new LoginRequest
@@ -232,6 +257,157 @@ public class ApiService
         var response = await _httpClient.DeleteAsync($"api/documents/{id}");
 
         response.EnsureSuccessStatusCode();
+    }
+
+    public async Task ArchiveDocumentAsync(long id)
+    {
+        var response = await _httpClient.PostAsync($"api/documents/{id}/archive", null);
+
+        await EnsureSuccessWithMessageAsync(response);
+    }
+
+    public async Task RestoreArchivedDocumentAsync(long id)
+    {
+        var response = await _httpClient.PostAsync($"api/documents/{id}/restore-from-archive", null);
+
+        await EnsureSuccessWithMessageAsync(response);
+    }
+
+    public async Task<DocumentManagement.Contracts.Reports.ReportSummaryDto> GetReportSummaryAsync()
+    {
+        var response = await _httpClient.GetAsync("api/reports/summary");
+        await EnsureSuccessWithMessageAsync(response);
+        var result = await response.Content.ReadFromJsonAsync<DocumentManagement.Contracts.Reports.ReportSummaryDto>();
+
+        return result ?? new DocumentManagement.Contracts.Reports.ReportSummaryDto();
+    }
+
+    public async Task<List<DocumentManagement.Contracts.Catalog.CatalogItemDto>> GetCatalogCategoriesAsync(bool includeInactive = true)
+    {
+        var response = await _httpClient.GetAsync(
+            $"api/catalog/categories?includeInactive={includeInactive.ToString().ToLowerInvariant()}");
+        await EnsureSuccessWithMessageAsync(response);
+        var result = await response.Content.ReadFromJsonAsync<List<DocumentManagement.Contracts.Catalog.CatalogItemDto>>();
+
+        return result ?? new List<DocumentManagement.Contracts.Catalog.CatalogItemDto>();
+    }
+
+    public async Task<List<DocumentManagement.Contracts.Catalog.CatalogItemDto>> GetCatalogStatusesAsync(bool includeInactive = true)
+    {
+        var response = await _httpClient.GetAsync(
+            $"api/catalog/statuses?includeInactive={includeInactive.ToString().ToLowerInvariant()}");
+        await EnsureSuccessWithMessageAsync(response);
+        var result = await response.Content.ReadFromJsonAsync<List<DocumentManagement.Contracts.Catalog.CatalogItemDto>>();
+
+        return result ?? new List<DocumentManagement.Contracts.Catalog.CatalogItemDto>();
+    }
+
+    public async Task<DocumentManagement.Contracts.Catalog.CatalogItemDto> CreateCategoryAsync(
+        DocumentManagement.Contracts.Catalog.SaveCatalogItemRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/catalog/categories", request);
+        await EnsureSuccessWithMessageAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<DocumentManagement.Contracts.Catalog.CatalogItemDto>()
+               ?? new DocumentManagement.Contracts.Catalog.CatalogItemDto();
+    }
+
+    public async Task<DocumentManagement.Contracts.Catalog.CatalogItemDto> UpdateCategoryAsync(
+        long id,
+        DocumentManagement.Contracts.Catalog.SaveCatalogItemRequest request)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/catalog/categories/{id}", request);
+        await EnsureSuccessWithMessageAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<DocumentManagement.Contracts.Catalog.CatalogItemDto>()
+               ?? new DocumentManagement.Contracts.Catalog.CatalogItemDto();
+    }
+
+    public async Task DeleteCategoryAsync(long id)
+    {
+        var response = await _httpClient.DeleteAsync($"api/catalog/categories/{id}");
+        await EnsureSuccessWithMessageAsync(response);
+    }
+
+    public async Task<DocumentManagement.Contracts.Catalog.CatalogItemDto> CreateStatusAsync(
+        DocumentManagement.Contracts.Catalog.SaveCatalogItemRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/catalog/statuses", request);
+        await EnsureSuccessWithMessageAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<DocumentManagement.Contracts.Catalog.CatalogItemDto>()
+               ?? new DocumentManagement.Contracts.Catalog.CatalogItemDto();
+    }
+
+    public async Task<DocumentManagement.Contracts.Catalog.CatalogItemDto> UpdateStatusAsync(
+        long id,
+        DocumentManagement.Contracts.Catalog.SaveCatalogItemRequest request)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/catalog/statuses/{id}", request);
+        await EnsureSuccessWithMessageAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<DocumentManagement.Contracts.Catalog.CatalogItemDto>()
+               ?? new DocumentManagement.Contracts.Catalog.CatalogItemDto();
+    }
+
+    public async Task DeleteStatusAsync(long id)
+    {
+        var response = await _httpClient.DeleteAsync($"api/catalog/statuses/{id}");
+        await EnsureSuccessWithMessageAsync(response);
+    }
+
+    public async Task<List<DocumentManagement.Contracts.System.UserAdminDto>> SearchUsersAsync(
+        string? keyword,
+        bool includeInactive = true)
+    {
+        var query = $"includeInactive={includeInactive.ToString().ToLowerInvariant()}";
+
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            query += $"&keyword={Uri.EscapeDataString(keyword)}";
+        }
+
+        var response = await _httpClient.GetAsync($"api/system/users?{query}");
+        await EnsureSuccessWithMessageAsync(response);
+        var result = await response.Content.ReadFromJsonAsync<List<DocumentManagement.Contracts.System.UserAdminDto>>();
+
+        return result ?? new List<DocumentManagement.Contracts.System.UserAdminDto>();
+    }
+
+    public async Task<List<DocumentManagement.Contracts.System.RoleDto>> GetRolesAsync()
+    {
+        var response = await _httpClient.GetAsync("api/system/roles");
+        await EnsureSuccessWithMessageAsync(response);
+        var result = await response.Content.ReadFromJsonAsync<List<DocumentManagement.Contracts.System.RoleDto>>();
+
+        return result ?? new List<DocumentManagement.Contracts.System.RoleDto>();
+    }
+
+    public async Task<DocumentManagement.Contracts.System.UserAdminDto> CreateUserAsync(
+        DocumentManagement.Contracts.System.SaveUserRequest request)
+    {
+        var response = await _httpClient.PostAsJsonAsync("api/system/users", request);
+        await EnsureSuccessWithMessageAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<DocumentManagement.Contracts.System.UserAdminDto>()
+               ?? new DocumentManagement.Contracts.System.UserAdminDto();
+    }
+
+    public async Task<DocumentManagement.Contracts.System.UserAdminDto> UpdateUserAsync(
+        long id,
+        DocumentManagement.Contracts.System.SaveUserRequest request)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"api/system/users/{id}", request);
+        await EnsureSuccessWithMessageAsync(response);
+
+        return await response.Content.ReadFromJsonAsync<DocumentManagement.Contracts.System.UserAdminDto>()
+               ?? new DocumentManagement.Contracts.System.UserAdminDto();
+    }
+
+    public async Task DeleteUserAsync(long id)
+    {
+        var response = await _httpClient.DeleteAsync($"api/system/users/{id}");
+        await EnsureSuccessWithMessageAsync(response);
     }
 
     public async Task<AutoFillDocumentResultDto> ExtractPdfAsync(string filePath)

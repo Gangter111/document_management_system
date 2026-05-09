@@ -1,11 +1,13 @@
 ﻿using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocumentManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class LookupsController : ControllerBase
 {
     private readonly IDocumentService _documentService;
@@ -41,7 +43,7 @@ public class LookupsController : ControllerBase
             .Select(status => new LookupItemDto
             {
                 Id = status.Id,
-                Code = GetStatusCode(status.Id),
+                Code = string.IsNullOrWhiteSpace(status.Code) ? GetStatusCode(status.Id) : status.Code,
                 Name = status.Name
             })
             .ToList();

@@ -1,0 +1,163 @@
+<UserControl x:Class="DocumentManagement.Wpf.Views.ReportsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+    </UserControl.Resources>
+
+    <Grid Style="{StaticResource DenseDashboardViewportStyle}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Grid Style="{StaticResource DenseDashboardContentGridStyle}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="38"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="8"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource DenseHeaderBarStyle}">
+                    <Grid Style="{StaticResource DenseHeaderContentGridStyle}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="BÁO CÁO" Style="{StaticResource DenseHeaderTitleTextStyle}"/>
+                            <Border Style="{StaticResource DenseVerticalDividerStyle}"/>
+                            <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource DenseHeaderSubtitleTextStyle}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Style="{StaticResource DenseDocumentToolbarStackStyle}">
+                            <Button Command="{Binding RefreshCommand}" Style="{StaticResource DenseToolbarButtonStyle}">
+                                <StackPanel Style="{StaticResource DenseInlineIconTextStackStyle}">
+                                    <materialDesign:PackIcon Kind="Refresh" Style="{StaticResource DenseAccentButtonIconStyle}"/>
+                                    <TextBlock Text="Làm mới" Style="{StaticResource DenseButtonTextStyle}"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Command="{Binding ExportCommand}" Style="{StaticResource DenseToolbarButtonStyle}">
+                                <StackPanel Style="{StaticResource DenseInlineIconTextStackStyle}">
+                                    <materialDesign:PackIcon Kind="FileExcelOutline" Style="{StaticResource DenseAccentButtonIconStyle}"/>
+                                    <TextBlock Text="Xuất Excel" Style="{StaticResource DenseButtonTextStyle}"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource DenseKpiCardStyle}">
+                        <StackPanel Style="{StaticResource DenseKpiContentStackStyle}">
+                            <TextBlock Text="TỔNG VĂN BẢN" Style="{StaticResource DenseKpiLabelTextStyle}"/>
+                            <TextBlock Text="{Binding TotalDocuments, StringFormat={}{0:N0}}" Style="{StaticResource DenseKpiValueTextStyle}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource DenseKpiCardStyle}">
+                        <StackPanel Style="{StaticResource DenseKpiContentStackStyle}">
+                            <TextBlock Text="ĐÃ LƯU TRỮ" Style="{StaticResource DenseKpiLabelTextStyle}"/>
+                            <TextBlock Text="{Binding ArchivedDocuments, StringFormat={}{0:N0}}" Style="{StaticResource DenseKpiValueTextStyle}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="4" Style="{StaticResource DenseKpiCardStyle}">
+                        <StackPanel Style="{StaticResource DenseKpiContentStackStyle}">
+                            <TextBlock Text="CÒN HIỆU LỰC" Style="{StaticResource DenseKpiLabelTextStyle}"/>
+                            <TextBlock Text="{Binding EffectiveDocuments, StringFormat={}{0:N0}}" Style="{StaticResource DenseKpiValueTextStyle}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="6" Style="{StaticResource DenseKpiCardStyle}">
+                        <StackPanel Style="{StaticResource DenseKpiContentStackStyle}">
+                            <TextBlock Text="HẾT HIỆU LỰC" Style="{StaticResource DenseKpiLabelTextStyle}"/>
+                            <TextBlock Text="{Binding ExpiredDocuments, StringFormat={}{0:N0}}" Style="{StaticResource DenseKpiValueTextStyle}"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Grid.Column="8" Style="{StaticResource DenseKpiCardStyle}">
+                        <StackPanel Style="{StaticResource DenseKpiContentStackStyle}">
+                            <TextBlock Text="BẢN NHÁP" Style="{StaticResource DenseKpiLabelTextStyle}"/>
+                            <TextBlock Text="{Binding DraftDocuments, StringFormat={}{0:N0}}" Style="{StaticResource DenseKpiValueTextStyle}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="8"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Border Grid.Column="0" Style="{StaticResource DenseAnalyticsFeedPanelStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Theo trạng thái" Style="{StaticResource DensePanelTitleTextStyle}"/>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding ByStatus}" Style="{StaticResource DenseDashboardFeedDataGridStyle}" AutoGenerateColumns="False" HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Trạng thái" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource DenseGridTextStyle}"/>
+                                    <DataGridTextColumn Header="SL" Binding="{Binding Value}" Width="70" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="2" Style="{StaticResource DenseAnalyticsFeedPanelStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Theo danh mục" Style="{StaticResource DensePanelTitleTextStyle}"/>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding ByCategory}" Style="{StaticResource DenseDashboardFeedDataGridStyle}" AutoGenerateColumns="False" HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Danh mục" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource DenseGridTextStyle}"/>
+                                    <DataGridTextColumn Header="SL" Binding="{Binding Value}" Width="70" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+
+                    <Border Grid.Column="4" Style="{StaticResource DenseAnalyticsFeedPanelStyle}">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="31"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Theo phòng ban" Style="{StaticResource DensePanelTitleTextStyle}"/>
+                            <DataGrid Grid.Row="1" ItemsSource="{Binding ByDepartment}" Style="{StaticResource DenseDashboardFeedDataGridStyle}" AutoGenerateColumns="False" HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Phòng ban" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource DenseGridTextStyle}"/>
+                                    <DataGridTextColumn Header="SL" Binding="{Binding Value}" Width="70" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Grid>
+                    </Border>
+                </Grid>
+            </Grid>
+        </ScrollViewer>
+
+        <Grid Style="{StaticResource LoadingOverlayGridStyle}" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+            <Border Style="{StaticResource LoadingCardStyle}">
+                <StackPanel Style="{StaticResource DenseCenteredStateStackStyle}">
+                    <ProgressBar Style="{StaticResource DenseLoadingProgressBarStyle}" IsIndeterminate="True"/>
+                    <TextBlock Text="Đang tải báo cáo..." Style="{StaticResource LoadingTextStyle}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

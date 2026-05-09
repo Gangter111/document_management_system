@@ -1,5 +1,6 @@
 using System.Text;
 using DocumentManagement.Api.Health;
+using System.Security.Claims;
 using DocumentManagement.Api.Services;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Services;
@@ -120,6 +121,8 @@ builder.Services.AddScoped<IHistoryRepository, HistoryRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
+builder.Services.AddScoped<ICatalogRepository, CatalogRepository>();
+builder.Services.AddScoped<IUserManagementRepository, UserManagementRepository>();
 
 builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -132,6 +135,17 @@ builder.Services.AddScoped<JwtService>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtSecret = jwtSection["Secret"] ?? throw new Exception("JWT Secret is missing.");
+
+if (jwtSecret.Length < 32)
+{
+    throw new InvalidOperationException("Jwt:Secret phải có tối thiểu 32 ký tự.");
+}
+
+if (builder.Environment.IsProduction()
+    && jwtSecret.StartsWith("CHANGE_THIS", StringComparison.OrdinalIgnoreCase))
+{
+    throw new InvalidOperationException("Jwt:Secret production chưa được thay bằng giá trị bí mật an toàn.");
+}
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -219,6 +233,40 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthentication();
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        var userIdValue = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                          ?? context.User.FindFirst("sub")?.Value;
+
+        if (!long.TryParse(userIdValue, out var userId))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new { message = "Token không hợp lệ." });
+            return;
+        }
+
+        var activeUserConnectionFactory = context.RequestServices.GetRequiredService<IDbConnectionFactory>();
+        await using var connection = activeUserConnectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(1) FROM Users WHERE Id = @Id AND IsActive = 1";
+        command.AddParameter("@Id", userId);
+
+        var count = Convert.ToInt32(await command.ExecuteScalarAsync());
+
+        if (count <= 0)
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await context.Response.WriteAsJsonAsync(new { message = "Tài khoản không còn hoạt động." });
+            return;
+        }
+    }
+
+    await next();
+});
 app.UseAuthorization();
 
 app.MapHealthChecks("/health");

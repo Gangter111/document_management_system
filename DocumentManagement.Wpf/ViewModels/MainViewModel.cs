@@ -91,20 +91,17 @@ public class MainViewModel : BaseViewModel
 
     public bool CanViewTasks => false;
 
-    public bool CanViewReports => true;
+    public bool CanViewReports => _permissionService.CanViewReports();
 
-    public bool CanViewArchive => true;
+    public bool CanViewArchive => _permissionService.CanViewArchive();
 
-    public bool CanViewCategories => true;
+    public bool CanViewCategories => _permissionService.CanManageCatalog();
 
-    public bool CanViewSettings => true;
+    public bool CanViewSettings => _permissionService.CanManageSystem();
 
-    public bool CanBackup =>
-        string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase)
-        || string.Equals(CurrentRoleName, "Manager", StringComparison.OrdinalIgnoreCase);
+    public bool CanBackup => _permissionService.CanBackup();
 
-    public bool CanRestore =>
-        string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase);
+    public bool CanRestore => _permissionService.CanRestore();
 
     public bool CanRunBackupCommand => CanBackup && !IsSystemOperationRunning;
 
@@ -150,10 +147,10 @@ public class MainViewModel : BaseViewModel
         ShowDashboardCommand = new RelayCommand(_ => ShowDashboard(), _ => CanViewDashboard);
         ShowDocumentListCommand = new RelayCommand(_ => ShowDocuments(), _ => CanViewDocuments);
         CreateDocumentCommand = new RelayCommand(async _ => await CreateDocumentAsync(), _ => CanCreateDocument);
-        ShowArchiveCommand = new RelayCommand(_ => ShowPlaceholder("Lưu trữ", "Các văn bản lưu trữ sẽ được tổng hợp tại đây."));
-        ShowReportsCommand = new RelayCommand(_ => ShowPlaceholder("Báo cáo", "Khu vực báo cáo thống kê văn bản, tình trạng hiệu lực và phòng ban xử lý."));
-        ShowCategoriesCommand = new RelayCommand(_ => ShowPlaceholder("Danh mục", "Quản lý loại văn bản, trạng thái, độ mật và độ khẩn."));
-        ShowSettingsCommand = new RelayCommand(_ => ShowPlaceholder("Hệ thống", "Cấu hình người dùng, phân quyền và tham số vận hành."));
+        ShowArchiveCommand = new RelayCommand(_ => ShowArchive(), _ => CanViewArchive);
+        ShowReportsCommand = new RelayCommand(_ => ShowReports(), _ => CanViewReports);
+        ShowCategoriesCommand = new RelayCommand(_ => ShowCategories(), _ => CanViewCategories);
+        ShowSettingsCommand = new RelayCommand(_ => ShowSettings(), _ => CanViewSettings);
 
         BackupCommand = new RelayCommand(
             async _ => await BackupAsync(),
@@ -251,9 +248,92 @@ public class MainViewModel : BaseViewModel
         }
     }
 
-    private void ShowPlaceholder(string title, string description)
+    public void ShowArchive()
     {
-        CurrentView = new PlaceholderViewModel(title, description);
+        if (!CanViewArchive)
+        {
+            _notificationService.ShowWarning(
+                "Bạn không có quyền xem lưu trữ.",
+                "Từ chối truy cập");
+            return;
+        }
+
+        try
+        {
+            var vm = _serviceProvider.GetRequiredService<ArchiveViewModel>();
+            _ = vm.LoadAsync();
+            CurrentView = vm;
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError($"Không thể mở lưu trữ: {ex.Message}", "Lỗi");
+        }
+    }
+
+    public void ShowReports()
+    {
+        if (!CanViewReports)
+        {
+            _notificationService.ShowWarning(
+                "Bạn không có quyền xem báo cáo.",
+                "Từ chối truy cập");
+            return;
+        }
+
+        try
+        {
+            var vm = _serviceProvider.GetRequiredService<ReportsViewModel>();
+            _ = vm.LoadAsync();
+            CurrentView = vm;
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError($"Không thể mở báo cáo: {ex.Message}", "Lỗi");
+        }
+    }
+
+    public void ShowCategories()
+    {
+        if (!CanViewCategories)
+        {
+            _notificationService.ShowWarning(
+                "Bạn không có quyền quản lý danh mục.",
+                "Từ chối truy cập");
+            return;
+        }
+
+        try
+        {
+            var vm = _serviceProvider.GetRequiredService<CatalogViewModel>();
+            _ = vm.LoadAsync();
+            CurrentView = vm;
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError($"Không thể mở danh mục: {ex.Message}", "Lỗi");
+        }
+    }
+
+    public void ShowSettings()
+    {
+        if (!CanViewSettings)
+        {
+            _notificationService.ShowWarning(
+                "Bạn không có quyền quản trị hệ thống.",
+                "Từ chối truy cập");
+            return;
+        }
+
+        try
+        {
+            var vm = _serviceProvider.GetRequiredService<SystemViewModel>();
+            _ = vm.LoadAsync();
+            CurrentView = vm;
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError($"Không thể mở hệ thống: {ex.Message}", "Lỗi");
+        }
     }
 
     public async Task OpenDocumentAsync(long documentId)
@@ -457,19 +537,30 @@ public class MainViewModel : BaseViewModel
         if (CurrentView is DocumentListViewModel listVm)
         {
             await listVm.LoadAsync();
+            return;
+        }
+
+        if (CurrentView is ArchiveViewModel archiveVm)
+        {
+            await archiveVm.LoadAsync();
+            return;
+        }
+
+        if (CurrentView is ReportsViewModel reportsVm)
+        {
+            await reportsVm.LoadAsync();
+            return;
+        }
+
+        if (CurrentView is CatalogViewModel catalogVm)
+        {
+            await catalogVm.LoadAsync();
+            return;
+        }
+
+        if (CurrentView is SystemViewModel systemVm)
+        {
+            await systemVm.LoadAsync();
         }
     }
-}
-
-public class PlaceholderViewModel : BaseViewModel
-{
-    public PlaceholderViewModel(string title, string description)
-    {
-        Title = title;
-        Description = description;
-    }
-
-    public string Title { get; }
-
-    public string Description { get; }
 }

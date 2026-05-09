@@ -9,7 +9,7 @@ public class BackupService : IBackupService
     private const string DatabaseFolderName = "database";
     private const string StorageFolderName = "storage";
 
-    public async Task<string> CreateBackupAsync(string databasePath, string storageRoot, string backupFolder)
+    public async Task<string> CreateBackupAsync(string databasePath, string storageRoot, string backupFolder, CancellationToken cancellationToken = default)
     {
         ValidatePath(databasePath, nameof(databasePath), "Đường dẫn database không hợp lệ.");
         ValidatePath(storageRoot, nameof(storageRoot), "Đường dẫn storage không hợp lệ.");
@@ -37,7 +37,15 @@ public class BackupService : IBackupService
             var databaseFileName = Path.GetFileName(databasePath);
             var tempDatabasePath = Path.Combine(tempDatabaseFolder, databaseFileName);
 
-            File.Copy(databasePath, tempDatabasePath, overwrite: true);
+            var connectionString = new SqliteConnectionStringBuilder
+            {
+                DataSource = databasePath
+            }.ToString();
+            await using var connection = new SqliteConnection(connectionString);
+        await connection.OpenAsync(cancellationToken);
+            await using var command = connection.CreateCommand();
+            command.CommandText = $"VACUUM INTO '{tempDatabasePath.Replace("'", "''")}';";
+        await command.ExecuteNonQueryAsync(cancellationToken);
 
             if (Directory.Exists(storageRoot))
             {
@@ -54,7 +62,7 @@ public class BackupService : IBackupService
                     backupPath,
                     CompressionLevel.Optimal,
                     includeBaseDirectory: false);
-            });
+            }, cancellationToken);
 
             return backupPath;
         }
@@ -64,7 +72,7 @@ public class BackupService : IBackupService
         }
     }
 
-    public async Task RestoreBackupAsync(string backupZipPath, string targetDatabasePath, string targetStorageRoot)
+    public async Task RestoreBackupAsync(string backupZipPath, string targetDatabasePath, string targetStorageRoot, CancellationToken cancellationToken = default)
     {
         ValidatePath(backupZipPath, nameof(backupZipPath), "Đường dẫn file backup không hợp lệ.");
         ValidatePath(targetDatabasePath, nameof(targetDatabasePath), "Đường dẫn database đích không hợp lệ.");
@@ -90,7 +98,7 @@ public class BackupService : IBackupService
 
         if (File.Exists(targetDatabasePath))
         {
-            await CreateBackupAsync(targetDatabasePath, targetStorageRoot, safetyBackupFolder);
+            await CreateBackupAsync(targetDatabasePath, targetStorageRoot, safetyBackupFolder, cancellationToken);
         }
 
         SqliteConnection.ClearAllPools();
@@ -104,7 +112,7 @@ public class BackupService : IBackupService
             await Task.Run(() =>
             {
                 ZipFile.ExtractToDirectory(backupZipPath, tempRoot, overwriteFiles: true);
-            });
+            }, cancellationToken);
 
             var extractedDatabaseFolder = Path.Combine(tempRoot, DatabaseFolderName);
             var extractedStorageFolder = Path.Combine(tempRoot, StorageFolderName);
@@ -128,6 +136,8 @@ public class BackupService : IBackupService
             }
 
             File.Copy(extractedDatabasePath, targetDatabasePath, overwrite: true);
+            File.Delete(targetDatabasePath + "-wal");
+            File.Delete(targetDatabasePath + "-shm");
 
             if (Directory.Exists(targetStorageRoot))
                 Directory.Delete(targetStorageRoot, recursive: true);

@@ -1,0 +1,1313 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+                    xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <!-- Layout primitives -->
+    <Style x:Key="DenseDashboardViewportStyle" TargetType="Grid">
+        <Setter Property="Background" Value="{StaticResource DenseBackgroundBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseShellWindowStyle" TargetType="Window">
+        <Setter Property="Background" Value="{StaticResource DenseBackgroundBrush}"/>
+        <Setter Property="TextElement.Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style x:Key="DenseDashboardContentGridStyle" TargetType="Grid">
+        <Setter Property="MinWidth" Value="980"/>
+        <Setter Property="MinHeight" Value="650"/>
+        <Setter Property="Margin" Value="8"/>
+    </Style>
+
+    <Style x:Key="DenseHeaderContentGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="9,0"/>
+    </Style>
+
+    <Style x:Key="DenseShellRootGridStyle" TargetType="Grid">
+        <Setter Property="Background" Value="{StaticResource DenseBackgroundBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseShellMainGridStyle" TargetType="Grid">
+        <Setter Property="Background" Value="{StaticResource DenseBackgroundBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseTopBarContentGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="12,0"/>
+    </Style>
+
+    <Style x:Key="DenseSearchContentGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="0"/>
+    </Style>
+
+    <Style x:Key="DenseSectionGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="8"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentListRootGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="10"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentListHeaderGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentFilterGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="0"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentFooterGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="0,8,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseSummaryStackStyle" TargetType="StackPanel">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="8,0,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseMetricContentStackStyle" TargetType="StackPanel">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseKpiContentStackStyle" TargetType="StackPanel">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseSidebarHeaderTextStackStyle" TargetType="StackPanel">
+        <Setter Property="Margin" Value="8,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseShellUserStackStyle" TargetType="StackPanel">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="MinWidth" Value="112"/>
+    </Style>
+
+    <Style x:Key="DenseShellNavRowStackStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+
+    <Style x:Key="DenseShellUserRowStackStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentToolbarStackStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+    </Style>
+
+    <Style x:Key="DenseInlineIconTextStackStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+    </Style>
+
+    <Style x:Key="DensePagerStackStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseTableActionsStackStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseCenteredStateStackStyle" TargetType="StackPanel">
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Cards and panels -->
+    <Style x:Key="DenseCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="9,7"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <Style x:Key="DenseHoverCardStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource DenseRowHoverBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource DenseBorderStrongBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="DenseMetricCardStyle" TargetType="Border" BasedOn="{StaticResource DenseHoverCardStyle}">
+        <Setter Property="Height" Value="76"/>
+        <Setter Property="Margin" Value="0,0,0,6"/>
+        <Setter Property="Padding" Value="10,7"/>
+    </Style>
+
+    <Style x:Key="DenseKpiCardStyle" TargetType="Border" BasedOn="{StaticResource DenseHoverCardStyle}">
+        <Setter Property="MinHeight" Value="82"/>
+        <Setter Property="Padding" Value="12,9"/>
+    </Style>
+
+    <Style x:Key="DensePanelStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Padding" Value="0"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{StaticResource DenseBorderStrongBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="DenseAnalyticsPanelStyle" TargetType="Border" BasedOn="{StaticResource DensePanelStyle}">
+        <Setter Property="MinHeight" Value="220"/>
+    </Style>
+
+    <Style x:Key="DenseAnalyticsFeedPanelStyle" TargetType="Border" BasedOn="{StaticResource DensePanelStyle}">
+        <Setter Property="MinHeight" Value="210"/>
+    </Style>
+
+    <Style x:Key="DenseTablePanelStyle" TargetType="Border" BasedOn="{StaticResource DensePanelStyle}">
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseStatusBadgeStyle" TargetType="Border">
+        <Setter Property="Width" Value="84"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+    </Style>
+
+    <Style x:Key="DensePagerPillStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="MinWidth" Value="80"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Margin" Value="6,0"/>
+        <Setter Property="Padding" Value="12,0"/>
+    </Style>
+
+    <Style x:Key="DenseHeaderBarStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Height" Value="38"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style x:Key="DenseLogoPillStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Width" Value="102"/>
+        <Setter Property="Height" Value="26"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="CornerRadius" Value="5"/>
+        <Setter Property="Padding" Value="7,2"/>
+    </Style>
+
+    <Style x:Key="DenseMarkStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Width" Value="23"/>
+        <Setter Property="Height" Value="23"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style x:Key="DenseVerticalDividerStyle" TargetType="Border">
+        <Setter Property="Width" Value="1"/>
+        <Setter Property="Height" Value="18"/>
+        <Setter Property="Margin" Value="10,0"/>
+        <Setter Property="Background" Value="{StaticResource DenseBorderBrush}"/>
+    </Style>
+
+    <!-- Sidebar -->
+    <Style x:Key="DenseSidebarRailStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="7"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <Style x:Key="DenseShellSidebarStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,1,0"/>
+        <Setter Property="Padding" Value="6"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <Style x:Key="DenseShellLogoRegionStyle" TargetType="Border">
+        <Setter Property="Height" Value="70"/>
+        <Setter Property="Padding" Value="8,8,8,7"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <Style x:Key="DenseShellLogoCardStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Height" Value="44"/>
+        <Setter Property="Padding" Value="8,4"/>
+    </Style>
+
+    <Style x:Key="DensePlaceholderCardStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Width" Value="500"/>
+        <Setter Property="Padding" Value="24"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseSidebarHeaderStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Padding" Value="9,7"/>
+    </Style>
+
+    <Style x:Key="DenseSidebarItemStyle" TargetType="RadioButton">
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Margin" Value="0,0,0,4"/>
+        <Setter Property="Padding" Value="7,0"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Root"
+                            Background="Transparent"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource DenseRowHoverBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.48"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DenseShellSidebarItemStyle" TargetType="RadioButton" BasedOn="{StaticResource DenseSidebarItemStyle}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="0,1"/>
+        <Setter Property="Padding" Value="9,0"/>
+    </Style>
+
+    <Style x:Key="DenseShellSidebarActionButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="0,1"/>
+        <Setter Property="Padding" Value="9,0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6"
+                            Padding="{TemplateBinding Padding}">
+                        <ContentPresenter VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource DenseRowHoverBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource DenseRowSelectedBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.48"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DenseShellSidebarSeparatorStyle" TargetType="Separator">
+        <Setter Property="Margin" Value="8,8"/>
+        <Setter Property="Background" Value="{StaticResource DenseBorderBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseShellExitButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseShellSidebarActionButtonStyle}">
+        <Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+
+    <!-- Typography -->
+    <Style x:Key="DenseHeaderTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseHeaderSubtitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseBrandMarkTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseBrandBrush}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseSidebarTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseSidebarSubtitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseShellNavTextStyle" TargetType="TextBlock">
+        <Setter Property="Margin" Value="9,0,0,0"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseShellUserNameTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseShellUserMetaTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseShellAvatarTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DensePlaceholderTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseBrandBrush}"/>
+        <Setter Property="FontSize" Value="22"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DensePlaceholderDescriptionTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Margin" Value="0,12,0,0"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentListTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseButtonTextStyle" TargetType="TextBlock">
+        <Setter Property="Margin" Value="6,0,0,0"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseStatusBadgeTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DensePagerTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseFooterMutedTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseEmptyStateTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource EmptyStateTitleTextStyle}">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="14"/>
+    </Style>
+
+    <Style x:Key="DenseEmptyStateDescriptionTextStyle" TargetType="TextBlock" BasedOn="{StaticResource EmptyStateDescriptionTextStyle}">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style x:Key="DensePanelTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Height" Value="31"/>
+        <Setter Property="Padding" Value="10,8,10,0"/>
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextAlignment" Value="Left"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseAnalyticsSectionTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseAnalyticsSectionSubtitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseMetricLabelTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="TextAlignment" Value="Left"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseKpiLabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseMetricLabelTextStyle}">
+        <Setter Property="FontSize" Value="10"/>
+    </Style>
+
+    <Style x:Key="DenseMetricValueTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseBrandBrush}"/>
+        <Setter Property="FontSize" Value="23"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextAlignment" Value="Left"/>
+        <Setter Property="Margin" Value="0,5,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseKpiValueTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseMetricValueTextStyle}">
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="Margin" Value="0,4,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseKpiMetaTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseSoftTextBrush}"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="Margin" Value="0,4,0,0"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseSummaryLabelTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseSummaryValueTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseBrandBrush}"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,3,0,10"/>
+    </Style>
+
+    <Style x:Key="DenseSummaryTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseGridTextStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style x:Key="DenseGridMutedTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseGridTextStyle}">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+    </Style>
+
+    <!-- Buttons -->
+    <Style x:Key="DenseButtonStyle" TargetType="Button">
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="MinWidth" Value="24"/>
+        <Setter Property="Padding" Value="7,0"/>
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="5">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource DenseRowHoverBrush}"/>
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource DenseBorderStrongBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.86"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.52"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DensePrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseButtonStyle}">
+        <Setter Property="Background" Value="{StaticResource DenseBrandBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBrandBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseButtonStyle}">
+        <Setter Property="Background" Value="{StaticResource DenseDangerBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseDangerBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseButtonStyle}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="Margin" Value="0,0,6,0"/>
+    </Style>
+
+    <Style x:Key="DenseToolbarDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseDangerButtonStyle}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="Margin" Value="0,0,6,0"/>
+    </Style>
+
+    <Style x:Key="DenseIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseButtonStyle}">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+    </Style>
+
+    <Style x:Key="DensePagerIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseIconButtonStyle}">
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="Height" Value="28"/>
+    </Style>
+
+    <Style x:Key="DenseTableActionIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseIconButtonStyle}">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+        <Setter Property="Margin" Value="1,0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+
+    <Style x:Key="DenseSidebarActionButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseButtonStyle}"/>
+
+    <Style x:Key="DenseTopIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseIconButtonStyle}">
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="Height" Value="30"/>
+    </Style>
+
+    <Style x:Key="DenseSearchTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+    </Style>
+
+    <Style x:Key="DenseFilterTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource AppTextBoxStyle}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseFilterComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource AppComboBoxStyle}">
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+    </Style>
+
+    <!-- Shell chrome -->
+    <Style x:Key="DenseShellTopBarStyle" TargetType="Border">
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <Style x:Key="DenseShellSearchBoxStyle" TargetType="Border">
+        <Setter Property="Width" Value="340"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Margin" Value="0,0,18,0"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="6"/>
+        <Setter Property="Padding" Value="9,0"/>
+        <Style.Triggers>
+            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource DenseAccentBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="DenseShellAvatarStyle" TargetType="Border">
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="CornerRadius" Value="14"/>
+        <Setter Property="Margin" Value="10,0,9,0"/>
+        <Setter Property="Background" Value="{StaticResource DenseTextBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseShellLogoImageStyle" TargetType="Image">
+        <Setter Property="Stretch" Value="Uniform"/>
+        <Setter Property="RenderOptions.BitmapScalingMode" Value="HighQuality"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+    </Style>
+
+    <!-- Icons -->
+    <Style x:Key="DenseShellNavIconStyle" TargetType="materialDesign:PackIcon">
+        <Setter Property="Width" Value="15"/>
+        <Setter Property="Height" Value="15"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseShellTopIconStyle" TargetType="materialDesign:PackIcon">
+        <Setter Property="Width" Value="17"/>
+        <Setter Property="Height" Value="17"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseShellSearchIconStyle" TargetType="materialDesign:PackIcon">
+        <Setter Property="Width" Value="14"/>
+        <Setter Property="Height" Value="14"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseShellChevronIconStyle" TargetType="materialDesign:PackIcon" BasedOn="{StaticResource DenseShellSearchIconStyle}">
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Margin" Value="8,0,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseButtonIconStyle" TargetType="materialDesign:PackIcon">
+        <Setter Property="Width" Value="14"/>
+        <Setter Property="Height" Value="14"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseAccentButtonIconStyle" TargetType="materialDesign:PackIcon" BasedOn="{StaticResource DenseButtonIconStyle}">
+        <Setter Property="Foreground" Value="{StaticResource DenseBrandBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseTableActionIconStyle" TargetType="materialDesign:PackIcon">
+        <Setter Property="Width" Value="15"/>
+        <Setter Property="Height" Value="15"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseLoadingProgressBarStyle" TargetType="ProgressBar">
+        <Setter Property="Width" Value="140"/>
+        <Setter Property="Height" Value="6"/>
+        <Setter Property="Margin" Value="0,0,0,18"/>
+    </Style>
+
+    <!-- Charts and DataGrid -->
+    <Style x:Key="DenseCartesianChartStyle" TargetType="lvc:CartesianChart">
+        <Setter Property="Margin" Value="8,6,8,8"/>
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+    </Style>
+
+    <Style x:Key="DensePieChartStyle" TargetType="lvc:PieChart">
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="LegendLocation" Value="None"/>
+        <Setter Property="HoverPushOut" Value="4"/>
+        <Setter Property="InnerRadius" Value="54"/>
+    </Style>
+
+    <Style x:Key="DenseDataGridColumnHeaderStyle" TargetType="DataGridColumnHeader">
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseDataGridCellStyle" TargetType="DataGridCell">
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="10,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <Style x:Key="DenseDataGridRowStyle" TargetType="DataGridRow">
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource DenseRowHoverBrush}"/>
+            </Trigger>
+            <Trigger Property="IsSelected" Value="True">
+                <Setter Property="Background" Value="{StaticResource DenseRowSelectedBrush}"/>
+                <Setter Property="Foreground" Value="{StaticResource DenseAccentBrush}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="DenseDataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource AppDataGridStyle}">
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="RowHeight" Value="36"/>
+        <Setter Property="ColumnHeaderHeight" Value="32"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="ColumnHeaderStyle" Value="{StaticResource DenseDataGridColumnHeaderStyle}"/>
+        <Setter Property="CellStyle" Value="{StaticResource DenseDataGridCellStyle}"/>
+        <Setter Property="RowStyle" Value="{StaticResource DenseDataGridRowStyle}"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentDataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource DenseDataGridStyle}">
+        <Setter Property="RowHeight" Value="38"/>
+        <Setter Property="ColumnHeaderHeight" Value="34"/>
+    </Style>
+
+    <Style x:Key="DenseDocumentTitleGridTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseGridTextStyle}">
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="ToolTip" Value="{Binding Title}"/>
+    </Style>
+
+    <Style x:Key="DenseDashboardFeedDataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource DenseDataGridStyle}">
+        <Setter Property="RowHeight" Value="32"/>
+        <Setter Property="ColumnHeaderHeight" Value="30"/>
+    </Style>
+
+    <!-- Login, forms, and modal dialogs -->
+    <Style x:Key="DenseModalWindowStyle" TargetType="Window">
+        <Setter Property="Background" Value="{StaticResource DenseBackgroundBrush}"/>
+        <Setter Property="TextElement.Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style x:Key="DenseLoginWindowStyle" TargetType="Window" BasedOn="{StaticResource DenseModalWindowStyle}"/>
+
+    <Style x:Key="DenseLoginRootGridStyle" TargetType="Grid">
+        <Setter Property="Background" Value="{StaticResource DenseBackgroundBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseLoginDragBarStyle" TargetType="Grid">
+        <Setter Property="Height" Value="36"/>
+        <Setter Property="Panel.ZIndex" Value="10"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Background" Value="Transparent"/>
+    </Style>
+
+    <Style x:Key="DenseLoginCloseButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="30"/>
+        <Setter Property="Height" Value="30"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="HorizontalAlignment" Value="Right"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Margin" Value="0,4,8,0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6">
+                        <ContentPresenter HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource DenseRowHoverBrush}"/>
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource DenseBorderBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.86"/>
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource DenseAccentBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.52"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DenseLoginLogoImageStyle" TargetType="Image" BasedOn="{StaticResource DenseShellLogoImageStyle}">
+        <Setter Property="Height" Value="86"/>
+    </Style>
+
+    <Style x:Key="DenseLoginCardStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Width" Value="408"/>
+        <Setter Property="Height" Value="468"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Top"/>
+        <Setter Property="Padding" Value="34,28"/>
+    </Style>
+
+    <Style x:Key="DenseLoginTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseBrandBrush}"/>
+        <Setter Property="FontSize" Value="32"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseLoginSubtitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,4,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseLoginServerTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseSoftTextBrush}"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="Margin" Value="0,8,0,0"/>
+        <Setter Property="MaxWidth" Value="320"/>
+    </Style>
+
+    <Style x:Key="DenseFormLabelTextStyle" TargetType="TextBlock">
+        <Setter Property="Margin" Value="0,0,0,5"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style x:Key="DenseFormRequiredLabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseFormLabelTextStyle}"/>
+
+    <Style x:Key="DenseLoginLabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseFormLabelTextStyle}">
+        <Setter Property="Foreground" Value="{StaticResource DenseBrandBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseLoginPlaceholderTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseSoftTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Margin" Value="42,0,0,0"/>
+        <Setter Property="IsHitTestVisible" Value="False"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseLoginErrorTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseDangerBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="TextAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseLoginFooterTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="10,0,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseInputIconStyle" TargetType="materialDesign:PackIcon">
+        <Setter Property="Width" Value="17"/>
+        <Setter Property="Height" Value="17"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="13,0,0,0"/>
+    </Style>
+
+    <Style x:Key="LoginInputTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Height" Value="42"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="42,0,12,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="CaretBrush" Value="{StaticResource DenseBrandBrush}"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource DenseAccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="DenseLoginVisiblePasswordTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource LoginInputTextBoxStyle}">
+        <Setter Property="Padding" Value="42,0,42,0"/>
+    </Style>
+
+    <Style x:Key="LoginPasswordBoxStyle" TargetType="PasswordBox">
+        <Setter Property="Height" Value="42"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="42,0,42,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="6">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource DenseAccentBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="LoginPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DensePrimaryButtonStyle}">
+        <Setter Property="Height" Value="42"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style x:Key="GhostLinkButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style x:Key="LoginIconButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseIconButtonStyle}">
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+
+    <Style x:Key="DenseFormWindowStyle" TargetType="Window" BasedOn="{StaticResource DenseModalWindowStyle}"/>
+
+    <Style x:Key="DenseFormRootGridStyle" TargetType="Grid">
+        <Setter Property="Margin" Value="10"/>
+    </Style>
+
+    <Style x:Key="DenseFormHeaderPanelStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Padding" Value="14,12"/>
+        <Setter Property="Margin" Value="0,0,0,8"/>
+    </Style>
+
+    <Style x:Key="DenseFormBodyPanelStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Padding" Value="12"/>
+    </Style>
+
+    <Style x:Key="DenseFormUploadPanelStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="Padding" Value="10"/>
+        <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+
+    <Style x:Key="DenseFormTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseFormUploadLabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseFormLabelTextStyle}">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0,0,10,0"/>
+    </Style>
+
+    <Style x:Key="DenseReadonlyBadgeStyle" TargetType="Border">
+        <Setter Property="CornerRadius" Value="999"/>
+        <Setter Property="Padding" Value="10,5"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="Background" Value="{StaticResource DenseWarningSoftBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseWarningBorderBrush}"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <Style x:Key="DenseReadonlyBadgeTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseWarningTextBrush}"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <Style x:Key="LabelStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseFormLabelTextStyle}"/>
+    <Style x:Key="RequiredLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource DenseFormRequiredLabelTextStyle}"/>
+
+    <Style x:Key="FormFieldPanelStyle" TargetType="StackPanel">
+        <Setter Property="Margin" Value="0,0,0,10"/>
+    </Style>
+
+    <Style x:Key="LeftFormFieldPanelStyle" TargetType="StackPanel" BasedOn="{StaticResource FormFieldPanelStyle}">
+        <Setter Property="Margin" Value="0,0,6,10"/>
+    </Style>
+
+    <Style x:Key="RightFormFieldPanelStyle" TargetType="StackPanel" BasedOn="{StaticResource FormFieldPanelStyle}">
+        <Setter Property="Margin" Value="6,0,0,10"/>
+    </Style>
+
+    <Style x:Key="FileNameTextStyle" TargetType="TextBlock">
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        <Setter Property="MaxWidth" Value="360"/>
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontStyle" Value="Italic"/>
+    </Style>
+
+    <Style x:Key="DenseFormFooterStyle" TargetType="Border">
+        <Setter Property="Padding" Value="0,10,0,0"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+        <Setter Property="Margin" Value="0,8,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseFormSecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseToolbarButtonStyle}">
+        <Setter Property="MinWidth" Value="96"/>
+        <Setter Property="Height" Value="32"/>
+    </Style>
+
+    <Style x:Key="DenseFormUploadSecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseFormSecondaryButtonStyle}">
+        <Setter Property="Margin" Value="0,0,12,0"/>
+    </Style>
+
+    <Style x:Key="DenseFormPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DensePrimaryButtonStyle}">
+        <Setter Property="MinWidth" Value="136"/>
+        <Setter Property="Height" Value="32"/>
+    </Style>
+
+    <Style x:Key="DenseFormDangerButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseDangerButtonStyle}">
+        <Setter Property="MinWidth" Value="126"/>
+        <Setter Property="Height" Value="32"/>
+    </Style>
+
+    <Style x:Key="DenseFormCancelButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseFormSecondaryButtonStyle}">
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <Style x:Key="DenseFormTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource AppTextBoxStyle}">
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Background" Value="{StaticResource DenseChromeBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="Padding" Value="10,0"/>
+    </Style>
+
+    <Style x:Key="DenseFormComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource AppComboBoxStyle}">
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseFormDatePickerStyle" TargetType="DatePicker" BasedOn="{StaticResource AppDatePickerStyle}">
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Background" Value="{StaticResource DenseSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+    </Style>
+
+    <Style x:Key="DenseFormMultilineTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource DenseFormTextBoxStyle}">
+        <Setter Property="VerticalContentAlignment" Value="Top"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+        <Setter Property="AcceptsReturn" Value="True"/>
+    </Style>
+
+    <Style x:Key="DenseFormTitleInputTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource DenseFormTextBoxStyle}">
+        <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+
+    <Style x:Key="DenseFormScrollViewerStyle" TargetType="ScrollViewer">
+        <Setter Property="VerticalScrollBarVisibility" Value="Auto"/>
+        <Setter Property="HorizontalScrollBarVisibility" Value="Disabled"/>
+        <Setter Property="Padding" Value="0,0,6,0"/>
+    </Style>
+
+    <Style x:Key="DenseDialogWindowStyle" TargetType="Window">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="TextElement.Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <Style x:Key="DenseDialogRootCardStyle" TargetType="Border" BasedOn="{StaticResource DenseCardStyle}">
+        <Setter Property="CornerRadius" Value="10"/>
+        <Setter Property="Padding" Value="0"/>
+    </Style>
+
+    <Style x:Key="DenseDialogHeaderStyle" TargetType="Border">
+        <Setter Property="Padding" Value="16,14"/>
+        <Setter Property="BorderBrush" Value="{StaticResource DenseBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+    </Style>
+
+    <Style x:Key="DenseDialogIconBackgroundStyle" TargetType="Border">
+        <Setter Property="Width" Value="34"/>
+        <Setter Property="Height" Value="34"/>
+        <Setter Property="CornerRadius" Value="17"/>
+        <Setter Property="Background" Value="{StaticResource DenseWarningSoftBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseDialogIconTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseWarningTextBrush}"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseDialogTitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+    </Style>
+
+    <Style x:Key="DenseDialogSubtitleTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseMutedBrush}"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Margin" Value="0,3,0,0"/>
+    </Style>
+
+    <Style x:Key="DenseDialogCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseIconButtonStyle}">
+        <Setter Property="Width" Value="28"/>
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="Transparent"/>
+    </Style>
+
+    <Style x:Key="DenseDialogBodyStyle" TargetType="Border">
+        <Setter Property="Padding" Value="16"/>
+    </Style>
+
+    <Style x:Key="DenseDialogTitleStackStyle" TargetType="StackPanel">
+        <Setter Property="Margin" Value="12,0,0,0"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <Style x:Key="DenseDialogMessageTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{StaticResource DenseTextBrush}"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="LineHeight" Value="20"/>
+        <Setter Property="TextWrapping" Value="Wrap"/>
+    </Style>
+
+    <Style x:Key="DenseDialogFooterStyle" TargetType="Border">
+        <Setter Property="Padding" Value="16,0,16,16"/>
+    </Style>
+
+    <Style x:Key="DenseDialogCancelButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseFormSecondaryButtonStyle}">
+        <Setter Property="MinWidth" Value="104"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
+    <Style x:Key="DenseDialogConfirmButtonStyle" TargetType="Button" BasedOn="{StaticResource DenseFormPrimaryButtonStyle}">
+        <Setter Property="MinWidth" Value="124"/>
+    </Style>
+
+</ResourceDictionary>

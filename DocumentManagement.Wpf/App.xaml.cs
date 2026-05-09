@@ -98,6 +98,10 @@ public partial class App : Application
         services.AddTransient<DocumentFormViewModel>();
         services.AddTransient<DocumentDetailViewModel>();
         services.AddTransient<DashboardViewModel>();
+        services.AddTransient<ArchiveViewModel>();
+        services.AddTransient<ReportsViewModel>();
+        services.AddTransient<CatalogViewModel>();
+        services.AddTransient<SystemViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<ServerSettingsWindow>();

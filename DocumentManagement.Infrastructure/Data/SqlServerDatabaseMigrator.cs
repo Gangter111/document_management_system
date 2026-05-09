@@ -40,9 +40,14 @@ CREATE TABLE dbo.document_categories (
 IF OBJECT_ID('dbo.document_statuses', 'U') IS NULL
 CREATE TABLE dbo.document_statuses (
     id bigint NOT NULL PRIMARY KEY,
+    code nvarchar(100) NULL,
     name nvarchar(250) NOT NULL,
     is_active bit NOT NULL DEFAULT 1
 );");
+
+        Execute(connection, @"
+IF COL_LENGTH('dbo.document_statuses', 'code') IS NULL
+ALTER TABLE dbo.document_statuses ADD code nvarchar(100) NULL;");
 
         Execute(connection, @"
 IF OBJECT_ID('dbo.documents', 'U') IS NULL
@@ -144,11 +149,16 @@ IF NOT EXISTS (SELECT 1 FROM dbo.document_categories WHERE name = @name)
 INSERT INTO dbo.document_categories(name, is_active) VALUES (@name, 1);", ("@name", category));
         }
 
-        foreach (var status in new[] { (1, "Bản nháp"), (2, "Chờ duyệt"), (3, "Đã ban hành"), (4, "Đang xử lý"), (5, "Hoàn thành") })
+        foreach (var status in new[] { (1, "DRAFT", "Bản nháp"), (2, "PENDING_APPROVAL", "Chờ duyệt"), (3, "APPROVED", "Đã duyệt"), (4, "ISSUED", "Đã ban hành"), (5, "ARCHIVED", "Đã lưu trữ"), (6, "REJECTED", "Bị từ chối") })
         {
             Execute(connection, @"
 IF NOT EXISTS (SELECT 1 FROM dbo.document_statuses WHERE id = @id)
-INSERT INTO dbo.document_statuses(id, name, is_active) VALUES (@id, @name, 1);", ("@id", status.Item1), ("@name", status.Item2));
+INSERT INTO dbo.document_statuses(id, code, name, is_active) VALUES (@id, @code, @name, 1);
+
+UPDATE dbo.document_statuses
+SET code = @code,
+    name = @name
+WHERE id = @id;", ("@id", status.Item1), ("@code", status.Item2), ("@name", status.Item3));
         }
     }
 
@@ -190,6 +200,8 @@ WHERE LOWER(LTRIM(RTRIM(Username))) = LOWER(LTRIM(RTRIM(@username)));",
         Execute(connection, "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'idx_documents_title') CREATE INDEX idx_documents_title ON dbo.documents(title);");
         Execute(connection, "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'idx_documents_sender_name') CREATE INDEX idx_documents_sender_name ON dbo.documents(sender_name);");
         Execute(connection, "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'idx_documents_status_id') CREATE INDEX idx_documents_status_id ON dbo.documents(status_id);");
+        Execute(connection, "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'idx_document_categories_name') CREATE INDEX idx_document_categories_name ON dbo.document_categories(name);");
+        Execute(connection, "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'idx_document_statuses_code') CREATE INDEX idx_document_statuses_code ON dbo.document_statuses(code);");
         Execute(connection, "IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name = 'idx_audit_logs_entity') CREATE INDEX idx_audit_logs_entity ON dbo.audit_logs(entity_name, entity_id);");
     }
 

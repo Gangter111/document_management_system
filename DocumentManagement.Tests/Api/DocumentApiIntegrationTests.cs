@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using DocumentManagement.Contracts.AuditLogs;
 using DocumentManagement.Contracts.Auth;
 using DocumentManagement.Contracts.Documents;
+using DocumentManagement.Contracts.System;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
@@ -124,7 +125,125 @@ public sealed class DocumentApiIntegrationTests : IClassFixture<DocumentApiFacto
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task ProtectedEndpoints_ShouldRejectUnauthenticatedAndUnauthorizedUsers()
+    {
+        using var client = _factory.CreateClient();
+
+        var unauthenticatedPasswordChange = await client.PostAsJsonAsync(
+            "/api/auth/change-password",
+            new ChangePasswordRequest { UserId = 1, NewPassword = "NewPassword123" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthenticatedPasswordChange.StatusCode);
+
+        var unauthenticatedAuditLogs = await client.GetAsync(
+            "/api/audit-logs?entityName=Document&entityId=1");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, unauthenticatedAuditLogs.StatusCode);
+
+        var staffToken = await LoginAsync(client, "staff", "staff123", "STAFF");
+        SetBearerToken(client, staffToken);
+
+        var staffPasswordChange = await client.PostAsJsonAsync(
+            "/api/auth/change-password",
+            new ChangePasswordRequest { UserId = 1, NewPassword = "NewPassword123" });
+
+        Assert.Equal(HttpStatusCode.Forbidden, staffPasswordChange.StatusCode);
+
+        var staffAuditLogs = await client.GetAsync(
+            "/api/audit-logs?entityName=Document&entityId=1");
+
+        Assert.Equal(HttpStatusCode.Forbidden, staffAuditLogs.StatusCode);
+    }
+
+    [Fact]
+    public async Task DeactivatedUserToken_ShouldBeRejected()
+    {
+        using var client = _factory.CreateClient();
+
+        var adminToken = await LoginAsync(client, "admin", "admin123", "ADMIN");
+        SetBearerToken(client, adminToken);
+
+        var roles = await client.GetFromJsonAsync<List<RoleDto>>("/api/system/roles");
+        var staffRole = Assert.Single(roles!, x => x.Name.Equals("STAFF", StringComparison.OrdinalIgnoreCase));
+        var username = $"inactive_{DateTime.UtcNow:yyyyMMddHHmmssfff}";
+
+        var createUserResponse = await client.PostAsJsonAsync(
+            "/api/system/users",
+            new SaveUserRequest
+            {
+                Username = username,
+                FullName = "Inactive Token Test",
+                Department = "QA",
+                RoleId = staffRole.Id,
+                Password = "Password123",
+                IsActive = true
+            });
+
+        Assert.Equal(HttpStatusCode.Created, createUserResponse.StatusCode);
+
+        var createdUser = await createUserResponse.Content.ReadFromJsonAsync<UserAdminDto>();
+        Assert.NotNull(createdUser);
+
+        var userToken = await LoginAsync(client, username, "Password123", "STAFF");
+
+        SetBearerToken(client, adminToken);
+        var deleteResponse = await client.DeleteAsync($"/api/system/users/{createdUser.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
+
+        SetBearerToken(client, userToken);
+        var staleTokenResponse = await client.GetAsync("/api/dashboard");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, staleTokenResponse.StatusCode);
+    }
+
+    [Fact]
+    public async Task Publisher_ShouldNotMoveDocumentToAnotherDepartment()
+    {
+        using var client = _factory.CreateClient();
+
+        var adminToken = await LoginAsync(client, "admin", "admin123", "ADMIN");
+        var publisherLogin = await LoginResponseAsync(client, "publisher", "publisher123", "PUBLISHER");
+
+        SetBearerToken(client, adminToken);
+
+        var stamp = DateTime.UtcNow.ToString("yyyyMMddHHmmssfff");
+        var createResponse = await client.PostAsJsonAsync(
+            "/api/documents",
+            new CreateDocumentRequest
+            {
+                DocumentNumber = $"DEPT-{stamp}",
+                Title = $"Department Scope Test {stamp}",
+                ProcessingDepartment = publisherLogin.Department
+            });
+
+        Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
+        var documentId = await createResponse.Content.ReadFromJsonAsync<long>();
+
+        SetBearerToken(client, publisherLogin.Token);
+
+        var moveResponse = await client.PutAsJsonAsync(
+            $"/api/documents/{documentId}",
+            CreateUpdateRequest(
+                documentId,
+                $"DEPT-{stamp}",
+                "Attempted department move",
+                "Unauthorized Department"));
+
+        Assert.Equal(HttpStatusCode.Forbidden, moveResponse.StatusCode);
+    }
+
     private static async Task<string> LoginAsync(
+        HttpClient client,
+        string username,
+        string password,
+        string expectedRole)
+    {
+        return (await LoginResponseAsync(client, username, password, expectedRole)).Token;
+    }
+
+    private static async Task<LoginResponse> LoginResponseAsync(
         HttpClient client,
         string username,
         string password,
@@ -148,10 +267,14 @@ public sealed class DocumentApiIntegrationTests : IClassFixture<DocumentApiFacto
         Assert.Equal(expectedRole, login.Role);
         Assert.False(string.IsNullOrWhiteSpace(login.Token));
 
-        return login.Token;
+        return login;
     }
 
-    private static UpdateDocumentRequest CreateUpdateRequest(long id, string documentNumber, string title)
+    private static UpdateDocumentRequest CreateUpdateRequest(
+        long id,
+        string documentNumber,
+        string title,
+        string processingDepartment = "Phòng HCNS")
     {
         return new UpdateDocumentRequest
         {
@@ -159,7 +282,7 @@ public sealed class DocumentApiIntegrationTests : IClassFixture<DocumentApiFacto
             DocumentNumber = documentNumber,
             Title = title,
             Summary = "Updated by integration test",
-            ProcessingDepartment = "Phòng HCNS",
+            ProcessingDepartment = processingDepartment,
             StatusId = 4,
             ConfidentialityLevel = "NORMAL",
             UrgencyLevel = "NORMAL",

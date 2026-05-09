@@ -2,12 +2,14 @@
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Dashboard;
 using DocumentManagement.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocumentManagement.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class DashboardController : ControllerBase
 {
     private readonly IDocumentService _documentService;

@@ -29,24 +29,24 @@ public partial class ConfirmDialogWindow : Window
         switch (type)
         {
             case ConfirmDialogType.Danger:
-                IconBackground.Background = new SolidColorBrush(Color.FromRgb(254, 242, 242));
-                IconText.Foreground = new SolidColorBrush(Color.FromRgb(153, 27, 27));
+                IconBackground.Background = (Brush)FindResource("DenseDangerSoftBrush");
+                IconText.Foreground = (Brush)FindResource("DenseDangerTextBrush");
                 IconText.Text = "!";
-                ConfirmButton.Style = (Style)FindResource("DangerButtonStyle");
+                ConfirmButton.Style = (Style)FindResource("DenseFormDangerButtonStyle");
                 break;
 
             case ConfirmDialogType.Info:
-                IconBackground.Background = new SolidColorBrush(Color.FromRgb(239, 246, 255));
-                IconText.Foreground = new SolidColorBrush(Color.FromRgb(30, 64, 175));
+                IconBackground.Background = (Brush)FindResource("DenseInfoSoftBrush");
+                IconText.Foreground = (Brush)FindResource("DenseInfoTextBrush");
                 IconText.Text = "i";
-                ConfirmButton.Style = (Style)FindResource("PrimaryButtonStyle");
+                ConfirmButton.Style = (Style)FindResource("DenseDialogConfirmButtonStyle");
                 break;
 
             default:
-                IconBackground.Background = new SolidColorBrush(Color.FromRgb(254, 243, 199));
-                IconText.Foreground = new SolidColorBrush(Color.FromRgb(146, 64, 14));
+                IconBackground.Background = (Brush)FindResource("DenseWarningSoftBrush");
+                IconText.Foreground = (Brush)FindResource("DenseWarningTextBrush");
                 IconText.Text = "!";
-                ConfirmButton.Style = (Style)FindResource("PrimaryButtonStyle");
+                ConfirmButton.Style = (Style)FindResource("DenseDialogConfirmButtonStyle");
                 break;
         }
     }

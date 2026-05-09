@@ -28,14 +28,14 @@ SELECT
     COUNT(*) as total,
     SUM(CASE WHEN status_id = 1 THEN 1 ELSE 0 END) as draft,
     SUM(CASE WHEN status_id = 2 THEN 1 ELSE 0 END) as pending,
-    SUM(CASE WHEN status_id = 3 THEN 1 ELSE 0 END) as issued,
-    SUM(CASE WHEN status_id = 4 THEN 1 ELSE 0 END) as archived,
-    SUM(CASE WHEN status_id = 5 THEN 1 ELSE 0 END) as rejected,
-    SUM(CASE 
-        WHEN due_date IS NOT NULL 
+    SUM(CASE WHEN status_id = 4 THEN 1 ELSE 0 END) as issued,
+    SUM(CASE WHEN status_id = 5 THEN 1 ELSE 0 END) as archived,
+    SUM(CASE WHEN status_id = 6 THEN 1 ELSE 0 END) as rejected,
+    SUM(CASE
+        WHEN due_date IS NOT NULL
         AND due_date < CONVERT(varchar(10), GETDATE(), 23)
-        AND status_id != 3 THEN 1 
-        ELSE 0 
+        AND status_id != 5 THEN 1
+        ELSE 0
     END) as overdue
 FROM documents
 WHERE is_active = 1;";

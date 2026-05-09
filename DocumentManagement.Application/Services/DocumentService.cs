@@ -40,25 +40,7 @@ public class DocumentService : IDocumentService
 
     public async Task<PagedResult<Document>> SearchPagedAsync(DocumentSearchRequest request)
     {
-        var allItems = await _documentRepository.SearchAsync(request);
-
-        var activeItems = allItems
-            .Where(x => x.IsActive)
-            .ToList();
-
-        var pageNumber = request.PageNumber <= 0 ? 1 : request.PageNumber;
-        var pageSize = request.PageSize <= 0 ? 100 : request.PageSize;
-
-        return new PagedResult<Document>
-        {
-            Items = activeItems
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToList(),
-            TotalCount = activeItems.Count,
-            PageNumber = pageNumber,
-            PageSize = pageSize
-        };
+        return await _documentRepository.SearchPagedAsync(request);
     }
 
     public async Task<Document?> GetByIdAsync(long id)

@@ -1,0 +1,129 @@
+<UserControl x:Class="DocumentManagement.Wpf.Views.CatalogView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+    </UserControl.Resources>
+
+    <Grid Style="{StaticResource DenseDocumentListRootGridStyle}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource DenseHeaderBarStyle}">
+            <Grid Style="{StaticResource DenseHeaderContentGridStyle}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="DANH MỤC" Style="{StaticResource DenseHeaderTitleTextStyle}"/>
+                    <Border Style="{StaticResource DenseVerticalDividerStyle}"/>
+                    <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource DenseHeaderSubtitleTextStyle}"/>
+                </StackPanel>
+                <Button Grid.Column="1" Command="{Binding RefreshCommand}" Style="{StaticResource DenseToolbarButtonStyle}">
+                    <StackPanel Style="{StaticResource DenseInlineIconTextStackStyle}">
+                        <materialDesign:PackIcon Kind="Refresh" Style="{StaticResource DenseAccentButtonIconStyle}"/>
+                        <TextBlock Text="Làm mới" Style="{StaticResource DenseButtonTextStyle}"/>
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{StaticResource DenseTablePanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Loại văn bản" Style="{StaticResource DensePanelTitleTextStyle}" Margin="10,8,10,8"/>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Style="{StaticResource DenseDocumentDataGridStyle}" AutoGenerateColumns="False" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="60" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                            <DataGridTextColumn Header="Tên danh mục" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource DenseGridTextStyle}"/>
+                            <DataGridCheckBoxColumn Header="Hoạt động" Binding="{Binding IsActive}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Style="{StaticResource DenseFilterTextBoxStyle}" Text="{Binding CategoryName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Tên loại văn bản"/>
+                        <CheckBox Grid.Column="2" Content="Hoạt động" IsChecked="{Binding CategoryIsActive}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="4" Command="{Binding NewCategoryCommand}" Style="{StaticResource DenseToolbarButtonStyle}" Content="Mới"/>
+                        <Button Grid.Column="6" Command="{Binding SaveCategoryCommand}" Style="{StaticResource DenseToolbarButtonStyle}" Content="Lưu" Visibility="{Binding CanManageCatalog, Converter={StaticResource BoolToVisibility}}"/>
+                        <Button Grid.Column="8" Command="{Binding DeleteCategoryCommand}" Style="{StaticResource DenseToolbarButtonStyle}" Content="Ngưng" Visibility="{Binding CanManageCatalog, Converter={StaticResource BoolToVisibility}}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{StaticResource DenseTablePanelStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    <TextBlock Text="Trạng thái văn bản" Style="{StaticResource DensePanelTitleTextStyle}" Margin="10,8,10,8"/>
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Statuses}" SelectedItem="{Binding SelectedStatus}" Style="{StaticResource DenseDocumentDataGridStyle}" AutoGenerateColumns="False" HeadersVisibility="Column">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="52" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                            <DataGridTextColumn Header="Mã" Binding="{Binding Code}" Width="120" ElementStyle="{StaticResource DenseGridMutedTextStyle}"/>
+                            <DataGridTextColumn Header="Tên trạng thái" Binding="{Binding Name}" Width="*" ElementStyle="{StaticResource DenseGridTextStyle}"/>
+                            <DataGridCheckBoxColumn Header="Hoạt động" Binding="{Binding IsActive}" Width="90"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                    <Grid Grid.Row="2" Margin="10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="120"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox Style="{StaticResource DenseFilterTextBoxStyle}" Text="{Binding StatusCode, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Mã"/>
+                        <TextBox Grid.Column="2" Style="{StaticResource DenseFilterTextBoxStyle}" Text="{Binding StatusName, UpdateSourceTrigger=PropertyChanged}" materialDesign:HintAssist.Hint="Tên"/>
+                        <CheckBox Grid.Column="4" Content="Hoạt động" IsChecked="{Binding StatusIsActive}" VerticalAlignment="Center"/>
+                        <Button Grid.Column="6" Command="{Binding NewStatusCommand}" Style="{StaticResource DenseToolbarButtonStyle}" Content="Mới"/>
+                        <Button Grid.Column="8" Command="{Binding SaveStatusCommand}" Style="{StaticResource DenseToolbarButtonStyle}" Content="Lưu" Visibility="{Binding CanManageCatalog, Converter={StaticResource BoolToVisibility}}"/>
+                        <Button Grid.Column="10" Command="{Binding DeleteStatusCommand}" Style="{StaticResource DenseToolbarButtonStyle}" Content="Ngưng" Visibility="{Binding CanManageCatalog, Converter={StaticResource BoolToVisibility}}"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <Grid Grid.RowSpan="2" Style="{StaticResource LoadingOverlayGridStyle}" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
+            <Border Style="{StaticResource LoadingCardStyle}">
+                <StackPanel Style="{StaticResource DenseCenteredStateStackStyle}">
+                    <ProgressBar Style="{StaticResource DenseLoadingProgressBarStyle}" IsIndeterminate="True"/>
+                    <TextBlock Text="Đang tải danh mục..." Style="{StaticResource LoadingTextStyle}"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

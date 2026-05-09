@@ -18,6 +18,10 @@
                 <!-- Shared empty/loading/error states -->
                 <ResourceDictionary Source="Themes/CommonStates.xaml" />
 
+                <!-- Dense Fluent design primitives -->
+                <ResourceDictionary Source="Themes/DenseFluentTokens.xaml" />
+                <ResourceDictionary Source="Themes/DenseFluentComponents.xaml" />
+
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
