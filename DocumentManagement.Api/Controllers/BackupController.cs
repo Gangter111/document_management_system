@@ -261,4 +261,18 @@ WHERE type = 'table'
 
         if (count < 5)
         {
-          
+                  {
+            throw new InvalidOperationException(
+                "Invalid backup database. Required core tables are missing.");
+        }
+    }
+}
+
+    private static void DeleteIfExists(string path)
+    {
+        if (System.IO.File.Exists(path))
+        {
+            System.IO.File.Delete(path);
+        }
+    }
+}
