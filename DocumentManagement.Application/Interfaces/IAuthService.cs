@@ -6,6 +6,7 @@ public interface IAuthService
 {
     Task<UserSession?> LoginAsync(string username, string password);
     Task<bool> ChangePasswordAsync(long userId, string newPassword);
+    Task<bool> VerifyPasswordAsync(long userId, string password);
     void Logout();
 
     UserSession? CurrentUser { get; }

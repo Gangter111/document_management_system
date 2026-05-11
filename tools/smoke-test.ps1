@@ -1,6 +1,9 @@
-$ErrorActionPreference = "Stop"
+param(
+    [string]$ApiBase = "http://localhost:5033",
+    [switch]$CheckSwagger
+)
 
-$ApiBase = "http://localhost:5033"
+$ErrorActionPreference = "Stop"
 
 function Pass($message) {
     Write-Host "[PASS] $message" -ForegroundColor Green
@@ -173,12 +176,14 @@ function Invoke-ApiJson($method, $url, $token, $body = $null, $expectedStatusCod
 
 Write-Host "=== SMOKE TEST START ==="
 
-try {
-    Invoke-WebRequest "$ApiBase/swagger/index.html" -UseBasicParsing | Out-Null
-    Pass "Swagger OK"
-}
-catch {
-    Fail "Swagger FAILED"
+if ($CheckSwagger) {
+    try {
+        Invoke-WebRequest "$ApiBase/swagger/index.html" -UseBasicParsing | Out-Null
+        Pass "Swagger OK"
+    }
+    catch {
+        Fail "Swagger FAILED"
+    }
 }
 
 try {

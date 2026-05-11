@@ -253,6 +253,8 @@ FROM documents
             where.Append(" AND issue_date <= @toDate");
         }
 
+        AppendReadScope(where, request, columns);
+
         using var countCommand = connection.CreateCommand();
         countCommand.CommandText = $"SELECT COUNT(*) FROM documents {where};";
         BindSearch(countCommand, request, columns);
@@ -440,6 +442,52 @@ ORDER BY id;";
         {
             command.AddParameter("toDate", request.ToDate.Trim());
         }
+
+        if (!request.IsAdminScope)
+        {
+            if (!string.IsNullOrWhiteSpace(request.ReadScopeUsername) && columns.Contains("assigned_to"))
+            {
+                command.AddParameter("readScopeUsername", request.ReadScopeUsername.Trim());
+            }
+
+            if (!string.IsNullOrWhiteSpace(request.ReadScopeDepartment) && columns.Contains("processing_department"))
+            {
+                command.AddParameter("readScopeDepartment", request.ReadScopeDepartment.Trim());
+            }
+        }
+    }
+
+    private static void AppendReadScope(
+        StringBuilder where,
+        DocumentSearchRequest request,
+        HashSet<string> columns)
+    {
+        if (request.IsAdminScope)
+        {
+            return;
+        }
+
+        var scopeParts = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(request.ReadScopeUsername) && columns.Contains("assigned_to"))
+        {
+            scopeParts.Add("LOWER(TRIM(assigned_to)) = LOWER(TRIM(@readScopeUsername))");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ReadScopeDepartment) && columns.Contains("processing_department"))
+        {
+            scopeParts.Add("LOWER(TRIM(processing_department)) = LOWER(TRIM(@readScopeDepartment))");
+        }
+
+        if (scopeParts.Count == 0)
+        {
+            where.Append(" AND 1 = 0");
+            return;
+        }
+
+        where.Append(" AND (");
+        where.Append(string.Join(" OR ", scopeParts));
+        where.Append(")");
     }
 
     private static Document Map(DbDataReader reader)

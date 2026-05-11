@@ -114,6 +114,29 @@ WHERE Id = @userId
         return affected > 0;
     }
 
+    public async Task<bool> VerifyPasswordAsync(long userId, string password)
+    {
+        if (userId <= 0 || string.IsNullOrWhiteSpace(password))
+        {
+            return false;
+        }
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+SELECT PasswordHash
+FROM Users
+WHERE Id = @userId
+  AND IsActive = 1;";
+        cmd.AddParameter("userId", userId);
+
+        var passwordHash = (await cmd.ExecuteScalarAsync())?.ToString() ?? string.Empty;
+
+        return VerifyPassword(password, passwordHash);
+    }
+
     public void Logout()
     {
         _currentUser = null;

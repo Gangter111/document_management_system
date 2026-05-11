@@ -143,6 +143,7 @@ public class DocumentsControllerTests
     [Fact]
     public async Task Search_ShouldReturnPagedResults()
     {
+        AppDocumentSearchRequest? capturedRequest = null;
         var pagedResult = new AppPagedResult
         {
             Items = new List<Document>
@@ -156,6 +157,7 @@ public class DocumentsControllerTests
 
         _mockDocumentService
             .Setup(s => s.SearchPagedAsync(It.IsAny<AppDocumentSearchRequest>()))
+            .Callback<AppDocumentSearchRequest>(request => capturedRequest = request)
             .ReturnsAsync(pagedResult);
 
         var result = await _controller.Search(
@@ -169,6 +171,40 @@ public class DocumentsControllerTests
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
 
         Assert.NotNull(okResult.Value);
+        Assert.NotNull(capturedRequest);
+        Assert.True(capturedRequest.IsAdminScope);
+    }
+
+    [Fact]
+    public async Task Search_ShouldPassReadScope_ForNonAdmin()
+    {
+        AppDocumentSearchRequest? capturedRequest = null;
+        var controller = CreateController("Staff", "PhÃ²ng Kinh doanh");
+
+        _mockDocumentService
+            .Setup(s => s.SearchPagedAsync(It.IsAny<AppDocumentSearchRequest>()))
+            .Callback<AppDocumentSearchRequest>(request => capturedRequest = request)
+            .ReturnsAsync(new AppPagedResult
+            {
+                Items = new List<Document>(),
+                TotalCount = 0,
+                PageNumber = 1,
+                PageSize = 10
+            });
+
+        await controller.Search(
+            keyword: "test",
+            categoryId: null,
+            statusId: null,
+            urgency: null,
+            fromDate: null,
+            toDate: null,
+            pageSize: 10);
+
+        Assert.NotNull(capturedRequest);
+        Assert.False(capturedRequest.IsAdminScope);
+        Assert.Equal("test-user", capturedRequest.ReadScopeUsername);
+        Assert.Equal("PhÃ²ng Kinh doanh", capturedRequest.ReadScopeDepartment);
     }
 
     [Fact]
@@ -282,5 +318,22 @@ public class DocumentsControllerTests
 
         var forbidden = Assert.IsType<ObjectResult>(result);
         Assert.Equal(StatusCodes.Status403Forbidden, forbidden.StatusCode);
+    }
+
+    [Fact]
+    public async Task ExtractPdf_ShouldRejectNonPdfExtension()
+    {
+        var controller = CreateController("Staff");
+        await using var stream = new MemoryStream("not a pdf"u8.ToArray());
+        var file = new FormFile(stream, 0, stream.Length, "file", "payload.txt")
+        {
+            Headers = new HeaderDictionary(),
+            ContentType = "text/plain"
+        };
+
+        var result = await controller.ExtractPdf(file, CancellationToken.None);
+
+        var badRequest = Assert.IsType<BadRequestObjectResult>(result.Result);
+        Assert.NotNull(badRequest.Value);
     }
 }

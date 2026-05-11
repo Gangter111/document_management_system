@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using DocumentManagement.Api.Health;
 using System.Security.Claims;
 using DocumentManagement.Api.Services;
@@ -10,12 +11,14 @@ using DocumentManagement.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+var rootPath = builder.Environment.ContentRootPath;
 
 builder.Host.UseWindowsService(options =>
 {
@@ -39,7 +42,6 @@ builder.Host.UseSerilog((context, services, configuration) =>
 // =======================
 var databaseOptions = builder.Configuration.GetSection("Database").Get<DatabaseOptions>() ?? new DatabaseOptions();
 var databaseProvider = databaseOptions.GetProvider();
-var rootPath = Directory.GetCurrentDirectory();
 
 IDbConnectionFactory connectionFactory;
 IDatabaseDialect databaseDialect;
@@ -141,17 +143,17 @@ if (jwtSecret.Length < 32)
     throw new InvalidOperationException("Jwt:Secret phải có tối thiểu 32 ký tự.");
 }
 
-if (builder.Environment.IsProduction()
+if ((builder.Environment.IsProduction() || builder.Environment.IsEnvironment("Staging"))
     && jwtSecret.StartsWith("CHANGE_THIS", StringComparison.OrdinalIgnoreCase))
 {
-    throw new InvalidOperationException("Jwt:Secret production chưa được thay bằng giá trị bí mật an toàn.");
+    throw new InvalidOperationException("Jwt:Secret chưa được thay bằng giá trị bí mật an toàn cho môi trường triển khai.");
 }
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false;
+        options.RequireHttpsMetadata = builder.Environment.IsProduction();
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -171,6 +173,19 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddFixedWindowLimiter("login", limiterOptions =>
+    {
+        limiterOptions.PermitLimit = builder.Configuration.GetValue("Security:LoginRateLimit:PermitLimit", 120);
+        limiterOptions.Window = TimeSpan.FromSeconds(
+            builder.Configuration.GetValue("Security:LoginRateLimit:WindowSeconds", 60));
+        limiterOptions.QueueLimit = 0;
+        limiterOptions.AutoReplenishment = true;
+        limiterOptions.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+    });
+});
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -232,6 +247,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.Use(async (context, next) =>
 {

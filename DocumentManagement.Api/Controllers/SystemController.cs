@@ -2,6 +2,7 @@ using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Models;
 using DocumentManagement.Api.Security;
 using DocumentManagement.Contracts.System;
+using DocumentManagement.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,10 +14,14 @@ namespace DocumentManagement.Api.Controllers;
 public class SystemController : ControllerBase
 {
     private readonly IUserManagementRepository _userManagementRepository;
+    private readonly IAuditLogRepository _auditLogRepository;
 
-    public SystemController(IUserManagementRepository userManagementRepository)
+    public SystemController(
+        IUserManagementRepository userManagementRepository,
+        IAuditLogRepository auditLogRepository)
     {
         _userManagementRepository = userManagementRepository;
+        _auditLogRepository = auditLogRepository;
     }
 
     [HttpGet("users")]
@@ -57,6 +62,7 @@ public class SystemController : ControllerBase
         try
         {
             var user = await _userManagementRepository.CreateUserAsync(ToModel(request));
+            await AddUserAuditAsync(user.Id, "USER_CREATE", "CREATED", user);
             return CreatedAtAction(nameof(SearchUsers), new { keyword = user.Username }, ToDto(user));
         }
         catch (InvalidOperationException ex)
@@ -83,7 +89,9 @@ public class SystemController : ControllerBase
                 return BadRequest("Không được tự ngưng kích hoạt tài khoản đang đăng nhập.");
             }
 
-            return Ok(ToDto(await _userManagementRepository.UpdateUserAsync(id, ToModel(request))));
+            var user = await _userManagementRepository.UpdateUserAsync(id, ToModel(request));
+            await AddUserAuditAsync(user.Id, "USER_UPDATE", "UPDATED", user);
+            return Ok(ToDto(user));
         }
         catch (InvalidOperationException ex)
         {
@@ -108,6 +116,7 @@ public class SystemController : ControllerBase
             }
 
             await _userManagementRepository.DeleteUserAsync(id);
+            await AddUserAuditAsync(id, "USER_DELETE", "IsActive", null);
             return NoContent();
         }
         catch (InvalidOperationException ex)
@@ -157,5 +166,25 @@ public class SystemController : ControllerBase
             Id = role.Id,
             Name = role.Name
         };
+    }
+
+    private Task AddUserAuditAsync(
+        long userId,
+        string action,
+        string changedColumns,
+        UserAdminModel? user)
+    {
+        return _auditLogRepository.AddAsync(new AuditLog
+        {
+            EntityName = "User",
+            EntityId = userId,
+            Action = action,
+            ChangedColumns = changedColumns,
+            NewValues = user == null
+                ? "User deactivated"
+                : $"Username={user.Username};Role={user.RoleName};IsActive={user.IsActive}",
+            Username = User.GetUsername(),
+            CreatedAt = DateTime.UtcNow
+        });
     }
 }

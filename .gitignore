@@ -7,6 +7,14 @@ logs/
 *.log
 keys/
 
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+secrets.json
+appsettings.*.local.json
+appsettings.local.json
+
 *.db
 *.sqlite
 *.sqlite3
@@ -24,3 +32,20 @@ keys/
 TestResults/
 coverage/
 publish/
+
+# Generated/temporary files
+.tmp/
+.tmp-*/
+*.tmp
+*-audit-*.md
+*-report-*.md
+
+# IDE temporary files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS temporary
+Thumbs.db
+.DS_Store

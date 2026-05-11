@@ -13,6 +13,9 @@ namespace DocumentManagement.Api.Controllers;
 [Authorize]
 public class DocumentsController : ControllerBase
 {
+    private const int DefaultPageSize = 100;
+    private const int MaxPageSize = 200;
+
     private readonly IDocumentService _documentService;
     private readonly IOcrService? _ocrService;
 
@@ -31,6 +34,8 @@ public class DocumentsController : ControllerBase
 
         var result = documents
             .Where(document => document.IsActive)
+            .Where(CanReadDocument)
+            .Take(MaxPageSize)
             .Select(ToDto)
             .ToList();
 
@@ -57,8 +62,9 @@ public class DocumentsController : ControllerBase
             FromDate = string.IsNullOrWhiteSpace(fromDate) ? null : fromDate,
             ToDate = string.IsNullOrWhiteSpace(toDate) ? null : toDate,
             PageNumber = pageNumber <= 0 ? 1 : pageNumber,
-            PageSize = pageSize <= 0 ? 100 : pageSize
+            PageSize = NormalizePageSize(pageSize)
         };
+        ApplyReadScope(request);
 
         var result = await _documentService.SearchPagedAsync(request);
 
@@ -84,6 +90,13 @@ public class DocumentsController : ControllerBase
         if (document == null || !document.IsActive)
         {
             return NotFound();
+        }
+
+        if (!CanReadDocument(document))
+        {
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                "Bạn không có quyền xem văn bản này.");
         }
 
         return Ok(ToDto(document));
@@ -136,6 +149,16 @@ public class DocumentsController : ControllerBase
         if (!string.Equals(Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Hệ thống chỉ hỗ trợ file PDF.");
+        }
+
+        if (!IsAllowedPdfContentType(file.ContentType))
+        {
+            return BadRequest("Content-Type của file PDF không hợp lệ.");
+        }
+
+        if (!await HasPdfSignatureAsync(file, cancellationToken))
+        {
+            return BadRequest("Nội dung file không phải PDF hợp lệ.");
         }
 
         var tempDirectory = Path.Combine(Path.GetTempPath(), "DocumentManagement", "pdf-extract");
@@ -363,6 +386,77 @@ public class DocumentsController : ControllerBase
         }
 
         return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền sửa văn bản.");
+    }
+
+    private bool CanReadDocument(Document document)
+    {
+        if (User.IsAdmin())
+        {
+            return true;
+        }
+
+        var username = User.GetUsername();
+
+        if (!string.IsNullOrWhiteSpace(document.AssignedTo)
+            && string.Equals(document.AssignedTo.Trim(), username.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var userDepartment = User.GetDepartment();
+
+        if (string.IsNullOrWhiteSpace(userDepartment))
+        {
+            return false;
+        }
+
+        return string.Equals(
+            document.ProcessingDepartment?.Trim(),
+            userDepartment.Trim(),
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void ApplyReadScope(DocumentManagement.Application.Models.DocumentSearchRequest request)
+    {
+        request.IsAdminScope = User.IsAdmin();
+
+        if (request.IsAdminScope)
+        {
+            return;
+        }
+
+        request.ReadScopeUsername = User.GetUsername();
+        request.ReadScopeDepartment = User.GetDepartment();
+    }
+
+    private static int NormalizePageSize(int pageSize)
+    {
+        if (pageSize <= 0)
+        {
+            return DefaultPageSize;
+        }
+
+        return Math.Min(pageSize, MaxPageSize);
+    }
+
+    private static bool IsAllowedPdfContentType(string? contentType)
+    {
+        return string.Equals(contentType, "application/pdf", StringComparison.OrdinalIgnoreCase)
+               || string.Equals(contentType, "application/octet-stream", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<bool> HasPdfSignatureAsync(IFormFile file, CancellationToken cancellationToken)
+    {
+        var buffer = new byte[5];
+        await using var stream = file.OpenReadStream();
+        var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+
+        return read == buffer.Length
+               && buffer[0] == (byte)'%'
+               && buffer[1] == (byte)'P'
+               && buffer[2] == (byte)'D'
+               && buffer[3] == (byte)'F'
+               && buffer[4] == (byte)'-';
     }
 
     private ActionResult? RequireDeletePermission()

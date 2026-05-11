@@ -5,6 +5,7 @@ using DocumentManagement.Api.Security;
 using DocumentManagement.Contracts.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace DocumentManagement.Api.Controllers;
 
@@ -24,6 +25,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("login")]
     public async Task<ActionResult<LoginResponse>> Login([FromBody] LoginRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.Username))
@@ -117,6 +119,23 @@ public class AuthController : ControllerBase
         if (request.NewPassword.Length < 8)
         {
             return BadRequest("Mật khẩu mới phải có tối thiểu 8 ký tự.");
+        }
+
+        if (request.UserId == currentUserId)
+        {
+            if (string.IsNullOrWhiteSpace(request.OldPassword))
+            {
+                return BadRequest("Mật khẩu hiện tại không được để trống.");
+            }
+
+            var oldPasswordValid = await _authService.VerifyPasswordAsync(
+                currentUserId,
+                request.OldPassword);
+
+            if (!oldPasswordValid)
+            {
+                return BadRequest("Mật khẩu hiện tại không đúng.");
+            }
         }
 
         var success = await _authService.ChangePasswordAsync(

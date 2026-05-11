@@ -1,5 +1,7 @@
 param(
     [string]$Urls = "http://0.0.0.0:5033",
+    [ValidateSet("Production", "Staging")]
+    [string]$Environment = "Production",
     [ValidateSet("Sqlite", "SqlServer")]
     [string]$DatabaseProvider = "Sqlite",
     [string]$DatabasePath = "database/app.db",
@@ -14,10 +16,11 @@ $ErrorActionPreference = "Stop"
 
 $Root = Resolve-Path "$PSScriptRoot\.."
 $Project = Join-Path $Root "DocumentManagement.Api\DocumentManagement.Api.csproj"
-$Template = Join-Path $Root "DocumentManagement.Api\appsettings.Production.template.json"
-$PublishRoot = Join-Path $Root "publish\api-server"
+$Template = Join-Path $Root "DocumentManagement.Api\appsettings.$Environment.template.json"
+$PublishFolderName = if ($Environment -eq "Production") { "api-server" } else { "api-server-staging" }
+$PublishRoot = Join-Path $Root "publish\$PublishFolderName"
 $AppDir = Join-Path $PublishRoot "app"
-$ZipPath = Join-Path $PublishRoot "DocumentManagement.Api-win-x64.zip"
+$ZipPath = Join-Path $PublishRoot "DocumentManagement.Api-$Environment-win-x64.zip"
 
 function Info($message) { Write-Host "[INFO] $message" -ForegroundColor Cyan }
 function Pass($message) { Write-Host "[PASS] $message" -ForegroundColor Green }
@@ -40,13 +43,14 @@ if ([string]::IsNullOrWhiteSpace($JwtSecret) -or $JwtSecret.Length -lt 32) {
 }
 
 if (-not (Test-Path $Template)) {
-    Fail "Production template not found: $Template"
+    Fail "$Environment template not found: $Template"
 }
 
 Set-Location $Root
 
 Info "Root: $Root"
 Info "Project: $Project"
+Info "Environment: $Environment"
 Info "Urls: $Urls"
 Info "Database provider: $DatabaseProvider"
 if ($DatabaseProvider -eq "SqlServer") {
@@ -83,24 +87,24 @@ $settings.Database.ConnectionString = $ConnectionString
 $settings.Jwt.Secret = $JwtSecret
 $settings.Kestrel.Endpoints.Http.Url = $Urls
 
-$appsettingsPath = Join-Path $AppDir "appsettings.Production.json"
+$appsettingsPath = Join-Path $AppDir "appsettings.$Environment.json"
 $settings | ConvertTo-Json -Depth 20 | Set-Content -Path $appsettingsPath -Encoding UTF8
 
 $runScriptPath = Join-Path $AppDir "run-api.ps1"
-@'
-$ErrorActionPreference = "Stop"
-$env:ASPNETCORE_ENVIRONMENT = "Production"
-Set-Location $PSScriptRoot
+@"
+`$ErrorActionPreference = "Stop"
+`$env:ASPNETCORE_ENVIRONMENT = "$Environment"
+Set-Location `$PSScriptRoot
 .\DocumentManagement.Api.exe
-'@ | Set-Content -Path $runScriptPath -Encoding UTF8
+"@ | Set-Content -Path $runScriptPath -Encoding UTF8
 
 $installServicePath = Join-Path $AppDir "install-service.ps1"
-@'
+$installServiceTemplate = @'
 param(
     [string]$ServiceName = "DocumentManagement.Api",
     [string]$DisplayName = "Document Management API",
     [string]$Description = "Internal API server for centralized document registry.",
-    [string]$Environment = "Production"
+    [string]$Environment = "__DEPLOY_ENVIRONMENT__"
 )
 
 $ErrorActionPreference = "Stop"
@@ -127,11 +131,11 @@ if ($existing) {
     Fail "Service '$ServiceName' already exists. Run uninstall-service.ps1 first."
 }
 
-[Environment]::SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", $Environment, "Machine")
+$binaryPath = "`"$exePath`" --environment `"$Environment`""
 
 New-Service `
     -Name $ServiceName `
-    -BinaryPathName "`"$exePath`"" `
+    -BinaryPathName $binaryPath `
     -DisplayName $DisplayName `
     -Description $Description `
     -StartupType Automatic
@@ -143,7 +147,9 @@ Info "Executable: $exePath"
 Info "Environment: $Environment"
 Pass "API Windows Service installed and started."
 exit 0
-'@ | Set-Content -Path $installServicePath -Encoding UTF8
+'@
+$installServiceTemplate.Replace("__DEPLOY_ENVIRONMENT__", $Environment) |
+    Set-Content -Path $installServicePath -Encoding UTF8
 
 $uninstallServicePath = Join-Path $AppDir "uninstall-service.ps1"
 @'

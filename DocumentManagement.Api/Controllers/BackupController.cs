@@ -1,4 +1,6 @@
 using DocumentManagement.Api.Security;
+using DocumentManagement.Application.Interfaces;
+using DocumentManagement.Domain.Entities;
 using DocumentManagement.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,13 +17,16 @@ public class BackupController : ControllerBase
 
     private readonly IConfiguration _configuration;
     private readonly IWebHostEnvironment _environment;
+    private readonly IAuditLogRepository? _auditLogRepository;
 
     public BackupController(
         IConfiguration configuration,
-        IWebHostEnvironment environment)
+        IWebHostEnvironment environment,
+        IAuditLogRepository? auditLogRepository = null)
     {
         _configuration = configuration;
         _environment = environment;
+        _auditLogRepository = auditLogRepository;
     }
 
     [HttpGet("download")]
@@ -55,6 +60,7 @@ public class BackupController : ControllerBase
             var backupPath = Path.Combine(backupDir, fileName);
 
             await CreateSqliteBackupAsync(databasePath, backupPath, cancellationToken);
+            await AddBackupAuditAsync("BACKUP_DOWNLOAD", "SUCCESS", fileName);
 
             return PhysicalFile(
                 backupPath,
@@ -74,6 +80,14 @@ public class BackupController : ControllerBase
         if (!User.IsAdmin())
         {
             return StatusCode(StatusCodes.Status403Forbidden, "Chỉ Admin được khôi phục dữ liệu.");
+        }
+
+        if (!IsApiRestoreAllowed())
+        {
+            await AddBackupAuditAsync("BACKUP_RESTORE", "BLOCKED_BY_CONFIG", null);
+            return StatusCode(
+                StatusCodes.Status403Forbidden,
+                "Khôi phục dữ liệu qua API đang bị tắt trong cấu hình.");
         }
 
         if (!IsSqliteProvider())
@@ -135,6 +149,7 @@ public class BackupController : ControllerBase
 
             DeleteIfExists(databasePath + "-wal");
             DeleteIfExists(databasePath + "-shm");
+            await AddBackupAuditAsync("BACKUP_RESTORE", "SUCCESS", Path.GetFileName(file.FileName));
 
             return Ok(new
             {
@@ -145,6 +160,7 @@ public class BackupController : ControllerBase
         }
         catch (InvalidOperationException ex)
         {
+            await AddBackupAuditAsync("BACKUP_RESTORE", "FAILED_VALIDATION", ex.Message);
             return BadRequest(ex.Message);
         }
         finally
@@ -211,6 +227,11 @@ public class BackupController : ControllerBase
         return provider == DatabaseProvider.Sqlite;
     }
 
+    private bool IsApiRestoreAllowed()
+    {
+        return _configuration.GetValue("Backup:AllowApiRestore", defaultValue: !_environment.IsProduction());
+    }
+
     private static async Task CreateSqliteBackupAsync(string sourceDatabasePath, string backupPath, CancellationToken cancellationToken = default)
     {
         DeleteIfExists(backupPath);
@@ -238,6 +259,11 @@ public class BackupController : ControllerBase
 
     private static async Task ValidateSqliteDatabaseAsync(string databasePath, CancellationToken cancellationToken = default)
     {
+        if (!await HasSqliteHeaderAsync(databasePath, cancellationToken))
+        {
+            throw new InvalidOperationException("Invalid backup database. SQLite header is missing.");
+        }
+
         var connectionString = new SqliteConnectionStringBuilder
         {
             DataSource = databasePath,
@@ -261,12 +287,53 @@ WHERE type = 'table'
 
         if (count < 5)
         {
-                  {
             throw new InvalidOperationException(
                 "Invalid backup database. Required core tables are missing.");
         }
     }
-}
+
+    private static async Task<bool> HasSqliteHeaderAsync(string databasePath, CancellationToken cancellationToken)
+    {
+        var expected = "SQLite format 3"u8.ToArray();
+        var buffer = new byte[16];
+
+        await using var stream = System.IO.File.OpenRead(databasePath);
+        var read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken);
+
+        if (read < expected.Length)
+        {
+            return false;
+        }
+
+        for (var i = 0; i < expected.Length; i++)
+        {
+            if (buffer[i] != expected[i])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private async Task AddBackupAuditAsync(string action, string result, string? details)
+    {
+        if (_auditLogRepository == null)
+        {
+            return;
+        }
+
+        await _auditLogRepository.AddAsync(new AuditLog
+        {
+            EntityName = "Backup",
+            EntityId = 0,
+            Action = action,
+            ChangedColumns = result,
+            NewValues = details,
+            Username = User.GetUsername(),
+            CreatedAt = DateTime.UtcNow
+        });
+    }
 
     private static void DeleteIfExists(string path)
     {

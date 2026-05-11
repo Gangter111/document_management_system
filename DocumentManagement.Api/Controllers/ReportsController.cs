@@ -34,6 +34,7 @@ public class ReportsController : ControllerBase
 
         var documents = (await _documentService.GetAllAsync())
             .Where(document => document.IsActive)
+            .Where(CanReadDocument)
             .ToList();
         var categories = (await _catalogRepository.GetCategoriesAsync(includeInactive: true))
             .ToDictionary(category => category.Id, category => category.Name);
@@ -113,5 +114,33 @@ public class ReportsController : ControllerBase
         }
 
         return StatusCode(StatusCodes.Status403Forbidden, "Bạn không có quyền xem báo cáo.");
+    }
+
+    private bool CanReadDocument(Document document)
+    {
+        if (User.IsAdmin())
+        {
+            return true;
+        }
+
+        var username = User.GetUsername();
+
+        if (!string.IsNullOrWhiteSpace(document.AssignedTo)
+            && string.Equals(document.AssignedTo.Trim(), username.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var userDepartment = User.GetDepartment();
+
+        if (string.IsNullOrWhiteSpace(userDepartment))
+        {
+            return false;
+        }
+
+        return string.Equals(
+            document.ProcessingDepartment?.Trim(),
+            userDepartment.Trim(),
+            StringComparison.OrdinalIgnoreCase);
     }
 }

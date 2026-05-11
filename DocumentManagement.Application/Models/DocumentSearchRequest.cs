@@ -18,6 +18,9 @@ public class DocumentSearchRequest
     public string? UrgencyLevel { get; set; }
     public string? ProcessingDepartment { get; set; }
     public string? AssignedTo { get; set; }
+    public string? ReadScopeUsername { get; set; }
+    public string? ReadScopeDepartment { get; set; }
+    public bool IsAdminScope { get; set; }
 
     public string? FromDate { get; set; }
     public string? ToDate { get; set; }

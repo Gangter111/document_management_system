@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using DocumentManagement.Api.Security;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Dashboard;
 using DocumentManagement.Domain.Entities;
@@ -24,6 +25,7 @@ public class DashboardController : ControllerBase
     {
         var documents = (await _documentService.GetAllAsync())
             .Where(document => document.IsActive)
+            .Where(CanReadDocument)
             .ToList();
 
         var issuedDocuments = documents
@@ -229,5 +231,33 @@ public class DashboardController : ControllerBase
             : document.CreatedAt;
 
         return true;
+    }
+
+    private bool CanReadDocument(Document document)
+    {
+        if (User.IsAdmin())
+        {
+            return true;
+        }
+
+        var username = User.GetUsername();
+
+        if (!string.IsNullOrWhiteSpace(document.AssignedTo)
+            && string.Equals(document.AssignedTo.Trim(), username.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        var userDepartment = User.GetDepartment();
+
+        if (string.IsNullOrWhiteSpace(userDepartment))
+        {
+            return false;
+        }
+
+        return string.Equals(
+            document.ProcessingDepartment?.Trim(),
+            userDepartment.Trim(),
+            StringComparison.OrdinalIgnoreCase);
     }
 }

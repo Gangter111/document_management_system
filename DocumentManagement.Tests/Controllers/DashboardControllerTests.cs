@@ -1,7 +1,9 @@
+using System.Security.Claims;
 using DocumentManagement.Api.Controllers;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Dashboard;
 using DocumentManagement.Domain.Entities;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using Xunit;
@@ -71,7 +73,7 @@ public sealed class DashboardControllerTests
                 }
             });
 
-        var controller = new DashboardController(_documentService.Object);
+        var controller = CreateController("Admin");
 
         var result = await controller.Get();
 
@@ -127,7 +129,7 @@ public sealed class DashboardControllerTests
                 }
             });
 
-        var controller = new DashboardController(_documentService.Object);
+        var controller = CreateController("Admin");
 
         var result = await controller.Get();
 
@@ -171,7 +173,7 @@ public sealed class DashboardControllerTests
                 }
             });
 
-        var controller = new DashboardController(_documentService.Object);
+        var controller = CreateController("Admin");
 
         var result = await controller.Get();
 
@@ -180,5 +182,79 @@ public sealed class DashboardControllerTests
 
         Assert.Contains(dto.EffectivenessChart, x => x.Name == "Có hiệu lực" && x.Value == 1);
         Assert.Contains(dto.EffectivenessChart, x => x.Name == "Hết hiệu lực" && x.Value == 1);
+    }
+
+    [Fact]
+    public async Task Get_ShouldScopeNonAdminDashboard_ToReadableDocuments()
+    {
+        _documentService
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(new List<Document>
+            {
+                new()
+                {
+                    Id = 1,
+                    DocumentNumber = "OWN-DEPT",
+                    Title = "Own department",
+                    StatusId = 4,
+                    IsActive = true,
+                    ProcessingDepartment = "HCNS"
+                },
+                new()
+                {
+                    Id = 2,
+                    DocumentNumber = "ASSIGNED",
+                    Title = "Assigned document",
+                    StatusId = 4,
+                    IsActive = true,
+                    ProcessingDepartment = "IT",
+                    AssignedTo = "staff"
+                },
+                new()
+                {
+                    Id = 3,
+                    DocumentNumber = "OTHER-DEPT",
+                    Title = "Other department",
+                    StatusId = 4,
+                    IsActive = true,
+                    ProcessingDepartment = "Finance"
+                }
+            });
+
+        var controller = CreateController("Staff", "HCNS", "staff");
+
+        var result = await controller.Get();
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var dto = Assert.IsType<DashboardDto>(ok.Value);
+
+        Assert.Equal(2, dto.Summary.TotalDocuments);
+        Assert.Contains(dto.RecentDocuments, x => x.DocumentNumber == "OWN-DEPT");
+        Assert.Contains(dto.RecentDocuments, x => x.DocumentNumber == "ASSIGNED");
+        Assert.DoesNotContain(dto.RecentDocuments, x => x.DocumentNumber == "OTHER-DEPT");
+    }
+
+    private DashboardController CreateController(
+        string role,
+        string department = "HCNS",
+        string username = "admin")
+    {
+        var controller = new DashboardController(_documentService.Object);
+        controller.ControllerContext = new ControllerContext
+        {
+            HttpContext = new DefaultHttpContext
+            {
+                User = new ClaimsPrincipal(new ClaimsIdentity(
+                    new[]
+                    {
+                        new Claim(ClaimTypes.Name, username),
+                        new Claim(ClaimTypes.Role, role),
+                        new Claim("department", department)
+                    },
+                    "TestAuth"))
+            }
+        };
+
+        return controller;
     }
 }
