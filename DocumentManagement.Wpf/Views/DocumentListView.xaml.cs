@@ -122,6 +122,13 @@ namespace DocumentManagement.Wpf.Views
                 return true;
             }
 
+            if (e.Key is Key.Enter or Key.Space
+                && (IsButtonActivationContext(e.OriginalSource as DependencyObject)
+                    || IsButtonActivationContext(Keyboard.FocusedElement as DependencyObject)))
+            {
+                return true;
+            }
+
             return IsEditingOrPopupContext(e.OriginalSource as DependencyObject)
                 || IsEditingOrPopupContext(Keyboard.FocusedElement as DependencyObject)
                 || HasOpenPopupControl(this);
@@ -141,6 +148,21 @@ namespace DocumentManagement.Wpf.Views
         private static bool IsImeOrDeadKey(KeyEventArgs e)
         {
             return e.Key is Key.ImeProcessed or Key.DeadCharProcessed || e.ImeProcessedKey != Key.None || e.DeadCharProcessedKey != Key.None;
+        }
+
+        private static bool IsButtonActivationContext(DependencyObject? source)
+        {
+            while (source != null)
+            {
+                if (source is ButtonBase)
+                {
+                    return true;
+                }
+
+                source = GetParent(source);
+            }
+
+            return false;
         }
 
         private static bool IsEditingOrPopupContext(DependencyObject? source)
