@@ -31,6 +31,13 @@ namespace DocumentManagement.Wpf.Views
                 return;
             }
 
+            if (e.Key == Key.Escape && SearchBox.IsKeyboardFocusWithin && !IsImeOrDeadKey(e) && !HasOpenPopupControl(this))
+            {
+                ClearWorkspaceSelection(vm);
+                e.Handled = true;
+                return;
+            }
+
             if (ShouldSkipWorkspaceShortcut(e))
             {
                 return;
@@ -74,13 +81,7 @@ namespace DocumentManagement.Wpf.Views
 
             if (e.Key == Key.Escape)
             {
-                vm.SearchText = null;
-                if (vm.ClearBatchCommand.CanExecute(null))
-                {
-                    vm.ClearBatchCommand.Execute(null);
-                }
-
-                DocumentsDataGrid.Focus();
+                ClearWorkspaceSelection(vm);
                 e.Handled = true;
                 return;
             }
@@ -116,7 +117,7 @@ namespace DocumentManagement.Wpf.Views
 
         private bool ShouldSkipWorkspaceShortcut(KeyEventArgs e)
         {
-            if (e.Key is Key.ImeProcessed or Key.DeadCharProcessed || e.ImeProcessedKey != Key.None || e.DeadCharProcessedKey != Key.None)
+            if (IsImeOrDeadKey(e))
             {
                 return true;
             }
@@ -124,6 +125,22 @@ namespace DocumentManagement.Wpf.Views
             return IsEditingOrPopupContext(e.OriginalSource as DependencyObject)
                 || IsEditingOrPopupContext(Keyboard.FocusedElement as DependencyObject)
                 || HasOpenPopupControl(this);
+        }
+
+        private void ClearWorkspaceSelection(DocumentListViewModel vm)
+        {
+            vm.SearchText = null;
+            if (vm.ClearBatchCommand.CanExecute(null))
+            {
+                vm.ClearBatchCommand.Execute(null);
+            }
+
+            DocumentsDataGrid.Focus();
+        }
+
+        private static bool IsImeOrDeadKey(KeyEventArgs e)
+        {
+            return e.Key is Key.ImeProcessed or Key.DeadCharProcessed || e.ImeProcessedKey != Key.None || e.DeadCharProcessedKey != Key.None;
         }
 
         private static bool IsEditingOrPopupContext(DependencyObject? source)

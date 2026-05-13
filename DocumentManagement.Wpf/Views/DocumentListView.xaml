@@ -548,22 +548,17 @@
                     <RowDefinition Height="34"/>
                 </Grid.RowDefinitions>
 
-                <Grid Grid.Row="0">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Border BorderBrush="{StaticResource FluentBorderSoftBrush}" BorderThickness="0,0,1,1" Background="{StaticResource FluentSurfaceBrush}">
-                        <TextBlock Text="Chi tiết" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border Grid.Column="1" BorderBrush="{StaticResource FluentBorderSoftBrush}" BorderThickness="0,0,1,1" Background="{StaticResource FluentChromeBrush}">
-                        <TextBlock Text="Ghi chú" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSmall}" Foreground="{StaticResource FluentTextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                    <Border Grid.Column="2" BorderBrush="{StaticResource FluentBorderSoftBrush}" BorderThickness="0,0,0,1" Background="{StaticResource FluentChromeBrush}">
-                        <TextBlock Text="Lịch sử" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSmall}" Foreground="{StaticResource FluentTextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
-                </Grid>
+                <Border Grid.Row="0"
+                        BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                        BorderThickness="0,0,0,1"
+                        Background="{StaticResource FluentSurfaceBrush}"
+                        Padding="10,0">
+                    <TextBlock Text="Chi tiết xem trước"
+                               FontWeight="SemiBold"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               Foreground="{StaticResource FluentTextBrush}"
+                               VerticalAlignment="Center"/>
+                </Border>
 
                 <Border Grid.Row="1"
                         Background="{StaticResource FluentSurfaceMutedBrush}"
