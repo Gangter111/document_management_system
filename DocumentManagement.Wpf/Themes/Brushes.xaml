@@ -1,0 +1,46 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <SolidColorBrush x:Key="FluentCanvasBrush" Color="{StaticResource FluentColorCanvas}"/>
+    <SolidColorBrush x:Key="FluentSurfaceBrush" Color="{StaticResource FluentColorSurface}"/>
+    <SolidColorBrush x:Key="FluentChromeBrush" Color="{StaticResource FluentColorChrome}"/>
+    <SolidColorBrush x:Key="FluentChromeSoftBrush" Color="{StaticResource FluentColorChromeSoft}"/>
+    <SolidColorBrush x:Key="FluentSurfaceMutedBrush" Color="{StaticResource FluentColorSurfaceMuted}"/>
+
+    <SolidColorBrush x:Key="FluentTextBrush" Color="{StaticResource FluentColorText}"/>
+    <SolidColorBrush x:Key="FluentTextMutedBrush" Color="{StaticResource FluentColorTextMuted}"/>
+    <SolidColorBrush x:Key="FluentTextSoftBrush" Color="{StaticResource FluentColorTextSoft}"/>
+    <SolidColorBrush x:Key="FluentTextDisabledBrush" Color="{StaticResource FluentColorTextDisabled}"/>
+
+    <SolidColorBrush x:Key="FluentBorderBrush" Color="{StaticResource FluentColorBorder}"/>
+    <SolidColorBrush x:Key="FluentBorderSoftBrush" Color="{StaticResource FluentColorBorderSoft}"/>
+    <SolidColorBrush x:Key="FluentBorderStrongBrush" Color="{StaticResource FluentColorBorderStrong}"/>
+
+    <SolidColorBrush x:Key="FluentAccentBrush" Color="{StaticResource FluentColorAccent}"/>
+    <SolidColorBrush x:Key="FluentBrandBrush" Color="{StaticResource FluentColorBrand}"/>
+    <SolidColorBrush x:Key="FluentBrandDarkBrush" Color="{StaticResource FluentColorBrandDark}"/>
+    <SolidColorBrush x:Key="FluentBrandSoftBrush" Color="{StaticResource FluentColorBrandSoft}"/>
+
+    <SolidColorBrush x:Key="FluentSuccessBrush" Color="{StaticResource FluentColorSuccess}"/>
+    <SolidColorBrush x:Key="FluentWarningBrush" Color="{StaticResource FluentColorWarning}"/>
+    <SolidColorBrush x:Key="FluentDangerBrush" Color="{StaticResource FluentColorDanger}"/>
+    <SolidColorBrush x:Key="FluentInfoBrush" Color="{StaticResource FluentColorInfo}"/>
+
+    <SolidColorBrush x:Key="FluentRowHoverBrush" Color="{StaticResource FluentColorRowHover}"/>
+    <SolidColorBrush x:Key="FluentRowSelectedBrush" Color="{StaticResource FluentColorRowSelected}"/>
+    <SolidColorBrush x:Key="FluentFocusBrush" Color="{StaticResource FluentColorFocus}"/>
+
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="{StaticResource FluentColorCanvas}"/>
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource FluentColorSurface}"/>
+    <SolidColorBrush x:Key="SurfaceMutedBrush" Color="{StaticResource FluentColorSurfaceMuted}"/>
+    <SolidColorBrush x:Key="BorderBrushDefault" Color="{StaticResource FluentColorBorder}"/>
+    <SolidColorBrush x:Key="BorderBrushStrong" Color="{StaticResource FluentColorBorderStrong}"/>
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource FluentColorText}"/>
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource FluentColorTextMuted}"/>
+    <SolidColorBrush x:Key="TextSoftBrush" Color="{StaticResource FluentColorTextSoft}"/>
+    <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource FluentColorBrand}"/>
+    <SolidColorBrush x:Key="PrimaryDarkBrush" Color="{StaticResource FluentColorBrandDark}"/>
+    <SolidColorBrush x:Key="PrimaryLightBrush" Color="{StaticResource FluentColorBrandSoft}"/>
+
+</ResourceDictionary>

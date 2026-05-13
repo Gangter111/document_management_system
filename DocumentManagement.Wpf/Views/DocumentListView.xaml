@@ -1,296 +1,686 @@
 <UserControl x:Class="DocumentManagement.Wpf.Views.DocumentListView"
+             x:Name="Root"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
              xmlns:conv="clr-namespace:DocumentManagement.Wpf.Converters"
-             Background="{StaticResource AppBackgroundBrush}">
+             Background="{StaticResource FluentCanvasBrush}"
+             Focusable="True">
 
     <UserControl.Resources>
         <conv:HexToBrushConverter x:Key="HexToBrushConverter"/>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
+        <SolidColorBrush x:Key="WorkflowBlockedRowBrush" Color="#FFF7F7"/>
+        <SolidColorBrush x:Key="WorkflowPrimaryShortcutBrush" Color="#EAF7EF"/>
 
-        <Style x:Key="FilterTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource AppTextBoxStyle}">
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Padding" Value="10,0"/>
+        <Style x:Key="WorkflowCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactCommandButtonStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="MinWidth" Value="44"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
-        <Style x:Key="FilterComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource AppComboBoxStyle}">
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="FontSize" Value="12"/>
+        <Style x:Key="WorkflowPrimaryCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactPrimaryButtonStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="MinWidth" Value="44"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
         </Style>
 
-        <Style x:Key="DocumentGridTextStyle" TargetType="TextBlock">
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-            <Setter Property="FontSize" Value="12"/>
-        </Style>
-
-        <Style x:Key="DocumentGridMutedTextStyle" TargetType="TextBlock" BasedOn="{StaticResource DocumentGridTextStyle}">
-            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
-        </Style>
-
-        <Style x:Key="ActionIconButtonStyle" TargetType="Button">
+        <Style x:Key="WorkflowIconButtonStyle" TargetType="Button" BasedOn="{StaticResource FluentIconButtonStyle}">
             <Setter Property="Width" Value="26"/>
             <Setter Property="Height" Value="26"/>
+            <Setter Property="MinWidth" Value="26"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="1,0"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
-            <Setter Property="Cursor" Value="Hand"/>
         </Style>
+
+        <Style x:Key="WorkflowTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource AppTextBoxStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+            <Setter Property="Padding" Value="8,0"/>
+            <Setter Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FluentBorderBrush}"/>
+        </Style>
+
+        <Style x:Key="WorkflowComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource AppComboBoxStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+        </Style>
+
+        <Style x:Key="WorkflowDatePickerStyle" TargetType="DatePicker" BasedOn="{StaticResource AppDatePickerStyle}">
+            <Setter Property="Height" Value="26"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+        </Style>
+
+        <Style x:Key="QueueListBoxStyle" TargetType="ListBox">
+            <Setter Property="Background" Value="{StaticResource FluentChromeBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="5"/>
+        </Style>
+
+        <Style x:Key="QueueItemStyle" TargetType="ListBoxItem">
+            <Setter Property="MinHeight" Value="34"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,1"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="RootBorder"
+                                Background="Transparent"
+                                BorderBrush="Transparent"
+                                BorderThickness="1"
+                                CornerRadius="6"
+                                Padding="7,4">
+                            <ContentPresenter/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource FluentBorderBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="RootBorder" Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+                                <Setter TargetName="RootBorder" Property="BorderBrush" Value="{StaticResource FluentBrandBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="GridTextStyle" TargetType="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            <Setter Property="Foreground" Value="{StaticResource FluentTextBrush}"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+        </Style>
+
+        <Style x:Key="GridMutedTextStyle" TargetType="TextBlock" BasedOn="{StaticResource GridTextStyle}">
+            <Setter Property="Foreground" Value="{StaticResource FluentTextMutedBrush}"/>
+        </Style>
+
+        <Style x:Key="WorkflowDataGridStyle" TargetType="DataGrid" BasedOn="{StaticResource AppDataGridStyle}">
+            <Setter Property="SelectionMode" Value="Single"/>
+            <Setter Property="RowHeight" Value="32"/>
+            <Setter Property="ColumnHeaderHeight" Value="28"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+            <Setter Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+        </Style>
+
+        <Style x:Key="WorkflowRowStyle" TargetType="DataGridRow">
+            <Setter Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FluentBorderSoftBrush}"/>
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding IsUnread}" Value="True">
+                    <Setter Property="FontWeight" Value="SemiBold"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsArchived}" Value="True">
+                    <Setter Property="Opacity" Value="0.74"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding IsBlocked}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource WorkflowBlockedRowBrush}"/>
+                </DataTrigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource FluentRowHoverBrush}"/>
+                </Trigger>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{StaticResource FluentRowSelectedBrush}"/>
+                    <Setter Property="Foreground" Value="{StaticResource FluentTextBrush}"/>
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                    <Setter Property="BorderBrush" Value="{StaticResource FluentFocusBrush}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="WorkflowSectionLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource FluentCaptionTextStyle}">
+            <Setter Property="Margin" Value="0,0,0,5"/>
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+        </Style>
+
+        <Style x:Key="WorkflowBadgeBorderStyle" TargetType="Border" BasedOn="{StaticResource FluentBadgeBorderStyle}">
+            <Setter Property="MinWidth" Value="62"/>
+            <Setter Property="CornerRadius" Value="{StaticResource Radius4}"/>
+            <Setter Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+        </Style>
+
+        <Style x:Key="WorkflowBadgeTextStyle" TargetType="TextBlock" BasedOn="{StaticResource FluentBadgeTextStyle}">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+
+        <DataTemplate x:Key="BadgeTemplate">
+            <Border Style="{StaticResource WorkflowBadgeBorderStyle}"
+                    BorderBrush="{Binding StatusColor, Converter={StaticResource HexToBrushConverter}}"
+                    ToolTip="{Binding StatusText}">
+                <TextBlock Text="{Binding StatusText}"
+                           Style="{StaticResource WorkflowBadgeTextStyle}"
+                           Foreground="{Binding StatusColor, Converter={StaticResource HexToBrushConverter}}"
+                           TextTrimming="CharacterEllipsis"/>
+            </Border>
+        </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
-        </Grid.RowDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="190"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="340"/>
+        </Grid.ColumnDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,14">
+        <Border Grid.Column="0"
+                Background="{StaticResource FluentChromeBrush}"
+                BorderBrush="{StaticResource FluentBorderBrush}"
+                BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="34"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="30"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="8,0">
+                    <TextBlock Text="Hàng đợi"
+                               FontSize="{StaticResource FontSizeBody}"
+                               FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                    <Button HorizontalAlignment="Right"
+                            Style="{StaticResource WorkflowIconButtonStyle}"
+                            Command="{Binding RefreshCommand}"
+                            ToolTip="Làm mới (F5)">
+                        <materialDesign:PackIcon Kind="Refresh" Width="14" Height="14"/>
+                    </Button>
+                </Grid>
+
+                <ListBox Grid.Row="1"
+                         ItemsSource="{Binding Queues}"
+                         SelectedItem="{Binding SelectedQueue}"
+                         Style="{StaticResource QueueListBoxStyle}"
+                         ItemContainerStyle="{StaticResource QueueItemStyle}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="24"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding Code}"
+                                           FontSize="{StaticResource FontSizeCaption}"
+                                           FontWeight="Bold"
+                                           Foreground="{StaticResource FluentTextMutedBrush}"
+                                           VerticalAlignment="Center"/>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding Title}"
+                                               FontSize="{StaticResource FontSizeBody}"
+                                               FontWeight="SemiBold"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Description}"
+                                               FontSize="{StaticResource FontSizeCaption}"
+                                               Foreground="{StaticResource FluentTextSoftBrush}"
+                                               TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Grid.Row="2"
+                           Text="Enter mở - Ctrl+F tìm - Esc bỏ chọn"
+                           FontSize="{StaticResource FontSizeCaption}"
+                           Foreground="{StaticResource FluentTextMutedBrush}"
+                           Margin="8,0"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1" Background="{StaticResource FluentCanvasBrush}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="14"/>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="34"/>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="28"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="30"/>
             </Grid.RowDefinitions>
 
-            <Grid>
-            <TextBlock Text="DANH SÁCH VĂN BẢN"
-                           FontSize="18"
-                           FontWeight="Bold"
-                           Foreground="{StaticResource TextBrush}"
+            <Grid Grid.Row="0"
+                  Margin="0"
+                  Background="{StaticResource FluentSurfaceBrush}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Vận hành văn bản"
+                           Margin="10,0,0,0"
+                           FontSize="{StaticResource FontSizeTitle}"
+                           FontWeight="SemiBold"
                            VerticalAlignment="Center"/>
-
-                <StackPanel Orientation="Horizontal"
-                            HorizontalAlignment="Right">
-                    <Button Command="{Binding AddCommand}"
-                            Style="{StaticResource DangerButtonStyle}"
-                            Height="34"
-                            Padding="12,0"
-                            Margin="0,0,8,0"
-                            Visibility="{Binding CanCreateDocument, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Grid.Column="1"
+                           Text="{Binding StatusMessage}"
+                           Margin="10,0"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           Foreground="{StaticResource FluentTextMutedBrush}"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,10,0">
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding RefreshCommand}"
+                            Margin="0,0,4,0"
+                            ToolTip="F5">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="Plus" Width="14" Height="14" VerticalAlignment="Center"/>
-                            <TextBlock Text="Thêm văn bản" Margin="6,0,0,0" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Đồng bộ"/>
+                            <TextBlock Text=" F5" Foreground="{StaticResource FluentTextMutedBrush}" FontSize="{StaticResource FontSizeCaption}"/>
                         </StackPanel>
                     </Button>
-
-                    <Button Command="{Binding ExportExcelCommand}"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Height="34"
-                            Padding="12,0"
-                            Visibility="{Binding CanExportExcel, Converter={StaticResource BoolToVisibility}}">
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding RestoreSelectedCommand}"
+                            Margin="0,0,4,0"
+                            ToolTip="Khôi phục văn bản đã lưu trữ">
+                        <TextBlock Text="Khôi phục"/>
+                    </Button>
+                    <Button Style="{StaticResource WorkflowPrimaryCommandButtonStyle}"
+                            Command="{Binding ArchiveSelectedCommand}"
+                            ToolTip="Alt+A">
                         <StackPanel Orientation="Horizontal">
-                            <materialDesign:PackIcon Kind="FileExcelOutline" Width="14" Height="14" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
-                            <TextBlock Text="Xuất Excel" Margin="6,0,0,0" FontSize="12" VerticalAlignment="Center"/>
+                            <TextBlock Text="Lưu trữ"/>
+                            <TextBlock Text=" Alt+A" Foreground="{StaticResource WorkflowPrimaryShortcutBrush}" FontSize="{StaticResource FontSizeCaption}"/>
                         </StackPanel>
                     </Button>
                 </StackPanel>
             </Grid>
 
-            <Grid Grid.Row="2">
+            <Grid Grid.Row="1"
+                  Background="{StaticResource FluentSurfaceBrush}"
+                  Margin="0"
+                  MinHeight="30">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.5*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="12"/>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="12"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="SearchBox"
+                         Margin="8,2,8,2"
+                         Style="{StaticResource WorkflowTextBoxStyle}"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         materialDesign:HintAssist.Hint="Tìm trong hàng đợi hiện tại: số ký hiệu, trích yếu, cơ quan..."
+                         materialDesign:HintAssist.IsFloating="False"/>
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="0,0,8,0">
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding OpenSelectedDocumentCommand}"
+                            Margin="0,0,4,0"
+                            Content="Mở"/>
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding EditSelectedDocumentCommand}"
+                            Margin="0,0,4,0"
+                            Content="Sửa"/>
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding ExportExcelCommand}"
+                            Content="Xuất Excel"/>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="2" Background="{StaticResource FluentChromeBrush}" Margin="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.1*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="0.9*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="0.8*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="0.75*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="112"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="112"/>
+                    <ColumnDefinition Width="8"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <TextBox Grid.Column="0"
-                         Style="{StaticResource FilterTextBoxStyle}"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         materialDesign:HintAssist.Hint="Tìm kiếm theo số ký hiệu, trích yếu..."
-                         materialDesign:HintAssist.IsFloating="False"/>
-
-                <ComboBox Grid.Column="2"
-                          Style="{StaticResource FilterComboBoxStyle}"
+                <ComboBox Grid.Column="0"
+                          Margin="8,2,0,2"
+                          Style="{StaticResource WorkflowComboBoxStyle}"
                           ItemsSource="{Binding Categories}"
                           SelectedValue="{Binding SelectedCategoryId}"
                           DisplayMemberPath="Name"
-                          SelectedValuePath="Id"
-                          materialDesign:HintAssist.Hint="Loại văn bản"
-                          materialDesign:HintAssist.IsFloating="False"/>
-
-                <ComboBox Grid.Column="4"
-                          Style="{StaticResource FilterComboBoxStyle}"
+                          SelectedValuePath="Id"/>
+                <ComboBox Grid.Column="2"
+                          Margin="0,2"
+                          Style="{StaticResource WorkflowComboBoxStyle}"
                           ItemsSource="{Binding Statuses}"
                           SelectedValue="{Binding SelectedStatusId}"
                           DisplayMemberPath="Name"
-                          SelectedValuePath="Id"
-                          materialDesign:HintAssist.Hint="Trạng thái"
-                          materialDesign:HintAssist.IsFloating="False"/>
-
-                <ComboBox Grid.Column="6"
-                          Style="{StaticResource FilterComboBoxStyle}"
+                          SelectedValuePath="Id"/>
+                <ComboBox Grid.Column="4"
+                          Margin="0,2"
+                          Style="{StaticResource WorkflowComboBoxStyle}"
                           ItemsSource="{Binding UrgencyOptions}"
                           SelectedValue="{Binding SelectedUrgency}"
                           SelectedValuePath="Value"
-                          DisplayMemberPath="Text"
-                          materialDesign:HintAssist.Hint="Độ khẩn"
-                          materialDesign:HintAssist.IsFloating="False"/>
-
-                <Button Grid.Column="8"
+                          DisplayMemberPath="Text"/>
+                <DatePicker Grid.Column="6"
+                            Margin="0,2"
+                            Style="{StaticResource WorkflowDatePickerStyle}"
+                            SelectedDate="{Binding FromDate}"/>
+                <DatePicker Grid.Column="8"
+                            Margin="0,2"
+                            Style="{StaticResource WorkflowDatePickerStyle}"
+                            SelectedDate="{Binding ToDate}"/>
+                <Button Grid.Column="12"
+                        Margin="0,2,8,2"
+                        Style="{StaticResource WorkflowCommandButtonStyle}"
                         Command="{Binding ClearFiltersCommand}"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        Height="34"
-                        Padding="12,0"
                         Content="Xóa lọc"/>
+            </Grid>
+
+            <Grid Grid.Row="3" Background="{StaticResource FluentBrandSoftBrush}" Margin="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Margin="8,0" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding BatchSelectedCount, StringFormat=Đã chọn {0:N0}}"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               FontWeight="SemiBold"/>
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding SelectAllBatchCommand}"
+                            Margin="8,0,0,0"
+                            Content="Chọn trang"/>
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding ClearBatchCommand}"
+                            Margin="4,0,0,0"
+                            Content="Bỏ chọn"/>
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding ArchiveBatchCommand}"
+                            Margin="0,0,4,0"
+                            Content="Lưu trữ lô"/>
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding RestoreBatchCommand}"
+                            Content="Khôi phục lô"/>
+                </StackPanel>
+                <TextBlock Grid.Column="2"
+                           Text="{Binding PreviewNextAction}"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           Foreground="{StaticResource FluentTextMutedBrush}"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center"
+                           Margin="8,0"/>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Margin="0,0,8,0">
+                    <Border Width="7" Height="7" Background="{StaticResource FluentDangerBrush}" CornerRadius="2" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Quá hạn" FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource FluentTextMutedBrush}" VerticalAlignment="Center"/>
+                    <Border Width="7" Height="7" Background="{StaticResource FluentWarningBrush}" CornerRadius="2" Margin="8,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Hôm nay" FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource FluentTextMutedBrush}" VerticalAlignment="Center"/>
+                    <Border Width="7" Height="7" Background="{StaticResource FluentSuccessBrush}" CornerRadius="2" Margin="8,0,4,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="Ổn định" FontSize="{StaticResource FontSizeCaption}" Foreground="{StaticResource FluentTextMutedBrush}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <Border Grid.Row="4"
+                    Margin="8,6,8,0"
+                    Background="{StaticResource FluentSurfaceBrush}"
+                    BorderBrush="{StaticResource FluentBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Radius6}"
+                    ClipToBounds="True">
+                <Grid>
+                    <DataGrid x:Name="DocumentsDataGrid"
+                              ItemsSource="{Binding Documents}"
+                              SelectedItem="{Binding SelectedDocument}"
+                              Style="{StaticResource WorkflowDataGridStyle}"
+                              RowStyle="{StaticResource WorkflowRowStyle}"
+                              AutoGenerateColumns="False"
+                              HeadersVisibility="Column"
+                              GridLinesVisibility="None"
+                              RowHeaderWidth="0"
+                              EnableRowVirtualization="True"
+                              EnableColumnVirtualization="True"
+                              VirtualizingPanel.IsVirtualizing="True"
+                              VirtualizingPanel.VirtualizationMode="Recycling"
+                              MouseDoubleClick="DocumentsDataGrid_MouseDoubleClick">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Width="4" IsReadOnly="True">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{Binding SlaBrush, Converter={StaticResource HexToBrushConverter}}"/>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridCheckBoxColumn Header="" Width="28" Binding="{Binding IsBatchSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"/>
+                            <DataGridTextColumn Header="#" Width="36" Binding="{Binding Id}" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                            <DataGridTextColumn Header="Số ký hiệu" Width="92" Binding="{Binding DocumentNumber}" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                            <DataGridTextColumn Header="Trích yếu" Width="*" Binding="{Binding Title}">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource GridTextStyle}">
+                                        <Setter Property="FontWeight" Value="SemiBold"/>
+                                        <Setter Property="ToolTip" Value="{Binding Title}"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Loại" Width="78" Binding="{Binding DocumentType}" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                            <DataGridTemplateColumn Header="SLA" Width="76">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Border Style="{StaticResource WorkflowBadgeBorderStyle}"
+                                                BorderBrush="{Binding SlaBrush, Converter={StaticResource HexToBrushConverter}}"
+                                                ToolTip="{Binding SlaText}">
+                                            <TextBlock Text="{Binding SlaText}"
+                                                       Style="{StaticResource WorkflowBadgeTextStyle}"
+                                                       Foreground="{Binding SlaBrush, Converter={StaticResource HexToBrushConverter}}"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn Header="Trạng thái" Width="92" CellTemplate="{StaticResource BadgeTemplate}"/>
+                            <DataGridTextColumn Header="Đơn vị" Width="112" Binding="{Binding ProcessingDepartment}" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                            <DataGridTextColumn Header="Xử lý" Width="82" Binding="{Binding AssignedTo}" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                            <DataGridTextColumn Header="Cập nhật" Width="80" Binding="{Binding UpdatedAtText}" ElementStyle="{StaticResource GridMutedTextStyle}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <Border>
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource EmptyStateContainerStyle}">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasDocuments}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsLoading}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="Không có dữ liệu" Style="{StaticResource EmptyStateTitleTextStyle}"/>
+                            <TextBlock Text="Không tìm thấy văn bản phù hợp với điều kiện hiện tại." Style="{StaticResource EmptyStateDescriptionTextStyle}"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="5" Margin="8,0">
+                <TextBlock Text="{Binding GridStatusText}"
+                           FontSize="{StaticResource FontSizeSmall}"
+                           Foreground="{StaticResource FluentTextMutedBrush}"
+                           VerticalAlignment="Center"/>
+                <StackPanel Orientation="Horizontal"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center">
+                    <Button Style="{StaticResource WorkflowIconButtonStyle}"
+                            Command="{Binding PreviousPageCommand}">
+                        <materialDesign:PackIcon Kind="ChevronLeft" Width="14" Height="14"/>
+                    </Button>
+                    <TextBlock Text="{Binding PageDisplayText}"
+                               FontSize="{StaticResource FontSizeSmall}"
+                               Foreground="{StaticResource FluentTextMutedBrush}"
+                               Margin="8,0"
+                               VerticalAlignment="Center"/>
+                    <Button Style="{StaticResource WorkflowIconButtonStyle}"
+                            Command="{Binding NextPageCommand}">
+                        <materialDesign:PackIcon Kind="ChevronRight" Width="14" Height="14"/>
+                    </Button>
+                </StackPanel>
             </Grid>
         </Grid>
 
-        <Border Grid.Row="1"
-                Style="{StaticResource AppCardStyle}"
-                Padding="0">
+        <Border Grid.Column="2"
+                Background="{StaticResource FluentSurfaceBrush}"
+                BorderBrush="{StaticResource FluentBorderBrush}"
+                BorderThickness="1,0,0,0">
             <Grid>
-                <DataGrid x:Name="DocumentsDataGrid"
-                          MouseDoubleClick="DocumentsDataGrid_MouseDoubleClick"
-                          ItemsSource="{Binding Documents}"
-                          SelectedItem="{Binding SelectedDocument}"
-                          Style="{StaticResource AppDataGridStyle}"
-                          AutoGenerateColumns="False"
-                          HeadersVisibility="Column"
-                          GridLinesVisibility="None"
-                          RowHeaderWidth="0"
-                          RowHeight="46"
-                          ColumnHeaderHeight="40"
-                          EnableRowVirtualization="True"
-                          EnableColumnVirtualization="True"
-                          VirtualizingPanel.IsVirtualizing="True"
-                          VirtualizingPanel.VirtualizationMode="Recycling">
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="STT" Width="54" Binding="{Binding Id}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
-                        <DataGridTextColumn Header="Số ký hiệu" Width="120" Binding="{Binding DocumentNumber}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
-                        <DataGridTextColumn Header="Trích yếu" Width="*" Binding="{Binding Title}">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock" BasedOn="{StaticResource DocumentGridTextStyle}">
-                                    <Setter Property="FontWeight" Value="SemiBold"/>
-                                    <Setter Property="ToolTip" Value="{Binding Title}"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                        <DataGridTextColumn Header="Loại văn bản" Width="110" Binding="{Binding DocumentType}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
-                        <DataGridTextColumn Header="Cơ quan ban hành" Width="150" Binding="{Binding SenderName}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
-                        <DataGridTextColumn Header="Ngày ban hành" Width="112" Binding="{Binding IssueDate}" ElementStyle="{StaticResource DocumentGridMutedTextStyle}"/>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="30"/>
+                    <RowDefinition Height="122"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="34"/>
+                </Grid.RowDefinitions>
 
-                        <DataGridTemplateColumn Header="Trạng thái" Width="116">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <Border Width="84"
-                                            Height="24"
-                                            CornerRadius="12"
-                                            Background="{Binding StatusColor, Converter={StaticResource HexToBrushConverter}}"
-                                            HorizontalAlignment="Left">
-                                        <TextBlock Text="{Binding StatusText}"
-                                                   Foreground="White"
-                                                   FontSize="10"
-                                                   FontWeight="SemiBold"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"/>
-                                    </Border>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border BorderBrush="{StaticResource FluentBorderSoftBrush}" BorderThickness="0,0,1,1" Background="{StaticResource FluentSurfaceBrush}">
+                        <TextBlock Text="Chi tiết" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSmall}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Grid.Column="1" BorderBrush="{StaticResource FluentBorderSoftBrush}" BorderThickness="0,0,1,1" Background="{StaticResource FluentChromeBrush}">
+                        <TextBlock Text="Ghi chú" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSmall}" Foreground="{StaticResource FluentTextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <Border Grid.Column="2" BorderBrush="{StaticResource FluentBorderSoftBrush}" BorderThickness="0,0,0,1" Background="{StaticResource FluentChromeBrush}">
+                        <TextBlock Text="Lịch sử" FontWeight="SemiBold" FontSize="{StaticResource FontSizeSmall}" Foreground="{StaticResource FluentTextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
 
-                        <DataGridTemplateColumn Header="Thao tác" Width="92">
-                            <DataGridTemplateColumn.CellTemplate>
-                                <DataTemplate>
-                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                        <Button Style="{StaticResource ActionIconButtonStyle}" ToolTip="Xem">
-                                            <materialDesign:PackIcon Kind="EyeOutline" Width="15" Height="15"/>
-                                        </Button>
-                                        <Button Style="{StaticResource ActionIconButtonStyle}" ToolTip="Sửa">
-                                            <materialDesign:PackIcon Kind="PencilOutline" Width="15" Height="15"/>
-                                        </Button>
-                                        <Button Style="{StaticResource ActionIconButtonStyle}" ToolTip="Khác">
-                                            <materialDesign:PackIcon Kind="DotsVertical" Width="15" Height="15"/>
-                                        </Button>
-                                    </StackPanel>
-                                </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                        </DataGridTemplateColumn>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <Border>
-                    <Border.Style>
-                        <Style TargetType="Border" BasedOn="{StaticResource EmptyStateContainerStyle}">
-                            <Setter Property="Visibility" Value="Visible"/>
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding HasDocuments}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                                <DataTrigger Binding="{Binding IsLoading}" Value="True">
-                                    <Setter Property="Visibility" Value="Collapsed"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Border.Style>
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="Chưa có dữ liệu" Style="{StaticResource EmptyStateTitleTextStyle}"/>
-                        <TextBlock Text="Không tìm thấy văn bản phù hợp với điều kiện hiện tại." Style="{StaticResource EmptyStateDescriptionTextStyle}"/>
+                <Border Grid.Row="1"
+                        Background="{StaticResource FluentSurfaceMutedBrush}"
+                        BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                        BorderThickness="0,0,0,1"
+                        Padding="10,8">
+                    <StackPanel>
+                        <TextBlock Text="{Binding SelectedDocument.PreviewMeta}"
+                                   FontSize="{StaticResource FontSizeSmall}"
+                                   Foreground="{StaticResource FluentTextMutedBrush}"/>
+                        <TextBlock Text="{Binding PreviewTitle}"
+                                   FontSize="{StaticResource FontSizeTitle}"
+                                   FontWeight="SemiBold"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   MaxHeight="38"
+                                   Margin="0,6,0,4"/>
+                        <Border BorderBrush="{StaticResource FluentWarningBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource Radius6}"
+                                Background="{StaticResource FluentSurfaceBrush}"
+                                Padding="8,5">
+                            <TextBlock Text="{Binding PreviewNextAction}"
+                                       FontSize="{StaticResource FontSizeSmall}"
+                                       Foreground="{StaticResource FluentTextBrush}"
+                                       MaxHeight="34"
+                                       TextTrimming="CharacterEllipsis"
+                                       TextWrapping="Wrap"/>
+                        </Border>
                     </StackPanel>
                 </Border>
+
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <StackPanel Margin="10,8">
+                        <TextBlock Text="Hành động" Style="{StaticResource WorkflowSectionLabelStyle}"/>
+                        <Button Style="{StaticResource WorkflowPrimaryCommandButtonStyle}"
+                                Command="{Binding ArchiveSelectedCommand}"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,0,0,5"
+                                Content="Lưu trữ văn bản"/>
+                        <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                                Command="{Binding RestoreSelectedCommand}"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,0,0,5"
+                                Content="Khôi phục"/>
+                        <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                                Command="{Binding EditSelectedDocumentCommand}"
+                                HorizontalAlignment="Stretch"
+                                Margin="0,0,0,12"
+                                Content="Mở để chỉnh sửa"/>
+
+                        <TextBlock Text="Thông tin xử lý" Style="{StaticResource WorkflowSectionLabelStyle}"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="96"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Số ký hiệu" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Column="1" Text="{Binding SelectedDocument.DocumentNumber}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="1" Text="Cơ quan" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedDocument.SenderName}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="2" Text="Nơi nhận" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding SelectedDocument.ReceiverName}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="3" Text="Phòng xử lý" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding SelectedDocument.ProcessingDepartment}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="4" Text="Người xử lý" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding SelectedDocument.AssignedTo}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="5" Text="Ngày ban hành" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SelectedDocument.IssueDate}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="6" Text="Hạn xử lý" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SelectedDocument.DueDate}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="7" Text="Cập nhật" Style="{StaticResource GridMutedTextStyle}" Margin="0,4"/>
+                            <TextBlock Grid.Row="7" Grid.Column="1" Text="{Binding SelectedDocument.UpdatedAtText}" Style="{StaticResource GridTextStyle}" Margin="0,4"/>
+                        </Grid>
+
+                        <TextBlock Text="Ghi chú" Style="{StaticResource WorkflowSectionLabelStyle}" Margin="0,14,0,5"/>
+                        <Border BorderBrush="{StaticResource FluentBorderSoftBrush}" BorderThickness="1" CornerRadius="{StaticResource Radius6}" Background="{StaticResource FluentSurfaceMutedBrush}" Padding="8">
+                            <TextBlock Text="{Binding SelectedDocument.Notes}"
+                                       FontSize="{StaticResource FontSizeBody}"
+                                       TextWrapping="Wrap"
+                                       Foreground="{StaticResource FluentTextBrush}"/>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <StackPanel Grid.Row="3"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="9,0">
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding OpenSelectedDocumentCommand}"
+                            Content="Mở"
+                            Margin="0,0,5,0"/>
+                    <Button Style="{StaticResource WorkflowCommandButtonStyle}"
+                            Command="{Binding ExportExcelCommand}"
+                            Content="Xuất"/>
+                </StackPanel>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2" Margin="0,12,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Text="{Binding TotalCount, StringFormat=Hiển thị dữ liệu trong tổng số {0} văn bản}"
-                       FontSize="11"
-                       Foreground="{StaticResource TextMutedBrush}"
-                       VerticalAlignment="Center"/>
-
-            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                <Button Command="{Binding PreviousPageCommand}"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        Height="32"
-                        Width="34"
-                        Padding="0"
-                        IsEnabled="{Binding CanGoPrevious}">
-                    <materialDesign:PackIcon Kind="ChevronLeft" Width="16" Height="16"/>
-                </Button>
-
-                <Border MinWidth="80"
-                        Height="32"
-                        CornerRadius="6"
-                        Background="{StaticResource SurfaceBrush}"
-                        BorderBrush="{StaticResource BorderBrushDefault}"
-                        BorderThickness="1"
-                        Margin="8,0"
-                        Padding="12,0">
-                    <TextBlock Text="{Binding PageDisplayText}" FontSize="12" Foreground="{StaticResource TextBrush}" VerticalAlignment="Center" HorizontalAlignment="Center"/>
-                </Border>
-
-                <Button Command="{Binding NextPageCommand}"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        Height="32"
-                        Width="34"
-                        Padding="0"
-                        IsEnabled="{Binding CanGoNext}">
-                    <materialDesign:PackIcon Kind="ChevronRight" Width="16" Height="16"/>
-                </Button>
-            </StackPanel>
-        </Grid>
-
-        <Grid Grid.RowSpan="3"
+        <Grid Grid.ColumnSpan="3"
               Style="{StaticResource LoadingOverlayGridStyle}"
               Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibility}}">
             <Border Style="{StaticResource LoadingCardStyle}">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ProgressBar Width="140" Height="6" IsIndeterminate="True" Margin="0,0,0,18"/>
-                    <TextBlock Text="Đang tải dữ liệu..." Style="{StaticResource LoadingTextStyle}"/>
+                    <TextBlock Text="Đang xử lý dữ liệu..." Style="{StaticResource LoadingTextStyle}"/>
                 </StackPanel>
             </Border>
         </Grid>

@@ -23,7 +23,25 @@ public class MainViewModel : BaseViewModel
     public BaseViewModel? CurrentView
     {
         get => _currentView;
-        set => SetProperty(ref _currentView, value);
+        set
+        {
+            if (ReferenceEquals(_currentView, value))
+            {
+                return;
+            }
+
+            if (_currentView is DocumentListViewModel documentListViewModel)
+            {
+                documentListViewModel.Deactivate();
+            }
+
+            if (_currentView is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+
+            SetProperty(ref _currentView, value);
+        }
     }
 
     public bool IsSystemOperationRunning
@@ -35,7 +53,7 @@ public class MainViewModel : BaseViewModel
             {
                 OnPropertyChanged(nameof(CanRunBackupCommand));
                 OnPropertyChanged(nameof(CanRunRestoreCommand));
-                CommandManager.InvalidateRequerySuggested();
+                RaiseSystemCommandState();
             }
         }
     }
@@ -148,7 +166,7 @@ public class MainViewModel : BaseViewModel
         _confirmDialogService = confirmDialogService;
 
         ShowDashboardCommand = new RelayCommand(_ => ShowDashboard(), _ => CanViewDashboard);
-        ShowDocumentListCommand = new RelayCommand(_ => ShowDocuments(), _ => CanViewDocuments);
+        ShowDocumentListCommand = new RelayCommand(async _ => await ShowDocumentsAsync(), _ => CanViewDocuments);
         CreateDocumentCommand = new RelayCommand(async _ => await CreateDocumentAsync(), _ => CanCreateDocument);
         ShowArchiveCommand = new RelayCommand(_ => ShowPlaceholder("Lưu trữ", "Các văn bản lưu trữ sẽ được tổng hợp tại đây."));
         ShowReportsCommand = new RelayCommand(_ => ShowPlaceholder("Báo cáo", "Khu vực báo cáo thống kê văn bản, tình trạng hiệu lực và phòng ban xử lý."));
@@ -171,7 +189,7 @@ public class MainViewModel : BaseViewModel
         }
         else
         {
-            ShowDocuments();
+            _ = ShowDocumentsAsync();
         }
     }
 
@@ -200,7 +218,21 @@ public class MainViewModel : BaseViewModel
         OnPropertyChanged(nameof(CanCreateDocument));
         OnPropertyChanged(nameof(CanEditDocument));
 
-        CommandManager.InvalidateRequerySuggested();
+        RaiseAllCommandState();
+    }
+
+    private void RaiseSystemCommandState()
+    {
+        (BackupCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (RestoreCommand as RelayCommand)?.RaiseCanExecuteChanged();
+    }
+
+    private void RaiseAllCommandState()
+    {
+        (ShowDashboardCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (ShowDocumentListCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (CreateDocumentCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        RaiseSystemCommandState();
     }
 
     public void ShowDashboard()
@@ -227,7 +259,7 @@ public class MainViewModel : BaseViewModel
         }
     }
 
-    public void ShowDocuments()
+    public async Task ShowDocumentsAsync()
     {
         if (!CanViewDocuments)
         {
@@ -240,8 +272,8 @@ public class MainViewModel : BaseViewModel
         try
         {
             var vm = _serviceProvider.GetRequiredService<DocumentListViewModel>();
-            _ = vm.LoadAsync();
             CurrentView = vm;
+            await vm.LoadAsync();
         }
         catch (Exception ex)
         {

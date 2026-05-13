@@ -41,9 +41,9 @@ public partial class MainWindow : Window
         _viewModel.ShowDashboard();
     }
 
-    private void DocumentsButton_Click(object sender, RoutedEventArgs e)
+    private async void DocumentsButton_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.ShowDocuments();
+        await _viewModel.ShowDocumentsAsync();
     }
 
     private void ExitButton_Click(object sender, RoutedEventArgs e)
@@ -320,6 +320,15 @@ public partial class MainWindow : Window
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
         _notificationService.NotificationRequested -= NotificationService_NotificationRequested;
+        if (_viewModel.CurrentView is DocumentListViewModel documentListViewModel)
+        {
+            documentListViewModel.Deactivate();
+        }
+
+        if (_viewModel.CurrentView is IDisposable disposable)
+        {
+            disposable.Dispose();
+        }
 
         if (_activeToastWindow != null)
         {

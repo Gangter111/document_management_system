@@ -89,6 +89,9 @@ public partial class App : Application
         services.AddSingleton<ApiService>();
         services.AddSingleton<ApiAuthService>();
         services.AddSingleton<ClientPermissionService>();
+        services.AddTransient<DocumentSearchCoordinator>();
+        services.AddTransient<DocumentWorkflowCommandService>();
+        services.AddTransient<DocumentExportService>();
 
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IConfirmDialogService, ConfirmDialogService>();

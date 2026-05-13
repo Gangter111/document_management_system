@@ -203,7 +203,6 @@ public class DocumentFormViewModel : BaseViewModel
                 OnPropertyChanged(nameof(HasFile));
                 OnPropertyChanged(nameof(CanAutoFill));
                 RaiseCommandStatesChanged();
-                CommandManager.InvalidateRequerySuggested();
             }
         }
     }
@@ -627,7 +626,6 @@ public class DocumentFormViewModel : BaseViewModel
         OnPropertyChanged(nameof(CanDelete));
 
         RaiseCommandStatesChanged();
-        CommandManager.InvalidateRequerySuggested();
     }
 
     private void RaiseCommandStatesChanged()

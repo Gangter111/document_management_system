@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Media;
@@ -7,6 +8,8 @@ namespace DocumentManagement.Wpf.Converters
 {
     public class HexToBrushConverter : IValueConverter
     {
+        private static readonly ConcurrentDictionary<string, SolidColorBrush> BrushCache = new(StringComparer.OrdinalIgnoreCase);
+
         public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             var hex = value?.ToString();
@@ -18,8 +21,13 @@ namespace DocumentManagement.Wpf.Converters
 
             try
             {
-                var color = (Color)ColorConverter.ConvertFromString(hex);
-                return new SolidColorBrush(color);
+                return BrushCache.GetOrAdd(hex.Trim(), static key =>
+                {
+                    var color = (Color)ColorConverter.ConvertFromString(key);
+                    var brush = new SolidColorBrush(color);
+                    brush.Freeze();
+                    return brush;
+                });
             }
             catch
             {

@@ -12,8 +12,18 @@
                                              PrimaryColor="Blue"
                                              SecondaryColor="Amber" />
 
-                <!-- App global SaaS theme -->
+                <!-- Enterprise Fluent design tokens -->
                 <ResourceDictionary Source="Themes/GlobalTheme.xaml" />
+                <ResourceDictionary Source="Themes/Colors.xaml" />
+                <ResourceDictionary Source="Themes/Brushes.xaml" />
+                <ResourceDictionary Source="Themes/Typography.xaml" />
+                <ResourceDictionary Source="Themes/Spacing.xaml" />
+                <ResourceDictionary Source="Themes/Panels.xaml" />
+                <ResourceDictionary Source="Themes/Buttons.xaml" />
+                <ResourceDictionary Source="Themes/Badges.xaml" />
+                <ResourceDictionary Source="Themes/DataGrid.xaml" />
+                <ResourceDictionary Source="Themes/Inputs.xaml" />
+                <ResourceDictionary Source="Themes/Navigation.xaml" />
 
                 <!-- Shared empty/loading/error states -->
                 <ResourceDictionary Source="Themes/CommonStates.xaml" />

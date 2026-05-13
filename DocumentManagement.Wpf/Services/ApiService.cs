@@ -161,7 +161,8 @@ public class ApiService
         DateTime? fromDate,
         DateTime? toDate,
         int pageNumber,
-        int pageSize)
+        int pageSize,
+        CancellationToken cancellationToken = default)
     {
         var query = new List<string>
         {
@@ -201,7 +202,7 @@ public class ApiService
 
         var url = "api/documents/search?" + string.Join("&", query);
 
-        var result = await _httpClient.GetFromJsonAsync<PagedResultDto<DocumentDto>>(url);
+        var result = await _httpClient.GetFromJsonAsync<PagedResultDto<DocumentDto>>(url, cancellationToken);
 
         return result ?? new PagedResultDto<DocumentDto>();
     }
@@ -220,9 +221,9 @@ public class ApiService
         return await response.Content.ReadFromJsonAsync<long>();
     }
 
-    public async Task UpdateDocumentAsync(long id, UpdateDocumentRequest request)
+    public async Task UpdateDocumentAsync(long id, UpdateDocumentRequest request, CancellationToken cancellationToken = default)
     {
-        var response = await _httpClient.PutAsJsonAsync($"api/documents/{id}", request);
+        var response = await _httpClient.PutAsJsonAsync($"api/documents/{id}", request, cancellationToken);
 
         response.EnsureSuccessStatusCode();
     }

@@ -1,0 +1,17 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Style x:Key="FluentTextBoxStyle" TargetType="TextBox">
+        <Setter Property="Height" Value="28"/>
+        <Setter Property="Padding" Value="8,0"/>
+        <Setter Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource FluentBorderBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Foreground" Value="{StaticResource FluentTextBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource AppFontFamily}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+    </Style>
+
+</ResourceDictionary>
