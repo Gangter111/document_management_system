@@ -10,7 +10,9 @@
         ResizeMode="CanResize"
         Background="{StaticResource FluentCanvasBrush}"
         FontFamily="{StaticResource AppFontFamily}"
-        FontSize="{StaticResource FontSizeBody}">
+        FontSize="{StaticResource FontSizeBody}"
+        KeyboardNavigation.TabNavigation="Cycle"
+        KeyboardNavigation.ControlTabNavigation="Cycle">
 
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisibility"/>
@@ -468,6 +470,7 @@
                     <Button MinWidth="92"
                             Height="32"
                             IsCancel="True"
+                            ToolTip="Esc"
                             Margin="0,0,10,0">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource FormFooterButtonStyle}">
@@ -486,6 +489,8 @@
                             Height="32"
                             Style="{StaticResource PrimaryButtonStyle}"
                             Command="{Binding SaveCommand}"
+                            IsDefault="True"
+                            ToolTip="Enter"
                             IsEnabled="{Binding CanSaveDocument}"
                             Visibility="{Binding CanSaveDocument, Converter={StaticResource BoolToVisibility}}"
                             CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=Window}}"/>

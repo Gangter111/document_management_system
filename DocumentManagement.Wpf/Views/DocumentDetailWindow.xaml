@@ -5,127 +5,168 @@
         Title="Chi tiết văn bản"
         Height="760"
         Width="940"
+        MinHeight="680"
+        MinWidth="880"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource AppBackgroundBrush}"
-        FontFamily="{StaticResource AppFontFamily}">
+        Background="{StaticResource FluentCanvasBrush}"
+        FontFamily="{StaticResource AppFontFamily}"
+        TextElement.Foreground="{StaticResource FluentTextBrush}"
+        KeyboardNavigation.TabNavigation="Cycle"
+        KeyboardNavigation.ControlTabNavigation="Cycle">
 
     <Window.Resources>
-        <Style x:Key="InfoLabelStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="{StaticResource TextMutedBrush}"/>
+        <Style x:Key="DetailCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactCommandButtonStyle}">
+            <Setter Property="MinWidth" Value="64"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
         </Style>
 
-        <Style x:Key="InfoValueStyle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="12"/>
+        <Style x:Key="DetailPrimaryCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource CompactPrimaryButtonStyle}">
+            <Setter Property="MinWidth" Value="82"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+        </Style>
+
+        <Style x:Key="DetailSectionLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource FluentCaptionTextStyle}">
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Foreground" Value="{StaticResource FluentTextSoftBrush}"/>
+        </Style>
+
+        <Style x:Key="InfoLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="{StaticResource FontSizeCaption}"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource FluentTextSoftBrush}"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
         </Style>
 
-        <Style x:Key="ToolbarButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="Margin" Value="0,0,8,0"/>
-            <Setter Property="FontSize" Value="12"/>
+        <Style x:Key="InfoValueStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="0,2,0,0"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeBody}"/>
+            <Setter Property="Foreground" Value="{StaticResource FluentTextBrush}"/>
+            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+        </Style>
+
+        <Style x:Key="AttachmentItemStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource FluentSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FluentBorderSoftBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="{StaticResource Radius6}"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="Margin" Value="0,0,0,6"/>
         </Style>
     </Window.Resources>
 
-    <Grid Margin="22">
+    <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="44"/>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="14"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="14"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
-            <TextBlock Text="CHI TIẾT VĂN BẢN"
-                       FontSize="18"
-                       FontWeight="Bold"
-                       Foreground="{StaticResource TextBrush}"
-                       VerticalAlignment="Center"/>
-
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Style="{StaticResource ToolbarButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="PencilOutline" Width="14" Height="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="Sửa" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolbarButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="PrinterOutline" Width="14" Height="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="In" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolbarButtonStyle}">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="DownloadOutline" Width="14" Height="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="Tải xuống" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource SuccessButtonStyle}" Height="32" Padding="12,0" Margin="0,0,8,0">
-                    <StackPanel Orientation="Horizontal">
-                        <materialDesign:PackIcon Kind="CheckCircleOutline" Width="14" Height="14" VerticalAlignment="Center"/>
-                        <TextBlock Text="Đã duyệt" Margin="6,0,0,0" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button Style="{StaticResource ToolbarButtonStyle}" Content="Khác"/>
-                <Button Style="{StaticResource ToolbarButtonStyle}" Click="CloseButton_Click" Content="Đóng"/>
-            </StackPanel>
-        </Grid>
-
-        <Border Grid.Row="2"
-                Style="{StaticResource AppCardStyle}">
+        <Border Grid.Row="0"
+                Background="{StaticResource FluentSurfaceBrush}"
+                BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="14,0">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="58"/>
-                    <ColumnDefinition Width="1.15*"/>
-                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Border Width="40"
-                        Height="48"
-                        CornerRadius="6"
-                        Background="#E8F7EF"
-                        BorderBrush="#BEE3CB"
+                <TextBlock Text="Chi tiết văn bản"
+                           Style="{StaticResource FluentTitleTextStyle}"
+                           VerticalAlignment="Center"/>
+
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center">
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PencilOutline" Width="14" Height="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Sửa" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="PrinterOutline" Width="14" Height="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="In" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="DownloadOutline" Width="14" Height="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Tải xuống" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource DetailPrimaryCommandButtonStyle}" IsTabStop="False">
+                        <StackPanel Orientation="Horizontal">
+                            <materialDesign:PackIcon Kind="CheckCircleOutline" Width="14" Height="14" VerticalAlignment="Center"/>
+                            <TextBlock Text="Đã duyệt" Margin="6,0,0,0" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False" Content="Khác"/>
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" Click="CloseButton_Click" IsCancel="True" ToolTip="Esc" Content="Đóng"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Row="1"
+                Background="{StaticResource FluentSurfaceBrush}"
+                BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="14,12">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="44"/>
+                    <ColumnDefinition Width="1.25*"/>
+                    <ColumnDefinition Width="1.2*"/>
+                </Grid.ColumnDefinitions>
+
+                <Border Width="34"
+                        Height="38"
+                        CornerRadius="{StaticResource Radius6}"
+                        Background="{StaticResource FluentBrandSoftBrush}"
+                        BorderBrush="{StaticResource FluentBorderSoftBrush}"
                         BorderThickness="1"
                         VerticalAlignment="Top">
                     <materialDesign:PackIcon Kind="FileDocumentOutline"
-                                             Width="24"
-                                             Height="24"
-                                             Foreground="{StaticResource PrimaryBrush}"
+                                             Width="20"
+                                             Height="20"
+                                             Foreground="{StaticResource FluentBrandBrush}"
                                              HorizontalAlignment="Center"
                                              VerticalAlignment="Center"/>
                 </Border>
 
-                <StackPanel Grid.Column="1">
-                    <TextBlock Text="{Binding Document.DocumentType}"
-                               FontSize="12"
-                               Foreground="{StaticResource TextMutedBrush}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
-                        <TextBlock Text="{Binding Document.DocumentNumber}"
-                                   FontSize="24"
-                                   FontWeight="Bold"
-                                   Foreground="{StaticResource TextBrush}"
+                <StackPanel Grid.Column="1" Margin="0,0,18,0">
+                    <TextBlock Text="{Binding Document.DocumentType, TargetNullValue=Chưa có loại văn bản}"
+                               Style="{StaticResource FluentCaptionTextStyle}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,3,0,0">
+                        <TextBlock Text="{Binding Document.DocumentNumber, TargetNullValue=Chưa có số văn bản}"
+                                   FontSize="{StaticResource FontSizeHeading}"
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource FluentTextBrush}"
+                                   TextTrimming="CharacterEllipsis"
                                    VerticalAlignment="Center"/>
-                        <Border Background="#DCFCE7"
-                                CornerRadius="12"
-                                Padding="9,3"
-                                Margin="12,0,0,0"
+                        <Border Style="{StaticResource FluentStatusPillStyle}"
+                                Margin="10,0,0,0"
                                 VerticalAlignment="Center">
-                            <TextBlock Text="{Binding Document.StatusText}"
-                                       FontSize="10"
-                                       FontWeight="SemiBold"
-                                       Foreground="#087A3D"/>
+                            <TextBlock Text="{Binding Document.StatusText, TargetNullValue=Chưa có trạng thái}"
+                                       Style="{StaticResource FluentBadgeTextStyle}"
+                                       Foreground="{StaticResource FluentBrandBrush}"/>
                         </Border>
                     </StackPanel>
+                    <TextBlock Text="{Binding Document.Title, TargetNullValue=Chưa có trích yếu}"
+                               Margin="0,8,0,0"
+                               FontSize="{StaticResource FontSizeBodyLarge}"
+                               Foreground="{StaticResource FluentTextBrush}"
+                               TextWrapping="Wrap"
+                               MaxHeight="42"
+                               TextTrimming="CharacterEllipsis"/>
                 </StackPanel>
 
                 <Grid Grid.Column="2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="14"/>
                         <ColumnDefinition Width="1*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
@@ -138,85 +179,121 @@
 
                     <StackPanel Grid.Row="0" Grid.Column="0">
                         <TextBlock Text="Cơ quan ban hành" Style="{StaticResource InfoLabelStyle}"/>
-                        <TextBlock Text="{Binding Document.SenderName}" Style="{StaticResource InfoValueStyle}"/>
+                        <TextBlock Text="{Binding Document.SenderName, TargetNullValue=Chưa cập nhật}" Style="{StaticResource InfoValueStyle}"/>
                     </StackPanel>
-                    <StackPanel Grid.Row="0" Grid.Column="1">
-                        <TextBlock Text="Số trang" Style="{StaticResource InfoLabelStyle}"/>
-                        <TextBlock Text="05" Style="{StaticResource InfoValueStyle}"/>
+                    <StackPanel Grid.Row="0" Grid.Column="2">
+                        <TextBlock Text="Ngày ban hành" Style="{StaticResource InfoLabelStyle}"/>
+                        <TextBlock Text="{Binding Document.IssueDate, TargetNullValue=Chưa cập nhật}" Style="{StaticResource InfoValueStyle}"/>
                     </StackPanel>
                     <StackPanel Grid.Row="2" Grid.Column="0">
-                        <TextBlock Text="Ngày ban hành" Style="{StaticResource InfoLabelStyle}"/>
-                        <TextBlock Text="{Binding Document.IssueDate}" Style="{StaticResource InfoValueStyle}"/>
-                    </StackPanel>
-                    <StackPanel Grid.Row="2" Grid.Column="1">
                         <TextBlock Text="Người ký" Style="{StaticResource InfoLabelStyle}"/>
-                        <TextBlock Text="{Binding Document.SignerName}" Style="{StaticResource InfoValueStyle}"/>
+                        <TextBlock Text="{Binding Document.SignerName, TargetNullValue=Chưa cập nhật}" Style="{StaticResource InfoValueStyle}"/>
+                    </StackPanel>
+                    <StackPanel Grid.Row="2" Grid.Column="2">
+                        <TextBlock Text="Nơi nhận" Style="{StaticResource InfoLabelStyle}"/>
+                        <TextBlock Text="{Binding Document.ReceiverName, TargetNullValue=Chưa cập nhật}" Style="{StaticResource InfoValueStyle}"/>
                     </StackPanel>
                     <StackPanel Grid.Row="4" Grid.Column="0">
-                        <TextBlock Text="Loại văn bản" Style="{StaticResource InfoLabelStyle}"/>
-                        <TextBlock Text="{Binding Document.DocumentType}" Style="{StaticResource InfoValueStyle}"/>
+                        <TextBlock Text="Đơn vị xử lý" Style="{StaticResource InfoLabelStyle}"/>
+                        <TextBlock Text="{Binding Document.ProcessingDepartment, TargetNullValue=Chưa cập nhật}" Style="{StaticResource InfoValueStyle}"/>
                     </StackPanel>
-                    <StackPanel Grid.Row="4" Grid.Column="1">
-                        <TextBlock Text="Nơi nhận" Style="{StaticResource InfoLabelStyle}"/>
-                        <TextBlock Text="{Binding Document.ReceiverName}" Style="{StaticResource InfoValueStyle}"/>
+                    <StackPanel Grid.Row="4" Grid.Column="2">
+                        <TextBlock Text="Người xử lý" Style="{StaticResource InfoLabelStyle}"/>
+                        <TextBlock Text="{Binding Document.AssignedTo, TargetNullValue=Chưa cập nhật}" Style="{StaticResource InfoValueStyle}"/>
                     </StackPanel>
                 </Grid>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="4">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <Grid Grid.Row="2" Margin="14,12,14,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2.2*"/>
+                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="0.95*"/>
+            </Grid.ColumnDefinitions>
 
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <TextBlock Text="NỘI DUNG" FontSize="12" FontWeight="Bold" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,30,0"/>
-                <TextBlock Text="NƠI NHẬN" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,30,0"/>
-                <TextBlock Text="LỊCH SỬ XỬ LÝ" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}" Margin="0,0,30,0"/>
-                <TextBlock Text="TỆP ĐÍNH KÈM" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextMutedBrush}"/>
-            </StackPanel>
+            <Border Grid.Column="0"
+                    Background="{StaticResource FluentSurfaceBrush}"
+                    BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Radius6}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="34"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
 
-            <Border Grid.Row="1"
-                    Style="{StaticResource AppCardStyle}">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <StackPanel>
-                        <TextBlock Text="{Binding Document.Summary}"
-                                   FontSize="13"
-                                   FontWeight="SemiBold"
-                                   Foreground="{StaticResource TextBrush}"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,14"/>
-                        <TextBlock Text="{Binding Document.ContentText}"
-                                   FontSize="13"
-                                   Foreground="{StaticResource TextBrush}"
-                                   TextWrapping="Wrap"
-                                   LineHeight="24"/>
-                        <ItemsControl ItemsSource="{Binding Attachments}" Margin="0,18,0,0">
+                    <Border BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                            BorderThickness="0,0,0,1"
+                            Padding="10,0">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBlock Text="NỘI DUNG" Style="{StaticResource DetailSectionLabelStyle}" Margin="0"/>
+                            <TextBlock Text="NƠI NHẬN" Style="{StaticResource DetailSectionLabelStyle}" Margin="26,0,0,0"/>
+                            <TextBlock Text="LỊCH SỬ XỬ LÝ" Style="{StaticResource DetailSectionLabelStyle}" Margin="26,0,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="12">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Document.Summary, TargetNullValue=Chưa có trích yếu nội dung.}"
+                                       FontSize="{StaticResource FontSizeBodyLarge}"
+                                       FontWeight="SemiBold"
+                                       Foreground="{StaticResource FluentTextBrush}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,12"/>
+                            <TextBlock Text="{Binding Document.ContentText, TargetNullValue=Chưa có nội dung văn bản.}"
+                                       FontSize="{StaticResource FontSizeBodyLarge}"
+                                       Foreground="{StaticResource FluentTextBrush}"
+                                       TextWrapping="Wrap"
+                                       LineHeight="22"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2"
+                    Background="{StaticResource FluentSurfaceBrush}"
+                    BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource Radius6}"
+                    Padding="10">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="TỆP ĐÍNH KÈM"
+                               Style="{StaticResource DetailSectionLabelStyle}"/>
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Attachments}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border BorderBrush="{StaticResource BorderBrushDefault}"
-                                            BorderThickness="1"
-                                            CornerRadius="6"
-                                            Padding="10"
-                                            Margin="0,0,0,8">
-                                        <DockPanel>
-                                            <Button Content="Mở file"
+                                    <Border Style="{StaticResource AttachmentItemStyle}">
+                                        <DockPanel LastChildFill="True">
+                                            <Button Content="Mở"
                                                     DockPanel.Dock="Right"
-                                                    Style="{StaticResource SecondaryButtonStyle}"
-                                                    Height="30"
+                                                    Style="{StaticResource CompactCommandButtonStyle}"
                                                     Command="{Binding DataContext.OpenAttachmentCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
                                                     CommandParameter="{Binding}"/>
-                                            <TextBlock Text="{Binding FileName}"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis"/>
+                                            <StackPanel Orientation="Horizontal">
+                                                <materialDesign:PackIcon Kind="Paperclip" Width="14" Height="14" Foreground="{StaticResource FluentTextMutedBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Text="{Binding FileName}"
+                                                           Margin="6,0,8,0"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           Foreground="{StaticResource FluentTextBrush}"/>
+                                            </StackPanel>
                                         </DockPanel>
                                     </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </StackPanel>
-                </ScrollViewer>
+                    </ScrollViewer>
+                </Grid>
             </Border>
         </Grid>
     </Grid>
