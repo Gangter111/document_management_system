@@ -161,17 +161,11 @@ Do NOT:
 
 Current focus:
 
-DocumentList enterprise refinement only.
+Enterprise operational QA and gap remediation.
 
-Do NOT expand:
+The application is no longer in speculative modernization mode. The stabilized UX/MVVM/runtime foundation should be preserved. Future work should fix concrete QA blockers and operational trust issues only.
 
-* Dashboard
-* Reports
-* Archive
-* Categories
-* System modules
-
-until explicitly requested.
+Archive / Reports / Categories / System are now intentionally visible modules. Do not hide them to avoid defects. If a module has a defect, fix it or present a truthful operational state.
 
 # REQUIRED WORKFLOW
 
@@ -236,6 +230,41 @@ The application has completed:
 * workflow consistency refinement
 * keyboard workflow hardening
 * operational honesty cleanup
+* DocumentList operational hardening:
+  * keyboard routing consistency
+  * button activation consistency
+  * stale selection cleanup
+  * paging consistency
+  * preview synchronization
+  * batch-selection trust fixes
+  * invalid filter state cleanup
+  * double-click row targeting protections
+  * command enable-state consistency
+  * permission-state cleanup
+* restrained Fluent visual refinement:
+  * rounded dashboard containers
+  * dashboard border hierarchy adjustments
+  * logo container refinement
+  * queue/sidebar spacing refinements
+  * preview empty-state refinement
+  * notification positioning remediation attempts
+* PDF extraction operational honesty improvements:
+  * PdfPig/native PDF text extraction remains primary
+  * OCR is not implemented
+  * scanned-image PDFs must report that OCR is not supported rather than silently failing
+* navigation/module restoration:
+  * Archive restored and wired to the real DocumentList archive queue
+  * Reports restored with real dashboard/report data surface
+  * Categories restored with real lookup data surface
+  * System restored with current user/server/config and admin operations
+* deterministic demo-data path:
+  * exactly 40 demo documents are seeded through application/persistence services
+  * demo records are deterministic and idempotent
+  * demo records are removable without deleting real user data
+* authentication operational cleanup:
+  * register action restored with a minimal local/API account creation flow
+  * forgot-password action restored with truthful local/admin recovery guidance
+  * dead visible auth controls are forbidden
 
 The application now has:
 
@@ -246,6 +275,44 @@ The application now has:
 * virtualization-safe rendering
 * coherent interaction grammar
 * operationally predictable workflows
+* deterministic local QA data for list/dashboard/archive/report/category testing
+
+# CURRENT QA READINESS
+
+The application is suitable for focused human QA of:
+
+* DocumentList filtering/search/paging/preview
+* archive/restore workflow using seeded archived documents
+* Dashboard counts/charts from real persisted data
+* Reports data surface from real dashboard statistics
+* Categories lookup surface from real persisted lookups
+* System server/user/config information and demo-data operations
+
+Known areas that still require human validation:
+
+* Reports must be opened in the WPF UI after the latest StaticResource fix to confirm the previous "Provide value on ..." / "A new guard page for the stack cannot be created" crash is fully closed.
+* Toast/notification placement has been remediated in code but needs visual validation on different DPI/window sizes.
+* scanned-image PDF extraction remains unsupported because OCR is intentionally deferred.
+* full VI/EN localization is deferred; do not introduce runtime localization complexity without explicit instruction.
+
+# DEMO DATA STATE
+
+The API startup path seeds exactly 40 removable demo documents through real application/persistence services.
+
+Demo rows are identified by:
+
+* document_number LIKE `DEMO-2026-%`
+* notes containing `DEMO-QA-2026-05`
+
+Admin cleanup is available through:
+
+* `DELETE api/demo-data`
+* System screen `Clear Demo Data`
+
+Cleanup must delete only marked demo rows and must preserve real user data. Reseeding is available through:
+
+* `POST api/demo-data/seed`
+* System screen `Seed Demo Data`
 
 IMPORTANT:
 
@@ -256,10 +323,17 @@ Do NOT:
 * add speculative UI refinements
 * add placeholder workflows
 * add fake interactive controls
+* hide broken features instead of fixing them
+* replace real workflows with placeholder cards
+* implement fake UI-only data
 * redesign keyboard routing architecture
 * introduce animation-heavy UI
 * introduce visual-tree complexity
 * create dashboard-style UI clutter
+* introduce startup-dashboard aesthetics
+* introduce cloud-dependent OCR or AI extraction
+* introduce LLM-first extraction workflows
+* introduce speculative identity/email/OAuth systems
 
 The current state is intentionally restrained.
 
@@ -267,6 +341,11 @@ The current state is intentionally restrained.
 
 Future work should prioritize:
 
+* REQUIRED-NOW: verify Reports opens in WPF without the previous StaticResource crash and modal-dialog spam
+* REQUIRED-NOW: verify exactly 40 demo documents appear after launch and remain idempotent across restarts
+* REQUIRED-NOW: verify Clear Demo Data removes only marked demo rows and reseeding restores exactly 40 rows
+* REQUIRED-NOW: verify Archive / Reports / Categories / System open stably and are minimally QA-usable
+* REQUIRED-NOW: verify register and forgot-password actions are truthful and stable in the login UI
 * real operator workflow feedback
 * human-driven QA findings
 * operational friction remediation
