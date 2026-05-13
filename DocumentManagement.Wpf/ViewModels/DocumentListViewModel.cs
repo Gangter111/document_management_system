@@ -114,6 +114,7 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
             if (SetProperty(ref _searchText, value))
             {
                 PageNumber = 1;
+                ClearBatchSelection();
                 QueueSearch(debounce: true);
             }
         }
@@ -218,6 +219,7 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
         {
             if (SetProperty(ref _isLoading, value))
             {
+                OnPropertyChanged(nameof(PreviewNextAction));
                 RaiseCommandState();
             }
         }
@@ -662,6 +664,7 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
         }
 
         PageNumber--;
+        SelectedDocument = null;
         await SearchAsync();
     }
 
@@ -673,6 +676,7 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
         }
 
         PageNumber++;
+        SelectedDocument = null;
         await SearchAsync();
     }
 
@@ -728,6 +732,8 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
             if (!CanViewDocument)
             {
                 ReplaceRows([]);
+                SelectedDocument = null;
+                PageNumber = 1;
                 TotalCount = 0;
                 TotalPages = 0;
                 StatusMessage = "Bạn không có quyền xem danh sách văn bản.";
@@ -737,8 +743,14 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
 
             if (FromDate.HasValue && ToDate.HasValue && FromDate > ToDate)
             {
+                ReplaceRows([]);
+                SelectedDocument = null;
+                PageNumber = 1;
+                TotalCount = 0;
+                TotalPages = 0;
                 StatusMessage = "Khoảng ngày không hợp lệ";
                 _notificationService.ShowWarning("Ngày bắt đầu không được lớn hơn ngày kết thúc.", "Khoảng ngày không hợp lệ");
+                canFinalizeUi = true;
                 return;
             }
 
@@ -754,7 +766,11 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
             TotalCount = result.Result.TotalCount;
             TotalPages = result.Result.TotalPages;
 
-            if (TotalPages > 0 && PageNumber > TotalPages)
+            if (TotalPages == 0)
+            {
+                PageNumber = 1;
+            }
+            else if (PageNumber > TotalPages)
             {
                 PageNumber = TotalPages;
                 await SearchAsync();
@@ -1213,6 +1229,16 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
         }
 
         RefreshBatchState();
+    }
+
+    private void ClearBatchSelection()
+    {
+        if (_batchSelectedRows.Count == 0)
+        {
+            return;
+        }
+
+        SetAllBatchSelection(false);
     }
 
     private void SelectRowParameter(object? parameter)

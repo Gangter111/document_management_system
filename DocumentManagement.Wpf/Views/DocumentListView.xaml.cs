@@ -21,6 +21,17 @@ namespace DocumentManagement.Wpf.Views
             if (DataContext is not DocumentListViewModel vm)
                 return;
 
+            var source = e.OriginalSource as DependencyObject;
+            if (!IsWithinDataGridRow(source) || IsNonOpenGridTarget(source))
+            {
+                return;
+            }
+
+            if (!vm.OpenSelectedDocumentCommand.CanExecute(null))
+            {
+                return;
+            }
+
             await vm.OpenSelectedDocumentAsync();
         }
 
@@ -157,6 +168,41 @@ namespace DocumentManagement.Wpf.Views
                 if (source is ButtonBase)
                 {
                     return true;
+                }
+
+                source = GetParent(source);
+            }
+
+            return false;
+        }
+
+        private static bool IsWithinDataGridRow(DependencyObject? source)
+        {
+            while (source != null)
+            {
+                if (source is DataGridRow)
+                {
+                    return true;
+                }
+
+                source = GetParent(source);
+            }
+
+            return false;
+        }
+
+        private static bool IsNonOpenGridTarget(DependencyObject? source)
+        {
+            while (source != null)
+            {
+                if (source is CheckBox or DataGridColumnHeader or ScrollBar)
+                {
+                    return true;
+                }
+
+                if (source is DataGridRow)
+                {
+                    return false;
                 }
 
                 source = GetParent(source);

@@ -218,3 +218,76 @@ Optimize for:
 * calm enterprise UX
 * predictable runtime behavior
 * maintainable architecture
+
+# COMPLETED ENTERPRISE WORKFLOW STABILIZATION PHASE
+
+The application has completed:
+
+* runtime/lifecycle hardening
+* stale async protection
+* cancellation ownership hardening
+* keyboard popup/IME safety
+* preview synchronization safety
+* export cancellation guards
+* enterprise Fluent shell modernization
+* DocumentList modernization
+* DocumentForm modernization
+* DocumentDetail modernization
+* workflow consistency refinement
+* keyboard workflow hardening
+* operational honesty cleanup
+
+The application now has:
+
+* restrained Fluent enterprise UX
+* keyboard-first workflow behavior
+* truthful operational surfaces
+* lightweight visual trees
+* virtualization-safe rendering
+* coherent interaction grammar
+* operationally predictable workflows
+
+IMPORTANT:
+
+Do NOT:
+
+* re-modernize the same screens
+* re-polish visuals endlessly
+* add speculative UI refinements
+* add placeholder workflows
+* add fake interactive controls
+* redesign keyboard routing architecture
+* introduce animation-heavy UI
+* introduce visual-tree complexity
+* create dashboard-style UI clutter
+
+The current state is intentionally restrained.
+
+# CURRENT ENGINEERING PRIORITY
+
+Future work should prioritize:
+
+* real operator workflow feedback
+* human-driven QA findings
+* operational friction remediation
+* workflow trust
+* predictable keyboard behavior
+* runtime stability
+
+NOT:
+
+* speculative modernization
+* visual experimentation
+* architecture rewrites
+* feature creep
+
+# IMPORTANT ENGINEERING PRINCIPLE
+
+The software should evolve through:
+
+small evidence-driven operational improvements
+
+NOT:
+
+continuous speculative polishing.
+
