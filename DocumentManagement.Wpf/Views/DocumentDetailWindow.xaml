@@ -79,31 +79,31 @@
                 <StackPanel Grid.Column="1"
                             Orientation="Horizontal"
                             VerticalAlignment="Center">
-                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False">
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="PencilOutline" Width="14" Height="14" VerticalAlignment="Center"/>
                             <TextBlock Text="Sửa" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False">
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="PrinterOutline" Width="14" Height="14" VerticalAlignment="Center"/>
                             <TextBlock Text="In" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False">
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="DownloadOutline" Width="14" Height="14" VerticalAlignment="Center"/>
                             <TextBlock Text="Tải xuống" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource DetailPrimaryCommandButtonStyle}" IsTabStop="False">
+                    <Button Style="{StaticResource DetailPrimaryCommandButtonStyle}" Visibility="Collapsed">
                         <StackPanel Orientation="Horizontal">
                             <materialDesign:PackIcon Kind="CheckCircleOutline" Width="14" Height="14" VerticalAlignment="Center"/>
                             <TextBlock Text="Đã duyệt" Margin="6,0,0,0" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource DetailCommandButtonStyle}" IsTabStop="False" Content="Khác"/>
+                    <Button Style="{StaticResource DetailCommandButtonStyle}" Visibility="Collapsed" Content="Khác"/>
                     <Button Style="{StaticResource DetailCommandButtonStyle}" Click="CloseButton_Click" IsCancel="True" ToolTip="Esc" Content="Đóng"/>
                 </StackPanel>
             </Grid>
