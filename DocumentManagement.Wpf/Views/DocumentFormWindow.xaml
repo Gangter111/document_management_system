@@ -209,11 +209,12 @@
                         </Border>
 
                         <Button Grid.Column="3"
-                                Content="Tự động điền từ PDF"
+                                Content="Trích xuất văn bản PDF"
                                 MinWidth="166"
                                 Style="{StaticResource CompactPrimaryButtonStyle}"
                                 Command="{Binding AutoFillCommand}"
-                                IsEnabled="{Binding CanAutoFill}"/>
+                                IsEnabled="{Binding CanAutoFill}"
+                                ToolTip="Trích xuất văn bản từ PDF có lớp chữ. PDF scan ảnh cần nhập thủ công."/>
                     </Grid>
                 </Border>
 

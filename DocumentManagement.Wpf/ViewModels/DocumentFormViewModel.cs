@@ -351,7 +351,7 @@ public class DocumentFormViewModel : BaseViewModel
             SelectedFilePath = dialog.FileName;
 
             _notificationService.ShowInfo(
-                "Đã chọn file PDF. Bấm Tự động điền để trích xuất thông tin.",
+                "Đã chọn file PDF. Bấm Trích xuất văn bản PDF để lấy thông tin từ PDF có lớp chữ.",
                 "Đã chọn tệp");
         }
     }
@@ -370,18 +370,43 @@ public class DocumentFormViewModel : BaseViewModel
         {
             var result = await _apiService.ExtractPdfAsync(SelectedFilePath);
 
+            if (!HasExtractedContent(result))
+            {
+                _notificationService.ShowWarning(
+                    "Không tìm thấy văn bản có thể trích xuất trong PDF. PDF scan ảnh hiện cần nhập thủ công.",
+                    "Không có văn bản PDF");
+                return;
+            }
+
             ApplyAutoFillResult(result);
 
             _notificationService.ShowSuccess(
-                "Đã trích xuất thông tin từ PDF.",
-                "Tự động điền");
+                "Đã trích xuất văn bản từ PDF. Vui lòng kiểm tra lại các trường trước khi lưu.",
+                "Trích xuất PDF");
         }
         catch (Exception ex)
         {
             _notificationService.ShowError(
-                "Không thể trích xuất thông tin từ PDF: " + ex.Message,
-                "Lỗi xử lý PDF");
+                "Không thể trích xuất văn bản từ PDF. PDF scan ảnh hiện cần nhập thủ công: " + ex.Message,
+                "Lỗi trích xuất PDF");
         }
+    }
+
+    private static bool HasExtractedContent(AutoFillDocumentResultDto result)
+    {
+        return !string.IsNullOrWhiteSpace(result.DocumentNumber)
+               || !string.IsNullOrWhiteSpace(result.Title)
+               || !string.IsNullOrWhiteSpace(result.Summary)
+               || (!string.IsNullOrWhiteSpace(result.ContentText) && !IsExtractionWarning(result.ContentText))
+               || !string.IsNullOrWhiteSpace(result.SenderName)
+               || !string.IsNullOrWhiteSpace(result.ReceiverName)
+               || !string.IsNullOrWhiteSpace(result.UrgencyLevel)
+               || !string.IsNullOrWhiteSpace(result.IssueDate);
+    }
+
+    private static bool IsExtractionWarning(string value)
+    {
+        return value.TrimStart().StartsWith("CẢNH BÁO:", StringComparison.OrdinalIgnoreCase);
     }
 
     private void ApplyAutoFillResult(AutoFillDocumentResultDto result)

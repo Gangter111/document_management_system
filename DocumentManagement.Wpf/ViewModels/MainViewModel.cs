@@ -109,13 +109,13 @@ public class MainViewModel : BaseViewModel
 
     public bool CanViewTasks => false;
 
-    public bool CanViewReports => true;
+    public bool CanViewReports => false;
 
-    public bool CanViewArchive => true;
+    public bool CanViewArchive => false;
 
-    public bool CanViewCategories => true;
+    public bool CanViewCategories => false;
 
-    public bool CanViewSettings => true;
+    public bool CanViewSettings => false;
 
     public bool CanBackup =>
         string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase)
@@ -168,10 +168,10 @@ public class MainViewModel : BaseViewModel
         ShowDashboardCommand = new RelayCommand(_ => ShowDashboard(), _ => CanViewDashboard);
         ShowDocumentListCommand = new RelayCommand(async _ => await ShowDocumentsAsync(), _ => CanViewDocuments);
         CreateDocumentCommand = new RelayCommand(async _ => await CreateDocumentAsync(), _ => CanCreateDocument);
-        ShowArchiveCommand = new RelayCommand(_ => ShowPlaceholder("Lưu trữ", "Các văn bản lưu trữ sẽ được tổng hợp tại đây."));
-        ShowReportsCommand = new RelayCommand(_ => ShowPlaceholder("Báo cáo", "Khu vực báo cáo thống kê văn bản, tình trạng hiệu lực và phòng ban xử lý."));
-        ShowCategoriesCommand = new RelayCommand(_ => ShowPlaceholder("Danh mục", "Quản lý loại văn bản, trạng thái, độ mật và độ khẩn."));
-        ShowSettingsCommand = new RelayCommand(_ => ShowPlaceholder("Hệ thống", "Cấu hình người dùng, phân quyền và tham số vận hành."));
+        ShowArchiveCommand = new RelayCommand(_ => ShowPlaceholder("Lưu trữ", "Các văn bản lưu trữ sẽ được tổng hợp tại đây."), _ => CanViewArchive);
+        ShowReportsCommand = new RelayCommand(_ => ShowPlaceholder("Báo cáo", "Khu vực báo cáo thống kê văn bản, tình trạng hiệu lực và phòng ban xử lý."), _ => CanViewReports);
+        ShowCategoriesCommand = new RelayCommand(_ => ShowPlaceholder("Danh mục", "Quản lý loại văn bản, trạng thái, độ mật và độ khẩn."), _ => CanViewCategories);
+        ShowSettingsCommand = new RelayCommand(_ => ShowPlaceholder("Hệ thống", "Cấu hình người dùng, phân quyền và tham số vận hành."), _ => CanViewSettings);
 
         BackupCommand = new RelayCommand(
             async _ => await BackupAsync(),
@@ -232,6 +232,10 @@ public class MainViewModel : BaseViewModel
         (ShowDashboardCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (ShowDocumentListCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (CreateDocumentCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (ShowArchiveCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (ShowReportsCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (ShowCategoriesCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (ShowSettingsCommand as RelayCommand)?.RaiseCanExecuteChanged();
         RaiseSystemCommandState();
     }
 

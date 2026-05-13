@@ -8,7 +8,7 @@ namespace DocumentManagement.Infrastructure.Services;
 
 /// <summary>
 /// Dịch vụ trích xuất thông tin từ file văn bản.
-/// LƯU Ý: Hiện tại chỉ hỗ trợ trích xuất Text từ file PDF kỹ thuật số (không phải PDF scan ảnh).
+/// LƯU Ý: Hiện tại chỉ hỗ trợ trích xuất văn bản từ PDF kỹ thuật số, chưa hỗ trợ OCR cho PDF scan ảnh.
 /// </summary>
 public class PdfExtractionService : IOcrService
 {
@@ -47,7 +47,7 @@ public class PdfExtractionService : IOcrService
         }
         catch (Exception)
         {
-            return "CẢNH BÁO: Đây có thể là PDF dạng ảnh hoặc file đã bị bảo vệ. Không thể trích xuất văn bản.";
+            return "CẢNH BÁO: Không trích xuất được văn bản từ PDF. File có thể là PDF scan ảnh hoặc đã bị bảo vệ. OCR chưa được bật; vui lòng nhập thủ công.";
         }
         return sb.ToString();
     }
@@ -57,10 +57,11 @@ public class PdfExtractionService : IOcrService
         var result = new AutoFillDocumentResult
         {
             ContentText = text,
-            IsFromOcr = false // Ghi chú: Đây là Extraction, chưa phải OCR thực thụ
+            IsFromOcr = false
         };
 
         if (string.IsNullOrWhiteSpace(text)) return result;
+        if (text.StartsWith("CẢNH BÁO:", StringComparison.OrdinalIgnoreCase)) return result;
 
         // RegEx patterns for common document metadata
         var numberMatch = Regex.Match(text, @"Số[:\s]*([A-Za-z0-9\/\-\.]+)", RegexOptions.IgnoreCase);

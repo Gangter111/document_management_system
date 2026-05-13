@@ -358,8 +358,7 @@
 
                                 <Button x:Name="PART_Button"
                                         Grid.Column="1"
-                                        Width="36"
-                                        Height="36"
+                                        Width="34"
                                         Padding="0"
                                         Margin="0"
                                         HorizontalAlignment="Right"
@@ -370,8 +369,8 @@
                                         BorderThickness="0"
                                         Cursor="Hand">
 
-                                    <Grid Width="36"
-                                          Height="36"
+                                    <Grid Width="34"
+                                          Height="34"
                                           HorizontalAlignment="Right"
                                           VerticalAlignment="Center">
 
