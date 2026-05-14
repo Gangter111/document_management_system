@@ -27,7 +27,7 @@
         <SolidColorBrush x:Key="LoginMutedBrush" Color="#7A7F87"/>
         <SolidColorBrush x:Key="LoginLineBrush" Color="#D7ECE0"/>
         <SolidColorBrush x:Key="LoginInputBorderBrush" Color="#BFDCCB"/>
-        <SolidColorBrush x:Key="LoginDecorBrush" Color="#DCEFE5"/>
+        <SolidColorBrush x:Key="LoginDecorBrush" Color="#C7E5D3"/>
 
         <LinearGradientBrush x:Key="LoginButtonBrush" StartPoint="0,0" EndPoint="1,1">
             <GradientStop Color="#0AA04B" Offset="0"/>
@@ -159,19 +159,19 @@
             </LinearGradientBrush>
         </Grid.Background>
 
-        <Canvas IsHitTestVisible="False" Opacity="0.62">
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M88,204 L172,166 L260,206 L260,376 L178,414 L88,374 Z"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M120,210 L120,360 M148,198 L148,374 M176,186 L176,386 M204,196 L204,398 M232,208 L232,386"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M96,488 L232,434 L392,498 L252,618 Z M142,502 L248,466 M158,526 L276,484 M174,552 L304,504"/>
-            <Ellipse Canvas.Left="196" Canvas.Top="552" Width="54" Height="34" Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4"/>
+        <Canvas IsHitTestVisible="False" Opacity="0.59">
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M88,204 L172,166 L260,206 L260,376 L178,414 L88,374 Z"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M120,210 L120,360 M148,198 L148,374 M176,186 L176,386 M204,196 L204,398 M232,208 L232,386"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M96,488 L232,434 L392,498 L252,618 Z M142,502 L248,466 M158,526 L276,484 M174,552 L304,504"/>
+            <Ellipse Canvas.Left="196" Canvas.Top="552" Width="54" Height="34" Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2"/>
 
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M820,188 L1048,224 L1018,418 L788,382 Z M844,220 L964,238 L946,350 L826,330 Z"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M792,384 L1002,420 L920,456 L710,418 Z"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M965,294 A35,35 0 1 1 964,295 M988,326 L1020,364"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M820,188 L1048,224 L1018,418 L788,382 Z M844,220 L964,238 L946,350 L826,330 Z"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M792,384 L1002,420 L920,456 L710,418 Z"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M965,294 A35,35 0 1 1 964,295 M988,326 L1020,364"/>
 
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M804,520 L986,468 L1062,506 L884,570 Z M804,520 L804,596 L884,646 L1062,578 L1062,506 M884,570 L884,646"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.4" Data="M916,618 L1050,670"/>
-            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="3" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M958,668 L1066,628"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M804,520 L986,468 L1062,506 L884,570 Z M804,520 L804,596 L884,646 L1062,578 L1062,506 M884,570 L884,646"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="1.2" Data="M916,618 L1050,670"/>
+            <Path Stroke="{StaticResource LoginDecorBrush}" StrokeThickness="2.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" Data="M958,668 L1066,628"/>
         </Canvas>
 
         <Grid Height="36"
@@ -394,10 +394,12 @@
                 <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="190"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
-                    <Border Background="{StaticResource LoginGreenBrush}"/>
-                    <Border Grid.Column="1" Background="{StaticResource LoginRedBrush}"/>
+                    <Border Background="{StaticResource LoginRedBrush}"/>
+                    <Border Grid.Column="1" Background="{StaticResource LoginGreenBrush}"/>
+                    <Border Grid.Column="2" Background="{StaticResource LoginRedBrush}"/>
                 </Grid>
 
                 <StackPanel Grid.Row="1"

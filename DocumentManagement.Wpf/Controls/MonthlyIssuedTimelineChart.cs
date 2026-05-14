@@ -10,48 +10,47 @@ using DocumentManagement.Contracts.Dashboard;
 
 namespace DocumentManagement.Wpf.Controls;
 
-public class DepartmentDocuments3DChart : Canvas
+public class MonthlyIssuedTimelineChart : Canvas
 {
     private static readonly Brush NavyTextBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromRgb(8, 34, 76)));
     private static readonly Brush AxisTextBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromRgb(44, 83, 128)));
-    private static readonly Brush MutedTextBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromRgb(76, 106, 140)));
+    private static readonly Brush MutedTextBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromRgb(82, 111, 145)));
     private static readonly Brush AxisBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(116, 134, 169, 205)));
-    private static readonly Brush GridBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(70, 203, 221, 236)));
+    private static readonly Brush GridBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(72, 203, 221, 236)));
     private static readonly Brush PlotBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#FFFFFF", "#F6FBFF", new Point(0, 0), new Point(1, 1)));
-    private static readonly Brush PlotDepthBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.RadialBrush(Color.FromArgb(22, 255, 255, 255), Color.FromArgb(0, 255, 255, 255)));
-    private static readonly Brush FloorBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient(Color.FromArgb(30, 218, 234, 248), Color.FromArgb(0, 218, 234, 248), new Point(0, 0), new Point(0, 1)));
-    private static readonly Brush FrontBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.ThreeStopGradient("#67ECF4", "#23ADEE", "#086CEA", new Point(0, 0), new Point(0, 1)));
-    private static readonly Brush FrontActiveBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.ThreeStopGradient("#83F6FC", "#159EF7", "#075FE3", new Point(0, 0), new Point(0, 1)));
-    private static readonly Brush SideBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#3BD2E3", "#1479CA", new Point(0, 0), new Point(1, 1)));
-    private static readonly Brush TopBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#C8FBFC", "#4AD8EA", new Point(0, 0), new Point(1, 1)));
-    private static readonly Brush PlatformBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#FFFFFF", "#DFEBF7", new Point(0, 0), new Point(1, 1)));
+    private static readonly Brush PlotGlowBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.RadialBrush(Color.FromArgb(24, 255, 255, 255), Color.FromArgb(0, 255, 255, 255)));
+    private static readonly Brush FrontBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.ThreeStopGradient("#65ECF4", "#1AA7EF", "#0869EA", new Point(0, 0), new Point(0, 1)));
+    private static readonly Brush FrontActiveBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.ThreeStopGradient("#7EF5FB", "#159EF7", "#075FE3", new Point(0, 0), new Point(0, 1)));
+    private static readonly Brush SideBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#38D2E2", "#1276C9", new Point(0, 0), new Point(1, 1)));
+    private static readonly Brush TopBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#C5FBFC", "#42D8E8", new Point(0, 0), new Point(1, 1)));
+    private static readonly Brush PlatformBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#FFFFFF", "#E0ECF8", new Point(0, 0), new Point(1, 1)));
     private static readonly Brush HighlightBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient(Color.FromArgb(105, 255, 255, 255), Color.FromArgb(16, 255, 255, 255), new Point(0, 0), new Point(1, 0)));
-    private static readonly Brush DiagonalHighlightBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient(Color.FromArgb(38, 255, 255, 255), Color.FromArgb(7, 255, 255, 255), new Point(0, 0), new Point(1, 0)));
-    private static readonly Brush EdgeLightBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(92, 205, 250, 255)));
-    private static readonly Brush ReflectionBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient(Color.FromArgb(38, 10, 120, 244), Color.FromArgb(0, 10, 120, 244), new Point(0, 0), new Point(0, 1)));
+    private static readonly Brush EdgeLightBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(95, 205, 250, 255)));
+    private static readonly Brush ReflectionBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient(Color.FromArgb(42, 10, 120, 244), Color.FromArgb(0, 10, 120, 244), new Point(0, 0), new Point(0, 1)));
+    private static readonly Brush ZeroBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#58E8FF", "#0B7AF4", new Point(0, 0), new Point(1, 1)));
+    private static readonly Brush ZeroGlowBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.RadialBrush(Color.FromArgb(58, 12, 112, 230), Color.FromArgb(0, 12, 112, 230)));
     private static readonly Brush TooltipBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#FFFFFF", "#F7FBFF", new Point(0, 0), new Point(1, 1)));
     private static readonly Brush TooltipBorderBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromRgb(209, 227, 243)));
     private static readonly Brush ShadowBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(44, 35, 111, 205)));
+    private static readonly Brush BarBorderBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(140, 180, 238, 255)));
     private static readonly Brush PlatformBorderBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromRgb(200, 216, 232)));
-    private static readonly Brush BarBorderBrush = DashboardChartDrawing.Freeze(new SolidColorBrush(Color.FromArgb(140, 185, 240, 255)));
-    private static readonly Brush LegendDotBrush = DashboardChartDrawing.Freeze(DashboardChartDrawing.TwoStopGradient("#5BE8FF", "#0B7AF4", new Point(0, 0), new Point(1, 1)));
 
     public static readonly DependencyProperty ItemsSourceProperty =
         DependencyProperty.Register(
             nameof(ItemsSource),
             typeof(IEnumerable),
-            typeof(DepartmentDocuments3DChart),
+            typeof(MonthlyIssuedTimelineChart),
             new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender, OnItemsSourceChanged));
 
     private readonly Stopwatch _animationClock = new();
-    private int _hoveredBarIndex = -1;
-    private Rect[] _barHitRects = [];
+    private int _hoveredIndex = -1;
+    private Rect[] _hitRects = [];
     private Point[] _tooltipAnchors = [];
-    private IReadOnlyList<DepartmentItem> _items = [];
+    private IReadOnlyList<DashboardChartItemDto> _items = [];
     private INotifyCollectionChanged? _observableItems;
     private bool _isAnimating;
 
-    public DepartmentDocuments3DChart()
+    public MonthlyIssuedTimelineChart()
     {
         Background = Brushes.Transparent;
         SnapsToDevicePixels = true;
@@ -78,21 +77,21 @@ public class DepartmentDocuments3DChart : Canvas
 
         var point = e.GetPosition(this);
         var hit = -1;
-        for (var i = 0; i < _barHitRects.Length; i++)
+        for (var i = 0; i < _hitRects.Length; i++)
         {
-            if (_barHitRects[i].Contains(point))
+            if (_hitRects[i].Contains(point))
             {
                 hit = i;
                 break;
             }
         }
 
-        if (hit == _hoveredBarIndex)
+        if (hit == _hoveredIndex)
         {
             return;
         }
 
-        _hoveredBarIndex = hit;
+        _hoveredIndex = hit;
         Cursor = hit >= 0 ? Cursors.Hand : Cursors.Arrow;
         InvalidateVisual();
     }
@@ -100,12 +99,12 @@ public class DepartmentDocuments3DChart : Canvas
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
-        if (_hoveredBarIndex < 0)
+        if (_hoveredIndex < 0)
         {
             return;
         }
 
-        _hoveredBarIndex = -1;
+        _hoveredIndex = -1;
         Cursor = Cursors.Arrow;
         InvalidateVisual();
     }
@@ -123,10 +122,10 @@ public class DepartmentDocuments3DChart : Canvas
 
         var pixelsPerDip = VisualTreeHelper.GetDpi(this).PixelsPerDip;
         var scale = Math.Min(width / 560.0, height / 300.0);
-        var left = 54 * scale;
-        var right = 24 * scale;
-        var top = 32 * scale;
-        var bottom = 50 * scale;
+        var left = 50 * scale;
+        var right = 18 * scale;
+        var top = 30 * scale;
+        var bottom = 44 * scale;
         var plotWidth = Math.Max(1, width - left - right);
         var plotHeight = Math.Max(1, height - top - bottom);
         var baselineY = top + plotHeight;
@@ -136,7 +135,7 @@ public class DepartmentDocuments3DChart : Canvas
 
         if (_items.Count == 0)
         {
-            _barHitRects = [];
+            _hitRects = [];
             _tooltipAnchors = [];
             DrawGrid(dc, left, top, plotWidth, plotHeight, 8, scale, pixelsPerDip);
             DrawEmptyState(dc, left, top, plotWidth, plotHeight, scale, pixelsPerDip);
@@ -144,22 +143,21 @@ public class DepartmentDocuments3DChart : Canvas
         }
 
         var maxValue = GetNiceMax(Math.Max(8, _items.Max(item => item.Value)));
-        _barHitRects = new Rect[_items.Count];
+        _hitRects = new Rect[_items.Count];
         _tooltipAnchors = new Point[_items.Count];
 
         DrawGrid(dc, left, top, plotWidth, plotHeight, maxValue, scale, pixelsPerDip);
-        DrawFloorDepth(dc, left, baselineY, plotWidth, scale);
-        DrawBars(dc, left, plotWidth, plotHeight, baselineY, maxValue, scale, pixelsPerDip);
+        DrawTimeline(dc, left, plotWidth, plotHeight, baselineY, maxValue, scale, pixelsPerDip);
 
-        if (_hoveredBarIndex >= 0 && _hoveredBarIndex < _items.Count)
+        if (_hoveredIndex >= 0 && _hoveredIndex < _items.Count)
         {
-            DrawTooltip(dc, _items[_hoveredBarIndex], _tooltipAnchors[_hoveredBarIndex], scale, pixelsPerDip);
+            DrawTooltip(dc, _items[_hoveredIndex], _tooltipAnchors[_hoveredIndex], scale, pixelsPerDip);
         }
     }
 
     private static void OnItemsSourceChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not DepartmentDocuments3DChart chart)
+        if (d is not MonthlyIssuedTimelineChart chart)
         {
             return;
         }
@@ -198,18 +196,16 @@ public class DepartmentDocuments3DChart : Canvas
     {
         _items = ItemsSource?
             .OfType<DashboardChartItemDto>()
-            .Where(item => item.Value > 0)
-            .OrderByDescending(item => item.Value)
-            .ThenBy(item => item.Name)
-            .Take(6)
-            .Select(item => new DepartmentItem(
-                string.IsNullOrWhiteSpace(item.Name) ? "Không xác định" : item.Name.Trim(),
-                Math.Max(0, item.Value)))
+            .Select(item => new DashboardChartItemDto
+            {
+                Name = string.IsNullOrWhiteSpace(item.Name) ? "-" : item.Name.Trim(),
+                Value = Math.Max(0, item.Value)
+            })
             .ToList()
             ?? [];
 
-        _hoveredBarIndex = -1;
-        _barHitRects = [];
+        _hoveredIndex = -1;
+        _hitRects = [];
         _tooltipAnchors = [];
         StartIntroAnimation();
         InvalidateVisual();
@@ -258,7 +254,7 @@ public class DepartmentDocuments3DChart : Canvas
             return 1;
         }
 
-        var t = Math.Clamp(_animationClock.Elapsed.TotalMilliseconds / 560.0, 0, 1);
+        var t = Math.Clamp(_animationClock.Elapsed.TotalMilliseconds / 520.0, 0, 1);
         return 1 - Math.Pow(1 - t, 3);
     }
 
@@ -266,7 +262,7 @@ public class DepartmentDocuments3DChart : Canvas
     {
         var rect = new Rect(0.5 * scale, 0.5 * scale, ActualWidth - scale, ActualHeight - scale);
         dc.DrawRoundedRectangle(PlotBrush, new Pen(TooltipBorderBrush, 0.6 * scale), rect, 13 * scale, 13 * scale);
-        dc.DrawRoundedRectangle(PlotDepthBrush, null, rect, 13 * scale, 13 * scale);
+        dc.DrawRoundedRectangle(PlotGlowBrush, null, rect, 13 * scale, 13 * scale);
     }
 
     private void DrawYAxisTitle(DrawingContext dc, double scale, double pixelsPerDip)
@@ -299,83 +295,90 @@ public class DepartmentDocuments3DChart : Canvas
         dc.DrawLine(axisPen, new Point(left, top), new Point(left, top + plotHeight));
     }
 
-    private void DrawFloorDepth(DrawingContext dc, double left, double baselineY, double plotWidth, double scale)
-    {
-        var floor = new StreamGeometry();
-        using (var ctx = floor.Open())
-        {
-            ctx.BeginFigure(new Point(left + 2 * scale, baselineY), true, true);
-            ctx.LineTo(new Point(left + plotWidth - 2 * scale, baselineY), true, false);
-            ctx.LineTo(new Point(left + plotWidth - 34 * scale, baselineY + 24 * scale), true, false);
-            ctx.LineTo(new Point(left + 30 * scale, baselineY + 24 * scale), true, false);
-        }
-        floor.Freeze();
-
-        dc.PushOpacity(0.55);
-        dc.DrawGeometry(FloorBrush, null, floor);
-        dc.Pop();
-    }
-
-    private void DrawBars(DrawingContext dc, double left, double plotWidth, double plotHeight, double baselineY, int maxValue, double scale, double pixelsPerDip)
+    private void DrawTimeline(DrawingContext dc, double left, double plotWidth, double plotHeight, double baselineY, int maxValue, double scale, double pixelsPerDip)
     {
         var progress = GetAnimationProgress();
         var section = plotWidth / _items.Count;
-        var barWidth = Math.Min(66 * scale, Math.Max(28 * scale, section * 0.4));
-        var depthX = Math.Min(16 * scale, barWidth * 0.26);
-        var depthY = -Math.Min(12 * scale, barWidth * 0.2);
+        var barWidth = Math.Min(35 * scale, Math.Max(14 * scale, section * 0.52));
+        var depthX = Math.Min(9 * scale, barWidth * 0.26);
+        var depthY = -Math.Min(7 * scale, barWidth * 0.2);
 
         for (var i = 0; i < _items.Count; i++)
         {
             var item = _items[i];
             var centerX = left + section * i + section / 2;
-            var active = i == _hoveredBarIndex;
-            var targetHeight = Math.Max(14 * scale, plotHeight * item.Value / maxValue * 0.9);
-            var barHeight = targetHeight * progress;
-            var x = centerX - barWidth / 2;
-            var y = baselineY - barHeight;
+            var active = i == _hoveredIndex;
 
-            DrawBarReflection(dc, x, baselineY, barWidth, barHeight, scale);
-            DrawPlatform(dc, x, baselineY, barWidth, depthX, scale, active);
-            Draw3DBar(dc, x, y, barWidth, barHeight, depthX, depthY, scale, active);
-            DrawValueLabel(dc, item.Value, centerX + depthX / 2, y - 16 * scale, scale, pixelsPerDip, active);
-            DrawCategoryLabel(dc, item.Label, centerX + depthX / 2, baselineY + 17 * scale, section, scale, pixelsPerDip);
+            if (item.Value <= 0)
+            {
+                DrawZeroMarker(dc, centerX, baselineY, scale, pixelsPerDip);
+                _hitRects[i] = new Rect(centerX - section / 2, baselineY - 26 * scale, section, 38 * scale);
+                _tooltipAnchors[i] = new Point(centerX, baselineY - 18 * scale);
+            }
+            else
+            {
+                var targetHeight = Math.Max(12 * scale, plotHeight * item.Value / maxValue * 0.9);
+                var barHeight = targetHeight * progress;
+                var x = centerX - barWidth / 2;
+                var y = baselineY - barHeight;
 
-            _barHitRects[i] = new Rect(x - 6 * scale, y + depthY - 6 * scale, barWidth + depthX + 12 * scale, barHeight - depthY + 13 * scale);
-            _tooltipAnchors[i] = new Point(centerX + depthX / 2, y - 4 * scale);
+                DrawBarReflection(dc, x, baselineY, barWidth, barHeight, scale);
+                DrawPlatform(dc, x, baselineY, barWidth, depthX, scale, active);
+                DrawRoundedDepthBar(dc, x, y, barWidth, barHeight, depthX, depthY, scale, active);
+                DrawValueLabel(dc, item.Value, centerX + depthX / 2, y - 18 * scale, scale, pixelsPerDip, active);
+
+                _hitRects[i] = new Rect(x - 5 * scale, y + depthY - 5 * scale, barWidth + depthX + 10 * scale, barHeight - depthY + 12 * scale);
+                _tooltipAnchors[i] = new Point(centerX + depthX / 2, y - 4 * scale);
+            }
+
+            if (ShouldDrawAxisLabel(i))
+            {
+                DrawAxisLabel(dc, item.Name, centerX, baselineY + 15 * scale, section, scale, pixelsPerDip);
+            }
         }
     }
 
-    private void Draw3DBar(DrawingContext dc, double x, double y, double width, double height, double depthX, double depthY, double scale, bool active)
+    private bool ShouldDrawAxisLabel(int index)
+    {
+        if (_items.Count <= 6)
+        {
+            return true;
+        }
+
+        return index == 0 || index == _items.Count - 1 || index == _items.Count / 2 || _items[index].Value > 0;
+    }
+
+    private void DrawRoundedDepthBar(DrawingContext dc, double x, double y, double width, double height, double depthX, double depthY, double scale, bool active)
     {
         if (height <= 0.5)
         {
             return;
         }
 
-        var corner = Math.Min(10 * scale, width * 0.22);
+        var corner = Math.Min(8 * scale, width * 0.3);
 
         dc.PushOpacity(active ? 1.0 : 0.96);
 
-        dc.PushOpacity(active ? 0.54 : 0.38);
-        dc.DrawRoundedRectangle(ShadowBrush, null, new Rect(x + 10 * scale, y + 11 * scale, width, height), corner, corner);
+        dc.PushOpacity(active ? 0.56 : 0.38);
+        dc.DrawRoundedRectangle(ShadowBrush, null, new Rect(x + 7 * scale, y + 8 * scale, width, height), corner, corner);
         dc.Pop();
 
         var side = new StreamGeometry();
         using (var ctx = side.Open())
         {
-            ctx.BeginFigure(new Point(x + width - corner, y + corner * 0.7), true, true);
+            ctx.BeginFigure(new Point(x + width - corner * 0.8, y + corner * 0.7), true, true);
             ctx.QuadraticBezierTo(new Point(x + width, y), new Point(x + width + depthX, y + depthY + corner * 0.8), true, false);
-            ctx.LineTo(new Point(x + width + depthX, y + height + depthY - corner), true, false);
+            ctx.LineTo(new Point(x + width + depthX, y + height + depthY - corner * 0.65), true, false);
             ctx.QuadraticBezierTo(new Point(x + width + depthX, y + height + depthY), new Point(x + width, y + height), true, false);
-            ctx.LineTo(new Point(x + width - corner, y + height), true, false);
+            ctx.LineTo(new Point(x + width - corner * 0.8, y + height), true, false);
         }
         side.Freeze();
         dc.DrawGeometry(SideBrush, null, side);
 
-        dc.DrawRoundedRectangle(active ? FrontActiveBrush : FrontBrush, new Pen(BarBorderBrush, 0.7 * scale), new Rect(x, y, width, height), corner, corner);
+        dc.DrawRoundedRectangle(active ? FrontActiveBrush : FrontBrush, new Pen(BarBorderBrush, 0.65 * scale), new Rect(x, y, width, height), corner, corner);
 
-        var topFace = new StreamGeometry();
-        using (var ctx = topFace.Open())
+        var top = new StreamGeometry();
+        using (var ctx = top.Open())
         {
             ctx.BeginFigure(new Point(x + corner, y), true, true);
             ctx.LineTo(new Point(x + width - corner, y), true, false);
@@ -383,89 +386,82 @@ public class DepartmentDocuments3DChart : Canvas
             ctx.LineTo(new Point(x + depthX + corner, y + depthY + corner * 0.8), true, false);
             ctx.QuadraticBezierTo(new Point(x, y), new Point(x + corner, y), true, false);
         }
-        topFace.Freeze();
-        dc.DrawGeometry(TopBrush, new Pen(BarBorderBrush, 0.55 * scale), topFace);
+        top.Freeze();
+        dc.DrawGeometry(TopBrush, new Pen(BarBorderBrush, 0.55 * scale), top);
 
         var highlightWidth = width * 0.24;
-        var highlightHeight = Math.Max(0, height - 15 * scale);
+        var highlightHeight = Math.Max(0, height - 13 * scale);
         if (highlightHeight > 2)
         {
             dc.PushOpacity(active ? 0.76 : 0.58);
-            dc.DrawRoundedRectangle(HighlightBrush, null, new Rect(x + 7 * scale, y + 9 * scale, highlightWidth, highlightHeight), corner * 0.75, corner * 0.75);
+            dc.DrawRoundedRectangle(HighlightBrush, null, new Rect(x + 6 * scale, y + 8 * scale, highlightWidth, highlightHeight), corner * 0.7, corner * 0.7);
             dc.Pop();
         }
 
-        if (height > 34 * scale)
-        {
-            var diagonal = new StreamGeometry();
-            using (var ctx = diagonal.Open())
-            {
-                ctx.BeginFigure(new Point(x + width * 0.14, y + height), true, true);
-                ctx.LineTo(new Point(x + width * 0.78, y + 14 * scale), true, false);
-                ctx.LineTo(new Point(x + width, y + 14 * scale), true, false);
-                ctx.LineTo(new Point(x + width * 0.42, y + height), true, false);
-            }
-            diagonal.Freeze();
-            dc.PushOpacity(active ? 0.52 : 0.38);
-            dc.DrawGeometry(DiagonalHighlightBrush, null, diagonal);
-            dc.Pop();
-        }
-
-        if (height > 24 * scale)
+        if (height > 20 * scale)
         {
             dc.PushOpacity(active ? 0.68 : 0.46);
-            dc.DrawLine(new Pen(EdgeLightBrush, 0.65 * scale), new Point(x + width - 2.5 * scale, y + 8 * scale), new Point(x + width - 2.5 * scale, y + height - 4 * scale));
+            dc.DrawLine(new Pen(EdgeLightBrush, 0.6 * scale), new Point(x + width - 2 * scale, y + 7 * scale), new Point(x + width - 2 * scale, y + height - 3 * scale));
             dc.Pop();
         }
 
         dc.Pop();
+    }
+
+    private void DrawZeroMarker(DrawingContext dc, double centerX, double baselineY, double scale, double pixelsPerDip)
+    {
+        DrawValueLabel(dc, 0, centerX, baselineY - 22 * scale, scale, pixelsPerDip, false);
+
+        dc.DrawEllipse(ZeroGlowBrush, null, new Point(centerX, baselineY + 4 * scale), 10 * scale, 6 * scale);
+        dc.DrawEllipse(Brushes.White, new Pen(ZeroBrush, 1.5 * scale), new Point(centerX, baselineY), 4.5 * scale, 4.5 * scale);
+        dc.DrawEllipse(ZeroBrush, null, new Point(centerX, baselineY), 2.1 * scale, 2.1 * scale);
     }
 
     private void DrawPlatform(DrawingContext dc, double x, double baselineY, double width, double depthX, double scale, bool active)
     {
-        var platformRect = new Rect(x - 9 * scale, baselineY - 2 * scale, width + depthX + 18 * scale, 11 * scale);
+        var platformRect = new Rect(x - 8 * scale, baselineY - 2 * scale, width + depthX + 16 * scale, 8.5 * scale);
 
-        dc.PushOpacity(active ? 0.58 : 0.42);
-        dc.DrawEllipse(ShadowBrush, null, new Point(platformRect.X + platformRect.Width / 2, baselineY + 8 * scale), platformRect.Width * 0.46, 5.5 * scale);
+        dc.PushOpacity(active ? 0.62 : 0.42);
+        dc.DrawEllipse(ShadowBrush, null, new Point(platformRect.X + platformRect.Width / 2, baselineY + 6 * scale), platformRect.Width * 0.44, 4.5 * scale);
         dc.Pop();
 
-        dc.DrawRoundedRectangle(PlatformBrush, new Pen(PlatformBorderBrush, 0.55 * scale), platformRect, 4 * scale, 4 * scale);
+        dc.DrawRoundedRectangle(PlatformBrush, new Pen(PlatformBorderBrush, 0.5 * scale), platformRect, 4 * scale, 4 * scale);
     }
 
     private void DrawBarReflection(DrawingContext dc, double x, double baselineY, double width, double height, double scale)
     {
-        var reflectionHeight = Math.Min(28 * scale, height * 0.18);
+        var reflectionHeight = Math.Min(24 * scale, height * 0.22);
         if (reflectionHeight <= 1)
         {
             return;
         }
 
         dc.PushOpacity(0.28);
-        dc.DrawRoundedRectangle(ReflectionBrush, null, new Rect(x, baselineY + 8 * scale, width, reflectionHeight), 7 * scale, 7 * scale);
+        dc.DrawRoundedRectangle(ReflectionBrush, null, new Rect(x, baselineY + 7 * scale, width, reflectionHeight), 6 * scale, 6 * scale);
         dc.Pop();
     }
 
     private static void DrawValueLabel(DrawingContext dc, int value, double centerX, double y, double scale, double pixelsPerDip, bool active)
     {
-        var text = Text(value.ToString(CultureInfo.CurrentCulture), active ? 11.6 * scale : 10.4 * scale, DashboardChartDrawing.BoldTypeface, NavyTextBrush, pixelsPerDip);
+        var text = Text(value.ToString(CultureInfo.CurrentCulture), active ? 11.2 * scale : 10.2 * scale, DashboardChartDrawing.BoldTypeface, NavyTextBrush, pixelsPerDip);
         dc.DrawText(text, new Point(centerX - text.Width / 2, y));
     }
 
-    private void DrawCategoryLabel(DrawingContext dc, string label, double centerX, double y, double section, double scale, double pixelsPerDip)
+    private void DrawAxisLabel(DrawingContext dc, string label, double centerX, double y, double section, double scale, double pixelsPerDip)
     {
-        var text = Text(label, 9.4 * scale, DashboardChartDrawing.SemiBoldTypeface, NavyTextBrush, pixelsPerDip);
-        text.MaxTextWidth = Math.Max(42 * scale, section - 8 * scale);
+        var text = Text(label, 9.2 * scale, DashboardChartDrawing.MediumTypeface, MutedTextBrush, pixelsPerDip);
+        text.MaxTextWidth = Math.Max(26 * scale, section - 4 * scale);
         text.Trimming = TextTrimming.CharacterEllipsis;
         dc.DrawText(text, new Point(centerX - text.Width / 2, y));
     }
 
-    private void DrawTooltip(DrawingContext dc, DepartmentItem item, Point anchor, double scale, double pixelsPerDip)
+    private void DrawTooltip(DrawingContext dc, DashboardChartItemDto item, Point anchor, double scale, double pixelsPerDip)
     {
-        var title = Text(item.Label, 10.8 * scale, DashboardChartDrawing.BoldTypeface, NavyTextBrush, pixelsPerDip);
-        var detail = Text($"Văn bản phát hành: {item.Value:N0}", 9.4 * scale, DashboardChartDrawing.SemiBoldTypeface, NavyTextBrush, pixelsPerDip);
-        var width = Math.Max(title.Width, detail.Width + 22 * scale) + 28 * scale;
-        var height = title.Height + detail.Height + 21 * scale;
-        var x = Math.Clamp(anchor.X - width * 0.55, 8 * scale, ActualWidth - width - 8 * scale);
+        var title = Text(item.Name, 10.8 * scale, DashboardChartDrawing.BoldTypeface, NavyTextBrush, pixelsPerDip);
+        var detail = Text($"Văn bản ban hành: {item.Value:N0}", 9.4 * scale, DashboardChartDrawing.SemiBoldTypeface, NavyTextBrush, pixelsPerDip);
+        var width = Math.Max(title.Width, detail.Width + 22 * scale) + 24 * scale;
+        var height = title.Height + detail.Height + 20 * scale;
+        var x = Math.Clamp(anchor.X - width * 0.58, 8 * scale, ActualWidth - width - 8 * scale);
         var y = Math.Max(6 * scale, anchor.Y - height - 18 * scale);
         var rect = new Rect(x, y, width, height);
 
@@ -475,8 +471,8 @@ public class DepartmentDocuments3DChart : Canvas
 
         dc.DrawRoundedRectangle(TooltipBrush, new Pen(TooltipBorderBrush, 0.8 * scale), rect, 8 * scale, 8 * scale);
         dc.DrawText(title, new Point(rect.X + (rect.Width - title.Width) / 2, rect.Y + 8 * scale));
-        dc.DrawEllipse(LegendDotBrush, null, new Point(rect.X + 15 * scale, rect.Y + title.Height + 18 * scale), 4 * scale, 4 * scale);
-        dc.DrawText(detail, new Point(rect.X + 25 * scale, rect.Y + title.Height + 12 * scale));
+        dc.DrawEllipse(ZeroBrush, null, new Point(rect.X + 14 * scale, rect.Y + title.Height + 18 * scale), 4 * scale, 4 * scale);
+        dc.DrawText(detail, new Point(rect.X + 24 * scale, rect.Y + title.Height + 12 * scale));
 
         var arrow = new StreamGeometry();
         using (var ctx = arrow.Open())
@@ -492,7 +488,7 @@ public class DepartmentDocuments3DChart : Canvas
 
     private void DrawEmptyState(DrawingContext dc, double left, double top, double plotWidth, double plotHeight, double scale, double pixelsPerDip)
     {
-        var message = Text("Chưa có dữ liệu phòng ban", 12 * scale, DashboardChartDrawing.SemiBoldTypeface, MutedTextBrush, pixelsPerDip);
+        var message = Text("Chưa có dữ liệu ban hành theo tháng", 12 * scale, DashboardChartDrawing.SemiBoldTypeface, MutedTextBrush, pixelsPerDip);
         dc.DrawText(message, new Point(left + (plotWidth - message.Width) / 2, top + (plotHeight - message.Height) / 2));
     }
 
@@ -511,6 +507,4 @@ public class DepartmentDocuments3DChart : Canvas
     {
         return DashboardChartDrawing.Text(text, size, typeface, brush, pixelsPerDip);
     }
-
-    private sealed record DepartmentItem(string Label, int Value);
 }

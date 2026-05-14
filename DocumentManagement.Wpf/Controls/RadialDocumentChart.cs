@@ -17,22 +17,25 @@ public class RadialDocumentChart : Canvas
     private static readonly Typeface HeavyTypeface = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Black, FontStretches.Normal);
     private static readonly Typeface BoldTypeface = new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Bold, FontStretches.Normal);
 
-    private static readonly Brush SurfaceBrush = Freeze(new SolidColorBrush(Colors.White));
-    private static readonly Brush MutedRingBrush = Freeze(new SolidColorBrush(Color.FromArgb(58, 147, 197, 253)));
-    private static readonly Brush OuterTickBrush = Freeze(new SolidColorBrush(Color.FromArgb(112, 96, 165, 250)));
-    private static readonly Brush SoftBlueBrush = Freeze(new SolidColorBrush(Color.FromArgb(118, 191, 219, 254)));
+    private static readonly Brush SurfaceBrush = Freeze(new SolidColorBrush(Color.FromArgb(218, 255, 255, 255)));
+    private static readonly Brush MutedRingBrush = Freeze(new SolidColorBrush(Color.FromArgb(34, 96, 165, 250)));
+    private static readonly Brush OuterTickBrush = Freeze(new SolidColorBrush(Color.FromArgb(44, 37, 99, 235)));
+    private static readonly Brush SoftBlueBrush = Freeze(new SolidColorBrush(Color.FromArgb(74, 125, 211, 252)));
     private static readonly Brush CenterTextBrush = Freeze(new SolidColorBrush(Color.FromRgb(7, 26, 100)));
     private static readonly Brush GreyBrush = Freeze(new SolidColorBrush(Color.FromRgb(100, 116, 139)));
     private static readonly Brush BlueBrush = Freeze(new SolidColorBrush(Color.FromRgb(37, 99, 235)));
     private static readonly Brush GreenBrush = Freeze(new SolidColorBrush(Color.FromRgb(16, 185, 129)));
     private static readonly Brush RedBrush = Freeze(new SolidColorBrush(Color.FromRgb(239, 68, 68)));
-    private static readonly Brush CyanWashBrush = Freeze(new RadialGradientBrush(Color.FromArgb(42, 34, 211, 238), Color.FromArgb(0, 34, 211, 238)));
-    private static readonly Brush TotalArcBrush = Freeze(CreateGradient("#DBEAFE", "#A5B4FC", "#60A5FA"));
-    private static readonly Brush IssuedArcBrush = Freeze(CreateGradient("#60A5FA", "#2563EB", "#22D3EE"));
-    private static readonly Brush EffectiveArcBrush = Freeze(CreateGradient("#6EE7B7", "#10B981", "#22C55E"));
-    private static readonly Brush ExpiredArcBrush = Freeze(CreateGradient("#FB7185", "#EF4444", "#F97316"));
-
-    private string? _hoveredMetric;
+    private static readonly Brush CyanWashBrush = Freeze(CreateAmbientWashBrush());
+    private static readonly Brush ArcShadowBrush = Freeze(new SolidColorBrush(Color.FromArgb(42, 15, 23, 42)));
+    private static readonly Brush ArcLowerEdgeBrush = Freeze(new SolidColorBrush(Color.FromArgb(58, 7, 26, 100)));
+    private static readonly Brush ArcSpecularBrush = Freeze(new SolidColorBrush(Color.FromArgb(176, 255, 255, 255)));
+    private static readonly Brush TrackBrush = Freeze(new SolidColorBrush(Color.FromArgb(92, 148, 163, 184)));
+    private static readonly Brush TrackDepthBrush = Freeze(new SolidColorBrush(Color.FromArgb(24, 15, 23, 42)));
+    private static readonly Brush TotalArcBrush = Freeze(CreateGradient("#FFFFFF", "#E2E8F0", "#CBD5E1", "#94A3B8"));
+    private static readonly Brush IssuedArcBrush = Freeze(CreateGradient("#BAE6FD", "#38BDF8", "#0EA5E9", "#1D4ED8"));
+    private static readonly Brush EffectiveArcBrush = Freeze(CreateGradient("#BBF7D0", "#4ADE80", "#10B981", "#047857"));
+    private static readonly Brush ExpiredArcBrush = Freeze(CreateGradient("#FECACA", "#FB7185", "#F43F5E", "#DC2626"));
 
     public static readonly DependencyProperty TotalDocumentsProperty =
         DependencyProperty.Register(nameof(TotalDocuments), typeof(int), typeof(RadialDocumentChart),
@@ -53,6 +56,10 @@ public class RadialDocumentChart : Canvas
     public static readonly DependencyProperty SelectedMetricProperty =
         DependencyProperty.Register(nameof(SelectedMetric), typeof(string), typeof(RadialDocumentChart),
             new FrameworkPropertyMetadata(TotalMetric, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty HoveredMetricProperty =
+        DependencyProperty.Register(nameof(HoveredMetric), typeof(string), typeof(RadialDocumentChart),
+            new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault | FrameworkPropertyMetadataOptions.AffectsRender));
 
     public int TotalDocuments
     {
@@ -84,6 +91,12 @@ public class RadialDocumentChart : Canvas
         set => SetValue(SelectedMetricProperty, value);
     }
 
+    public string HoveredMetric
+    {
+        get => (string)GetValue(HoveredMetricProperty);
+        set => SetValue(HoveredMetricProperty, value);
+    }
+
     public RadialDocumentChart()
     {
         Background = Brushes.Transparent;
@@ -95,26 +108,24 @@ public class RadialDocumentChart : Canvas
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        var metric = HitTestMetric(e.GetPosition(this));
-        if (metric == _hoveredMetric)
+        var metric = HitTestMetric(e.GetPosition(this)) ?? string.Empty;
+        if (string.Equals(metric, HoveredMetric, StringComparison.Ordinal))
         {
             return;
         }
 
-        _hoveredMetric = metric;
-        InvalidateVisual();
+        HoveredMetric = metric;
     }
 
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
-        if (_hoveredMetric == null)
+        if (string.IsNullOrWhiteSpace(HoveredMetric))
         {
             return;
         }
 
-        _hoveredMetric = null;
-        InvalidateVisual();
+        HoveredMetric = string.Empty;
     }
 
     protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
@@ -140,13 +151,11 @@ public class RadialDocumentChart : Canvas
 
         DrawAmbientShell(dc, cx, cy, scale);
         DrawTicks(dc, cx, cy, scale, dpi);
-        DrawStaticPercentMarkers(dc, cx, cy, scale, dpi);
 
         DrawOuterTotalRing(dc, cx, cy, 224 * scale, 35 * scale);
         DrawMetricArc(dc, cx, cy, 166 * scale, IssuedPercent, IssuedMetric, IssuedArcBrush, BlueBrush, "Phát hành", scale, dpi);
         DrawMetricArc(dc, cx, cy, 123 * scale, EffectivePercent, EffectiveMetric, EffectiveArcBrush, GreenBrush, "Còn hiệu lực", scale, dpi);
         DrawMetricArc(dc, cx, cy, 81 * scale, ExpiredPercent, ExpiredMetric, ExpiredArcBrush, RedBrush, "Hết hiệu lực", scale, dpi);
-        DrawTotalBadge(dc, cx, cy, scale, dpi);
         DrawCenterHub(dc, cx, cy, scale, dpi);
     }
 
@@ -169,33 +178,75 @@ public class RadialDocumentChart : Canvas
     private void DrawAmbientShell(DrawingContext dc, double cx, double cy, double scale)
     {
         dc.DrawEllipse(CyanWashBrush, null, new Point(cx, cy + 10 * scale), 214 * scale, 214 * scale);
-        DrawEllipse(dc, cx, cy, 269 * scale, null, new Pen(MutedRingBrush, 1.2 * scale));
-        DrawEllipse(dc, cx, cy, 246 * scale, null, new Pen(SoftBlueBrush, 2.3 * scale) { DashStyle = new DashStyle(new[] { 5.0, 8.0 }, 0) });
-        DrawEllipse(dc, cx, cy, 209 * scale, null, new Pen(MutedRingBrush, 1.1 * scale));
+        dc.PushOpacity(0.16);
+        dc.DrawEllipse(ArcShadowBrush, null, new Point(cx, cy + 18 * scale), 212 * scale, 196 * scale);
+        dc.Pop();
+
+        DrawEllipse(dc, cx, cy, 269 * scale, null, new Pen(MutedRingBrush, 1.25 * scale));
+        DrawEllipse(dc, cx, cy, 246 * scale, null, new Pen(SoftBlueBrush, 1.5 * scale) { DashStyle = new DashStyle(new[] { 4.0, 10.0 }, 0) });
+        DrawEllipse(dc, cx, cy, 209 * scale, null, new Pen(MutedRingBrush, 0.9 * scale));
         DrawEllipse(dc, cx, cy, 168 * scale, null, new Pen(MutedRingBrush, 0.9 * scale));
         DrawEllipse(dc, cx, cy, 126 * scale, null, new Pen(MutedRingBrush, 0.8 * scale));
     }
 
     private void DrawOuterTotalRing(DrawingContext dc, double cx, double cy, double radius, double strokeWidth)
     {
-        DrawTrack(dc, cx, cy, radius, strokeWidth, 0.42);
+        DrawTrack(dc, cx, cy, radius, strokeWidth, TrackBrush, 0.06, 0.035);
         var isActive = IsActive(TotalMetric);
-        var opacity = IsDimmed(TotalMetric) ? 0.32 : 0.86;
-        var pen = new Pen(TotalArcBrush, strokeWidth + (isActive ? 4 : 0))
+        var isHovered = IsHovered(TotalMetric);
+        var isDimmed = IsDimmed(TotalMetric);
+        var opacity = isDimmed ? 0.24 : isHovered ? 0.9 : isActive ? 0.76 : 0.58;
+        var arc = CreateArcGeometry(cx, cy, radius, -172, 178);
+
+        dc.PushOpacity(isDimmed ? 0.08 : isHovered ? 0.2 : 0.14);
+        dc.PushTransform(new TranslateTransform(0, 5 * (strokeWidth / 35.0)));
+        dc.DrawGeometry(null, new Pen(ArcShadowBrush, strokeWidth + 7)
+        {
+            StartLineCap = PenLineCap.Round,
+            EndLineCap = PenLineCap.Round
+        }, arc);
+        dc.Pop();
+        dc.Pop();
+
+        if (!isDimmed && isActive)
+        {
+            var glow = new Pen(GreyBrush, strokeWidth + (isHovered ? 24 : 16))
+            {
+                StartLineCap = PenLineCap.Round,
+                EndLineCap = PenLineCap.Round
+            };
+            dc.PushOpacity(isHovered ? 0.26 : 0.16);
+            dc.DrawGeometry(null, glow, arc);
+            dc.Pop();
+        }
+
+        var pen = new Pen(TotalArcBrush, strokeWidth + (isHovered ? 7 : isActive ? 5 : 0))
         {
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
         };
         dc.PushOpacity(opacity);
-        dc.DrawGeometry(null, pen, CreateArcGeometry(cx, cy, radius, -172, 178));
+        dc.DrawGeometry(null, pen, arc);
         dc.Pop();
 
-        var glint = new Pen(Freeze(new SolidColorBrush(Color.FromArgb(150, 255, 255, 255))), 4.8 * (strokeWidth / 35.0))
+        var edge = new Pen(ArcLowerEdgeBrush, 1.5 * (strokeWidth / 35.0))
         {
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
         };
-        dc.DrawGeometry(null, glint, CreateArcGeometry(cx, cy, radius, 196, 214));
+        dc.PushOpacity(isDimmed ? 0.08 : isHovered ? 0.26 : isActive ? 0.2 : 0.15);
+        dc.DrawGeometry(null, edge, CreateArcGeometry(cx, cy, radius + strokeWidth * 0.42, -164, 170));
+        dc.Pop();
+
+        var glint = new Pen(ArcSpecularBrush, 5.2 * (strokeWidth / 35.0))
+        {
+            StartLineCap = PenLineCap.Round,
+            EndLineCap = PenLineCap.Round
+        };
+        dc.PushOpacity(isDimmed ? 0.18 : isHovered ? 0.74 : isActive ? 0.64 : 0.54);
+        dc.DrawGeometry(null, glint, CreateArcGeometry(cx, cy, radius - strokeWidth * 0.22, -146, -112));
+        dc.DrawGeometry(null, glint, CreateArcGeometry(cx, cy, radius - strokeWidth * 0.18, 196, 216));
+        dc.Pop();
     }
 
     private void DrawMetricArc(
@@ -217,33 +268,84 @@ public class RadialDocumentChart : Canvas
         var startAngle = 0;
         var endAngle = Math.Clamp(percent, 0, 100) / 100.0 * 360.0;
 
-        DrawTrack(dc, cx, cy, radius, 34 * scale, dimmed ? 0.12 : 0.28);
+        DrawSemanticTrack(dc, cx, cy, radius, 34 * scale, metric, solidBrush, isActive, dimmed);
+        if (endAngle <= 0.1)
+        {
+            return;
+        }
 
-        dc.PushOpacity(dimmed ? 0.26 : isActive ? 1.0 : 0.88);
-        DrawArcGlow(dc, cx, cy, radius, startAngle, endAngle, solidBrush, (isActive ? 50 : 43) * scale, isActive ? 0.28 : 0.16);
+        dc.PushOpacity(dimmed ? 0.16 : isActive ? 0.34 : 0.22);
+        dc.PushTransform(new TranslateTransform(0, 5 * scale));
+        dc.DrawGeometry(null, new Pen(ArcShadowBrush, stroke + 7 * scale)
+        {
+            StartLineCap = PenLineCap.Flat,
+            EndLineCap = PenLineCap.Round
+        }, CreateArcGeometry(cx, cy, radius, startAngle + 1, endAngle));
+        dc.Pop();
+        dc.Pop();
+
+        dc.PushOpacity(dimmed ? 0.32 : isActive ? 1.0 : 0.92);
+        DrawArcGlow(dc, cx, cy, radius, startAngle, endAngle, solidBrush, (isActive ? 54 : 46) * scale, isActive ? 0.34 : 0.2);
         var pen = new Pen(arcBrush, stroke)
         {
-            StartLineCap = PenLineCap.Round,
+            StartLineCap = PenLineCap.Flat,
             EndLineCap = PenLineCap.Round
         };
         dc.DrawGeometry(null, pen, CreateArcGeometry(cx, cy, radius, startAngle, endAngle));
 
-        var highlight = new Pen(Freeze(new SolidColorBrush(Color.FromArgb(150, 255, 255, 255))), 4 * scale)
+        var lowerEdge = new Pen(ArcLowerEdgeBrush, 1.6 * scale)
+        {
+            StartLineCap = PenLineCap.Flat,
+            EndLineCap = PenLineCap.Round
+        };
+        if (endAngle > startAngle + 6)
+        {
+            dc.PushOpacity(dimmed ? 0.14 : 0.3);
+            dc.DrawGeometry(null, lowerEdge, CreateArcGeometry(cx, cy, radius + stroke * 0.38, startAngle + 2, endAngle - 1));
+            dc.Pop();
+        }
+
+        var highlight = new Pen(ArcSpecularBrush, 4.2 * scale)
+        {
+            StartLineCap = PenLineCap.Flat,
+            EndLineCap = PenLineCap.Round
+        };
+        dc.PushOpacity(dimmed ? 0.2 : isActive ? 0.82 : 0.62);
+        if (endAngle > startAngle + 8)
+        {
+            dc.DrawGeometry(null, highlight, CreateArcGeometry(cx, cy, radius - stroke * 0.25, startAngle + 4, Math.Min(endAngle, startAngle + 34)));
+        }
+        if (endAngle > 105)
+        {
+            dc.DrawGeometry(null, highlight, CreateArcGeometry(cx, cy, radius - stroke * 0.22, Math.Max(startAngle + 86, endAngle - 45), Math.Max(startAngle + 96, endAngle - 13)));
+        }
+        dc.Pop();
+        dc.Pop();
+
+    }
+
+    private void DrawTrack(
+        DrawingContext dc,
+        double cx,
+        double cy,
+        double radius,
+        double strokeWidth,
+        Brush trackBrush,
+        double opacity,
+        double depthOpacity)
+    {
+        var depthPen = new Pen(TrackDepthBrush, strokeWidth + 2)
         {
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
         };
-        dc.DrawGeometry(null, highlight, CreateArcGeometry(cx, cy, radius, startAngle + 2, Math.Min(endAngle, startAngle + 25)));
+        dc.PushOpacity(depthOpacity);
+        dc.PushTransform(new TranslateTransform(0, 2.5 * (strokeWidth / 34.0)));
+        dc.DrawEllipse(null, depthPen, new Point(cx, cy), radius, radius);
+        dc.Pop();
         dc.Pop();
 
-        var node = PointOnCircle(cx, cy, radius, endAngle);
-        DrawNode(dc, node, solidBrush, scale, isActive, dimmed);
-        DrawNodeLabel(dc, node, percent, solidBrush, scale, pixelsPerDip, isActive, dimmed);
-    }
-
-    private void DrawTrack(DrawingContext dc, double cx, double cy, double radius, double strokeWidth, double opacity)
-    {
-        var trackPen = new Pen(Freeze(new SolidColorBrush(Color.FromArgb(84, 174, 194, 224))), strokeWidth)
+        var trackPen = new Pen(trackBrush, strokeWidth)
         {
             StartLineCap = PenLineCap.Round,
             EndLineCap = PenLineCap.Round
@@ -253,11 +355,28 @@ public class RadialDocumentChart : Canvas
         dc.Pop();
     }
 
+    private void DrawSemanticTrack(
+        DrawingContext dc,
+        double cx,
+        double cy,
+        double radius,
+        double strokeWidth,
+        string metric,
+        Brush trackBrush,
+        bool isActive,
+        bool dimmed)
+    {
+        var opacity = dimmed ? 0.025 : isActive ? 0.07 : 0.055;
+        var depthOpacity = dimmed ? 0.012 : 0.02;
+
+        DrawTrack(dc, cx, cy, radius, strokeWidth, trackBrush, opacity, depthOpacity);
+    }
+
     private void DrawArcGlow(DrawingContext dc, double cx, double cy, double radius, double startAngle, double endAngle, Brush brush, double thickness, double opacity)
     {
         var pen = new Pen(brush, thickness)
         {
-            StartLineCap = PenLineCap.Round,
+            StartLineCap = PenLineCap.Flat,
             EndLineCap = PenLineCap.Round
         };
         dc.PushOpacity(opacity);
@@ -265,96 +384,36 @@ public class RadialDocumentChart : Canvas
         dc.Pop();
     }
 
-    private void DrawNode(DrawingContext dc, Point node, Brush brush, double scale, bool active, bool dimmed)
-    {
-        var outer = (active ? 34 : 29) * scale;
-        dc.PushOpacity(dimmed ? 0.28 : 1.0);
-        dc.DrawEllipse(Freeze(new SolidColorBrush(Color.FromArgb(active ? (byte)88 : (byte)48, 37, 99, 235))), null, node, outer * 0.88, outer * 0.88);
-        dc.DrawEllipse(SurfaceBrush, new Pen(brush, active ? 5 * scale : 4 * scale), node, outer * 0.42, outer * 0.42);
-        dc.DrawEllipse(brush, null, new Point(node.X + outer * 0.08, node.Y - outer * 0.08), outer * 0.16, outer * 0.16);
-        dc.Pop();
-    }
-
-    private void DrawNodeLabel(DrawingContext dc, Point node, double percent, Brush brush, double scale, double pixelsPerDip, bool active, bool dimmed)
-    {
-        var text = $"{percent:0}%";
-        var formatted = Text(text, active ? 22 * scale : 20 * scale, active ? HeavyTypeface : BoldTypeface, brush, pixelsPerDip);
-        var offsetX = node.X > ActualWidth / 2 ? 18 * scale : -formatted.Width - 18 * scale;
-        var offsetY = node.Y > ActualHeight / 2 ? 5 * scale : -formatted.Height - 2 * scale;
-
-        dc.PushOpacity(dimmed ? 0.32 : active ? 1.0 : 0.86);
-        dc.DrawText(formatted, new Point(node.X + offsetX, node.Y + offsetY));
-        dc.Pop();
-    }
-
-    private void DrawTotalBadge(DrawingContext dc, double cx, double cy, double scale, double pixelsPerDip)
-    {
-        var p = PointOnCircle(cx, cy, 247 * scale, 0);
-        var active = IsActive(TotalMetric);
-        dc.DrawEllipse(Freeze(new SolidColorBrush(Color.FromArgb(78, 37, 99, 235))), null, p, (active ? 53 : 48) * scale, (active ? 53 : 48) * scale);
-        dc.DrawEllipse(SurfaceBrush, new Pen(SoftBlueBrush, active ? 4.5 * scale : 3.5 * scale), p, 43 * scale, 43 * scale);
-
-        var percent = Text("100%", 23 * scale, HeavyTypeface, BlueBrush, pixelsPerDip);
-        var title = Text("TỔNG SỐ", 11.5 * scale, BoldTypeface, BlueBrush, pixelsPerDip);
-        dc.DrawText(percent, new Point(p.X - percent.Width / 2, p.Y - 22 * scale));
-        dc.DrawText(title, new Point(p.X - title.Width / 2, p.Y + 9 * scale));
-    }
-
     private void DrawCenterHub(DrawingContext dc, double cx, double cy, double scale, double pixelsPerDip)
     {
-        var metric = SelectedMetricOrDefault;
-        var value = MetricValue(metric);
+        var metric = HoveredMetricOrDefault ?? SelectedMetricOrDefault;
+        var percentText = $"{MetricPercent(metric):0}%";
         var caption = MetricCaption(metric);
-        var percent = metric == TotalMetric ? "100%" : $"{MetricPercent(metric):0}%";
 
-        dc.DrawEllipse(Freeze(new SolidColorBrush(Color.FromArgb(72, 37, 99, 235))), null, new Point(cx, cy + 7 * scale), 92 * scale, 92 * scale);
-        dc.DrawEllipse(SurfaceBrush, new Pen(SoftBlueBrush, 2.5 * scale), new Point(cx, cy), 80 * scale, 80 * scale);
+        var percent = Text(percentText, 40 * scale, HeavyTypeface, CenterTextBrush, pixelsPerDip);
+        var label = Text(caption, 12.5 * scale, BoldTypeface, GreyBrush, pixelsPerDip);
+        var gap = 7 * scale;
+        var top = cy - (percent.Height + gap + label.Height) / 2.0 - 1 * scale;
 
-        var number = Text(value.ToString("N0", CultureInfo.CurrentCulture), 56 * scale, HeavyTypeface, CenterTextBrush, pixelsPerDip);
-        var unit = Text(metric == TotalMetric ? "VB" : percent, metric == TotalMetric ? 31 * scale : 25 * scale, BoldTypeface, CenterTextBrush, pixelsPerDip);
-        var detail = Text(caption, 12 * scale, BoldTypeface, GreyBrush, pixelsPerDip);
-
-        dc.DrawText(number, new Point(cx - number.Width / 2, cy - 51 * scale));
-        dc.DrawText(unit, new Point(cx - unit.Width / 2, cy + 16 * scale));
-        dc.DrawText(detail, new Point(cx - detail.Width / 2, cy + 52 * scale));
+        dc.DrawText(percent, new Point(cx - percent.Width / 2, top));
+        dc.PushOpacity(0.82);
+        dc.DrawText(label, new Point(cx - label.Width / 2, top + percent.Height + gap));
+        dc.Pop();
     }
 
     private void DrawTicks(DrawingContext dc, double cx, double cy, double scale, double pixelsPerDip)
     {
-        for (var i = 0; i < 96; i++)
+        for (var i = 0; i < 72; i++)
         {
-            var angle = i * 3.75;
-            var major = i % 8 == 0;
-            var inner = PointOnCircle(cx, cy, major ? 257 * scale : 262 * scale, angle);
-            var outer = PointOnCircle(cx, cy, major ? 271 * scale : 267 * scale, angle);
-            var pen = new Pen(OuterTickBrush, major ? 1.4 * scale : 0.75 * scale);
-            dc.PushOpacity(major ? 0.66 : 0.34);
+            var angle = i * 5.0;
+            var major = i % 9 == 0;
+            var inner = PointOnCircle(cx, cy, major ? 260 * scale : 263 * scale, angle);
+            var outer = PointOnCircle(cx, cy, major ? 270 * scale : 267 * scale, angle);
+            var pen = new Pen(OuterTickBrush, major ? 1.0 * scale : 0.55 * scale);
+            dc.PushOpacity(major ? 0.32 : 0.18);
             dc.DrawLine(pen, inner, outer);
             dc.Pop();
         }
-
-        for (var i = 0; i < 8; i++)
-        {
-            var dot = PointOnCircle(cx, cy, 268 * scale, i * 45 + 12);
-            dc.DrawEllipse(BlueBrush, null, dot, 3.2 * scale, 3.2 * scale);
-        }
-    }
-
-    private void DrawStaticPercentMarkers(DrawingContext dc, double cx, double cy, double scale, double pixelsPerDip)
-    {
-        DrawMarker(dc, "0%", cx, cy, 281 * scale, 0, -11 * scale, -19 * scale, scale, pixelsPerDip);
-        DrawMarker(dc, "25%", cx, cy, 281 * scale, 90, 8 * scale, -7 * scale, scale, pixelsPerDip);
-        DrawMarker(dc, "50%", cx, cy, 281 * scale, 180, -17 * scale, 14 * scale, scale, pixelsPerDip);
-        DrawMarker(dc, "75%", cx, cy, 281 * scale, 270, -45 * scale, -7 * scale, scale, pixelsPerDip);
-    }
-
-    private void DrawMarker(DrawingContext dc, string label, double cx, double cy, double radius, double angle, double dx, double dy, double scale, double pixelsPerDip)
-    {
-        var p = PointOnCircle(cx, cy, radius, angle);
-        var text = Text(label, 14 * scale, BoldTypeface, BlueBrush, pixelsPerDip);
-        dc.PushOpacity(0.78);
-        dc.DrawText(text, new Point(p.X + dx, p.Y + dy));
-        dc.Pop();
     }
 
     private string? HitTestMetric(Point point)
@@ -401,29 +460,36 @@ public class RadialDocumentChart : Canvas
 
     private bool IsActive(string metric)
     {
-        return string.Equals(_hoveredMetric, metric, StringComparison.Ordinal)
-            || string.Equals(SelectedMetricOrDefault, metric, StringComparison.Ordinal);
+        var hovered = HoveredMetricOrDefault;
+        if (!string.IsNullOrWhiteSpace(hovered))
+        {
+            return string.Equals(hovered, metric, StringComparison.Ordinal);
+        }
+
+        return string.Equals(SelectedMetricOrDefault, metric, StringComparison.Ordinal);
     }
 
     private bool IsDimmed(string metric)
     {
-        var active = _hoveredMetric ?? SelectedMetricOrDefault;
-        return !string.IsNullOrWhiteSpace(active)
-            && !string.Equals(active, metric, StringComparison.Ordinal);
+        var hovered = HoveredMetricOrDefault;
+        if (!string.IsNullOrWhiteSpace(hovered))
+        {
+            return !string.Equals(hovered, metric, StringComparison.Ordinal);
+        }
+
+        var selected = SelectedMetricOrDefault;
+        return !string.Equals(selected, TotalMetric, StringComparison.Ordinal)
+            && !string.Equals(selected, metric, StringComparison.Ordinal);
     }
+
+    private bool IsHovered(string metric)
+    {
+        return string.Equals(HoveredMetricOrDefault, metric, StringComparison.Ordinal);
+    }
+
+    private string? HoveredMetricOrDefault => string.IsNullOrWhiteSpace(HoveredMetric) ? null : HoveredMetric;
 
     private string SelectedMetricOrDefault => string.IsNullOrWhiteSpace(SelectedMetric) ? TotalMetric : SelectedMetric;
-
-    private int MetricValue(string metric)
-    {
-        return metric switch
-        {
-            IssuedMetric => IssuedDocuments,
-            EffectiveMetric => EffectiveDocuments,
-            ExpiredMetric => ExpiredDocuments,
-            _ => TotalDocuments
-        };
-    }
 
     private double MetricPercent(string metric)
     {
@@ -440,10 +506,10 @@ public class RadialDocumentChart : Canvas
     {
         return metric switch
         {
-            IssuedMetric => "PHÁT HÀNH",
-            EffectiveMetric => "CÒN HIỆU LỰC",
-            ExpiredMetric => "HẾT HIỆU LỰC",
-            _ => "TỔNG SỐ"
+            IssuedMetric => "PH\u00c1T H\u00c0NH",
+            EffectiveMetric => "C\u00d2N HI\u1ec6U L\u1ef0C",
+            ExpiredMetric => "H\u1ebeT HI\u1ec6U L\u1ef0C",
+            _ => "T\u1ed4NG S\u1ed0 V\u0102N B\u1ea2N"
         };
     }
 
@@ -490,17 +556,35 @@ public class RadialDocumentChart : Canvas
             pixelsPerDip);
     }
 
-    private static Brush CreateGradient(string c1, string c2, string c3)
+    private static Brush CreateAmbientWashBrush()
+    {
+        return new RadialGradientBrush
+        {
+            Center = new Point(0.42, 0.34),
+            GradientOrigin = new Point(0.28, 0.18),
+            RadiusX = 0.9,
+            RadiusY = 0.92,
+            GradientStops =
+            {
+                new GradientStop(Color.FromArgb(70, 125, 211, 252), 0),
+                new GradientStop(Color.FromArgb(34, 59, 130, 246), 0.52),
+                new GradientStop(Color.FromArgb(0, 14, 165, 233), 1)
+            }
+        };
+    }
+
+    private static Brush CreateGradient(string c1, string c2, string c3, string c4)
     {
         return new LinearGradientBrush
         {
-            StartPoint = new Point(0, 0),
+            StartPoint = new Point(0.18, 0.02),
             EndPoint = new Point(1, 1),
             GradientStops =
             {
                 new GradientStop((Color)ColorConverter.ConvertFromString(c1), 0),
-                new GradientStop((Color)ColorConverter.ConvertFromString(c2), 0.55),
-                new GradientStop((Color)ColorConverter.ConvertFromString(c3), 1)
+                new GradientStop((Color)ColorConverter.ConvertFromString(c2), 0.32),
+                new GradientStop((Color)ColorConverter.ConvertFromString(c3), 0.68),
+                new GradientStop((Color)ColorConverter.ConvertFromString(c4), 1)
             }
         };
     }

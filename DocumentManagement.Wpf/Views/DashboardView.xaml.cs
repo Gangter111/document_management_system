@@ -7,12 +7,21 @@ namespace DocumentManagement.Wpf.Views;
 
 public partial class DashboardView : UserControl
 {
+    public static readonly DependencyProperty HoveredChartMetricProperty =
+        DependencyProperty.Register(nameof(HoveredChartMetric), typeof(string), typeof(DashboardView), new PropertyMetadata(string.Empty));
+
     private bool _isLoaded;
 
     public DashboardView()
     {
         InitializeComponent();
         Loaded += DashboardView_Loaded;
+    }
+
+    public string HoveredChartMetric
+    {
+        get => (string)GetValue(HoveredChartMetricProperty);
+        set => SetValue(HoveredChartMetricProperty, value);
     }
 
     private async void DashboardView_Loaded(object sender, RoutedEventArgs e)

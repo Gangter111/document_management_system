@@ -99,6 +99,8 @@ public class DashboardViewModel : BaseViewModel
 
     public SeriesCollection DepartmentIssuedSeries { get; } = new();
 
+    public ObservableCollection<DashboardChartItemDto> MonthlyIssuedItems { get; } = new();
+
     public ObservableCollection<DashboardChartItemDto> DepartmentIssuedItems { get; } = new();
 
     public List<string> MonthlyIssuedLabels { get; private set; } = new();
@@ -139,6 +141,81 @@ public class DashboardViewModel : BaseViewModel
     public bool HasMonthlyIssuedChartData => MonthlyIssuedSeries.Count > 0;
 
     public bool HasDepartmentIssuedChartData => DepartmentIssuedItems.Count > 0;
+
+    public int MonthlyIssuedTotal => MonthlyIssuedItems.Sum(item => item.Value);
+
+    public double MonthlyIssuedAverage => MonthlyIssuedItems.Count == 0
+        ? 0
+        : MonthlyIssuedItems.Average(item => item.Value);
+
+    public int MonthlyIssuedHighest => MonthlyIssuedItems.Count == 0
+        ? 0
+        : MonthlyIssuedItems.Max(item => item.Value);
+
+    public string MonthlyIssuedHighestPeriod
+    {
+        get
+        {
+            if (MonthlyIssuedItems.Count == 0)
+            {
+                return "Chưa có dữ liệu";
+            }
+
+            var highest = MonthlyIssuedHighest;
+            return highest <= 0
+                ? "Chưa có dữ liệu"
+                : MonthlyIssuedItems.First(item => item.Value == highest).Name;
+        }
+    }
+
+    public int MonthlyIssuedPeriodCount => MonthlyIssuedItems.Count;
+
+    public int DepartmentIssuedTotal => DepartmentIssuedItems.Sum(item => item.Value);
+
+    public double DepartmentIssuedAverage => DepartmentIssuedItems.Count == 0
+        ? 0
+        : DepartmentIssuedItems.Average(item => item.Value);
+
+    public int DepartmentIssuedHighest => DepartmentIssuedItems.Count == 0
+        ? 0
+        : DepartmentIssuedItems.Max(item => item.Value);
+
+    public string DepartmentIssuedHighestLabel
+    {
+        get
+        {
+            if (DepartmentIssuedItems.Count == 0)
+            {
+                return "Chưa có dữ liệu";
+            }
+
+            var highest = DepartmentIssuedHighest;
+            return highest <= 0
+                ? "Chưa có dữ liệu"
+                : DepartmentIssuedItems.First(item => item.Value == highest).Name;
+        }
+    }
+
+    public string DepartmentIssuedHighestDepartmentSummary
+    {
+        get
+        {
+            var highest = DepartmentIssuedHighest;
+            if (highest <= 0)
+            {
+                return "Chưa có dữ liệu";
+            }
+
+            var count = DepartmentIssuedItems.Count(item => item.Value == highest);
+            return $"{count:N0} phòng ban";
+        }
+    }
+
+    public string DepartmentIssuedHighestValueText => DepartmentIssuedHighest <= 0
+        ? "Chưa có dữ liệu"
+        : $"{DepartmentIssuedHighest:N0} văn bản";
+
+    public int DepartmentIssuedCount => DepartmentIssuedItems.Count;
 
     public ICommand RefreshCommand { get; }
 
@@ -292,10 +369,20 @@ public class DashboardViewModel : BaseViewModel
     private void BuildMonthlyIssuedChart(IReadOnlyList<DashboardChartItemDto> items)
     {
         MonthlyIssuedSeries.Clear();
+        MonthlyIssuedItems.Clear();
 
         MonthlyIssuedLabels = items
             .Select(item => item.Name)
             .ToList();
+
+        foreach (var item in items)
+        {
+            MonthlyIssuedItems.Add(new DashboardChartItemDto
+            {
+                Name = item.Name,
+                Value = item.Value
+            });
+        }
 
         MonthlyIssuedSeries.Add(new ColumnSeries
         {
@@ -305,7 +392,9 @@ public class DashboardViewModel : BaseViewModel
         });
 
         OnPropertyChanged(nameof(MonthlyIssuedLabels));
+        OnPropertyChanged(nameof(MonthlyIssuedItems));
         OnPropertyChanged(nameof(HasMonthlyIssuedChartData));
+        RefreshMonthlyIssuedSummary();
     }
 
     private void BuildDepartmentIssuedChart(IReadOnlyList<DashboardChartItemDto> items)
@@ -336,6 +425,7 @@ public class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(DepartmentIssuedLabels));
         OnPropertyChanged(nameof(DepartmentIssuedItems));
         OnPropertyChanged(nameof(HasDepartmentIssuedChartData));
+        RefreshDepartmentIssuedSummary();
     }
 
     private void ResetDashboardData()
@@ -352,6 +442,7 @@ public class DashboardViewModel : BaseViewModel
         EffectivenessSeries.Clear();
         MonthlyIssuedSeries.Clear();
         DepartmentIssuedSeries.Clear();
+        MonthlyIssuedItems.Clear();
         DepartmentIssuedItems.Clear();
 
         MonthlyIssuedLabels = new List<string>();
@@ -368,8 +459,31 @@ public class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(HasDepartmentIssuedChartData));
         OnPropertyChanged(nameof(MonthlyIssuedLabels));
         OnPropertyChanged(nameof(DepartmentIssuedLabels));
+        OnPropertyChanged(nameof(MonthlyIssuedItems));
         OnPropertyChanged(nameof(DepartmentIssuedItems));
+        RefreshMonthlyIssuedSummary();
+        RefreshDepartmentIssuedSummary();
         RefreshKpiPercentages();
+    }
+
+    private void RefreshMonthlyIssuedSummary()
+    {
+        OnPropertyChanged(nameof(MonthlyIssuedTotal));
+        OnPropertyChanged(nameof(MonthlyIssuedAverage));
+        OnPropertyChanged(nameof(MonthlyIssuedHighest));
+        OnPropertyChanged(nameof(MonthlyIssuedHighestPeriod));
+        OnPropertyChanged(nameof(MonthlyIssuedPeriodCount));
+    }
+
+    private void RefreshDepartmentIssuedSummary()
+    {
+        OnPropertyChanged(nameof(DepartmentIssuedTotal));
+        OnPropertyChanged(nameof(DepartmentIssuedAverage));
+        OnPropertyChanged(nameof(DepartmentIssuedHighest));
+        OnPropertyChanged(nameof(DepartmentIssuedHighestLabel));
+        OnPropertyChanged(nameof(DepartmentIssuedHighestDepartmentSummary));
+        OnPropertyChanged(nameof(DepartmentIssuedHighestValueText));
+        OnPropertyChanged(nameof(DepartmentIssuedCount));
     }
 
     private void RefreshKpiPercentages()

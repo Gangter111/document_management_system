@@ -1,497 +1,195 @@
 # AGENTS.md
 
-# PROJECT OVERVIEW
+# Project Overview
 
-This repository is a REAL enterprise Document Management System.
+This repository is a real enterprise Document Management System, not a prototype, demo shell, UI concept, or mock workflow application.
 
 Tech stack:
 
-* WPF
+* WPF desktop client
 * .NET 8
 * MVVM
 * Clean Architecture
+* ASP.NET Core API
+* SQLite for local/pilot runtime, with SQL Server deployment support
 
-Projects:
+Main projects:
 
-* DocumentManagement.Wpf
-* DocumentManagement.Api
-* DocumentManagement.Application
-* DocumentManagement.Domain
-* DocumentManagement.Infrastructure
-* DocumentManagement.Contracts
+* `DocumentManagement.Wpf`: desktop client and enterprise Fluent UI.
+* `DocumentManagement.Api`: server API, authentication, persistence endpoints, demo-data operations.
+* `DocumentManagement.Application`: application orchestration and service contracts.
+* `DocumentManagement.Domain`: entities, status semantics, and domain rules.
+* `DocumentManagement.Infrastructure`: persistence, migrations, seed/demo data, file/PDF/export infrastructure.
+* `DocumentManagement.Contracts`: DTO contracts shared by API and WPF.
+* `DocumentManagement.Tests`: automated verification for migrations, seed data, services, and safety-critical behavior.
 
-IMPORTANT:
-
-This is NOT:
-
-* a prototype
-* a demo shell
-* a startup dashboard
-* a UI concept
-* a mock workflow system
-
-This IS:
-
-* a production enterprise desktop application
-
-# CURRENT STATUS
-
-The application already includes:
-
-## Runtime/lifecycle hardening
-
-* ViewModel deactivation/disposal safety
-* stale async completion protection
-* cancellation ownership
-* preview synchronization safety
-* keyboard popup/IME routing safety
-* export cancellation guards
-* DataGrid virtualization preservation
-
-## Enterprise Fluent shell foundation
-
-* MainWindow Fluent shell
-* shared Fluent ResourceDictionaries
-* typography token system
-* spacing token system
-* color token system
-* shared DataGrid styles
-* shared badge/button/panel styles
-
-## DocumentList modernization pass 1
-
-* Fluent visual refinement
-* enterprise command/filter layout
-* preview panel modernization
-* lightweight DataGrid modernization
-* frozen cached brush optimization in HexToBrushConverter
-
-# CORE ENGINEERING RULES
-
-DO NOT:
-
-* rewrite backend architecture
-* rewrite MVVM structure unnecessarily
-* duplicate Application-layer orchestration
-* move business logic into WPF
-* create fake APIs
-* create placeholder workflows
-* create fake analytics
-* create mock modules
-* introduce CommandManager invalidation
-* introduce animation-heavy UI
-* introduce deep visual trees
-* introduce converter-heavy styling
-
-KEEP:
-
-* existing runtime safety
-* existing cancellation behavior
-* existing keyboard routing safety
-* existing preview synchronization safety
-* existing virtualization behavior
-
-# UI PHILOSOPHY
-
-Target visual direction:
-
-* Fluent 2
-* Windows 11
-* Outlook
-* Teams
-* enterprise operations software
-
-Prioritize:
-
-* low eye fatigue
-* operational clarity
-* dense scanability
-* keyboard-first workflow
-* restrained hierarchy
-* calm visual rhythm
-
-Avoid:
-
-* startup dashboard feel
-* dribbble gradients
-* oversized spacing
-* card-heavy layouts
-* heavy shadows
-* excessive animations
-* visual clutter
-
-# PERFORMANCE RULES
+# Engineering Rules
 
 Preserve:
 
-* DataGrid virtualization
-* recycling virtualization
-* lightweight row rendering
-* async safety
-* cancellation safety
-* keyboard routing safety
+* MVVM structure and WPF binding boundaries.
+* Application-layer orchestration.
+* API/Application/Domain/Infrastructure separation.
+* async cancellation and stale-completion guards.
+* preview synchronization safety.
+* keyboard popup/IME routing safety.
+* DataGrid virtualization and recycling.
+* lightweight row and chart rendering.
+
+Do not:
+
+* rewrite backend architecture without an explicit QA blocker.
+* move business logic into WPF.
+* create fake APIs, fake analytics, fake modules, or UI-only data paths.
+* hide broken modules to avoid defects.
+* introduce CommandManager invalidation.
+* introduce animation-heavy UI.
+* introduce deep visual trees or converter-heavy styling.
+* re-modernize stabilized screens without a concrete issue.
+
+# UI Direction
+
+The UI target is restrained enterprise software:
+
+* Fluent 2 / Windows 11 inspired.
+* Outlook/Teams operational density.
+* calm hierarchy.
+* clear panel boundaries.
+* low eye fatigue.
+* keyboard-first workflow.
+* predictable runtime behavior.
 
 Avoid:
 
-* nested DataTemplates
-* per-row visual complexity
-* dynamic brush allocation
-* excessive converters
-* heavy triggers
-* visual tree explosions
+* startup-dashboard aesthetics.
+* infographic-heavy pages.
+* decorative gradients and visual clutter.
+* heavy shadows, heavy glow, and excessive animation.
+* speculative polish that does not fix a concrete QA issue.
 
-# IMPLEMENTATION RULES
+# Dashboard System
 
-Prefer:
+The dashboard must remain inside the existing Tổng quan layout. Component-level refinements are allowed only inside the affected panel.
 
-* ResourceDictionary
-* shared Fluent tokens
-* reusable lightweight styles
-* static/frozen brushes
-* flattened visual structures
-* lightweight DataGrid cells
+Current dashboard panels:
 
-Do NOT:
+* `Cơ cấu hiệu lực văn bản`: radial KPI chart and semantic metric cards.
+* `Văn bản theo phòng ban`: lightweight Canvas 3D department chart.
+* `Văn bản mới ban hành`: recent issued documents grid.
+* `Văn bản ban hành theo tháng`: lightweight Canvas monthly issued chart.
 
-* redesign workflow logic without explicit instruction
-* redesign backend orchestration
-* create hidden application layers inside WPF
+Dashboard files:
 
-# CURRENT PHASE
+* `DocumentManagement.Wpf/Views/DashboardView.xaml`: panel layout, shared dashboard styles, typography, panel frame standards, chart bindings.
+* `DocumentManagement.Wpf/Views/DashboardView.xaml.cs`: view-owned hover state for radial chart/card coordination.
+* `DocumentManagement.Wpf/ViewModels/DashboardViewModel.cs`: dashboard data shaping and derived display metrics.
+* `DocumentManagement.Wpf/Controls/RadialDocumentChart.cs`: custom Canvas radial validity chart.
+* `DocumentManagement.Wpf/Controls/DashboardKpiCard.cs`: semantic metric cards bound to the radial chart.
+* `DocumentManagement.Wpf/Controls/DepartmentDocuments3DChart.cs`: custom Canvas department chart.
+* `DocumentManagement.Wpf/Controls/MonthlyIssuedTimelineChart.cs`: custom Canvas monthly issued chart.
+* `DocumentManagement.Wpf/Controls/DashboardChartDrawing.cs`: shared frozen brush/typeface/drawing helpers for dashboard charts.
 
-Current focus:
+Dashboard styling standards:
 
-Enterprise operational QA and gap remediation.
+* All four dashboard section titles use the shared `Segoe UI`, `15`, `Bold`, dark navy title treatment from `DashboardPremiumChartTitleStyle` / `PanelTitleStyle`.
+* Dashboard label text uses the shared dark blue label brush.
+* Subtle labels use the shared muted blue brush.
+* Panel frames use the same sharp, premium border family: light surface, clear one-pixel border, restrained radius, no heavy decorative shadow.
+* Do not create isolated chart aesthetics. Chart panels should feel like one component system while preserving each chart's identity.
 
-The application is no longer in speculative modernization mode. The stabilized UX/MVVM/runtime foundation should be preserved. Future work should fix concrete QA blockers and operational trust issues only.
+Radial chart interaction expectations:
 
-Archive / Reports / Categories / System are now intentionally visible modules. Do not hide them to avoid defects. If a module has a defect, fix it or present a truthful operational state.
+* Semantic groups are `Total`, `Issued`, `Effective`, and `Expired`.
+* Hovering or selecting a legend card updates the matching chart ring.
+* Hovering the chart ring updates the corresponding card/ring state.
+* The gray `Tổng số` ring must provide clear feedback on hover and selection, consistent with the colored rings.
+* Center percentage typography must remain readable but must not collide visually with the arcs.
 
-# REQUIRED WORKFLOW
+# Demo Data
 
-Before changes:
+The deterministic demo-data path currently seeds 100 removable documents through real application/persistence services.
 
-1. inspect existing implementation
-2. inspect related ViewModels/services
-3. inspect shared Fluent resources
-4. preserve runtime safety
-5. preserve virtualization
+Demo records are identified by:
 
-After changes:
+* `document_number LIKE 'DEMO-2026-%'`
+* `notes` containing `DEMO-QA-2026-05`
 
-1. run build
-2. run tests
-3. verify virtualization remains enabled
-4. verify no lifecycle regressions
-5. verify keyboard routing protections still work
-6. verify no allocation-heavy rendering paths were introduced
+Expected coverage:
 
-# REQUIRED VERIFICATION
+* multiple departments.
+* realistic Vietnamese document types and titles.
+* last-12-month distribution.
+* issued, active, expired, archived/completed, and draft/internal coverage.
+* idempotent reseeding.
+* safe cleanup that removes only marked demo records.
 
-Always run:
+Admin API operations:
 
-dotnet build .\DocumentManagement.Wpf\DocumentManagement.Wpf.csproj
-
-and when relevant:
-
-dotnet test .\DocumentManagement.Tests\DocumentManagement.Tests.csproj
-
-Never claim success without verification.
-
-# IMPORTANT ENGINEERING PRINCIPLE
-
-The goal is:
-
-enterprise operational software,
-NOT UI experimentation.
-
-Optimize for:
-
-* long-session stability
-* operator efficiency
-* calm enterprise UX
-* predictable runtime behavior
-* maintainable architecture
-
-# COMPLETED ENTERPRISE WORKFLOW STABILIZATION PHASE
-
-The application has completed:
-
-* runtime/lifecycle hardening
-* stale async protection
-* cancellation ownership hardening
-* keyboard popup/IME safety
-* preview synchronization safety
-* export cancellation guards
-* enterprise Fluent shell modernization
-* DocumentList modernization
-* DocumentForm modernization
-* DocumentDetail modernization
-* workflow consistency refinement
-* keyboard workflow hardening
-* operational honesty cleanup
-* DocumentList operational hardening:
-  * keyboard routing consistency
-  * button activation consistency
-  * stale selection cleanup
-  * paging consistency
-  * preview synchronization
-  * batch-selection trust fixes
-  * invalid filter state cleanup
-  * double-click row targeting protections
-  * command enable-state consistency
-  * permission-state cleanup
-* restrained Fluent visual refinement:
-  * rounded dashboard containers
-  * dashboard border hierarchy adjustments
-  * logo container refinement
-  * queue/sidebar spacing refinements
-  * preview empty-state refinement
-  * notification positioning remediation attempts
-* PDF extraction operational honesty improvements:
-  * PdfPig/native PDF text extraction remains primary
-  * OCR is not implemented
-  * scanned-image PDFs must report that OCR is not supported rather than silently failing
-* navigation/module restoration:
-  * Archive restored and wired to the real DocumentList archive queue
-  * Reports restored with real dashboard/report data surface
-  * Categories restored with real lookup data surface
-  * System restored with current user/server/config and admin operations
-* deterministic demo-data path:
-  * exactly 40 demo documents are seeded through application/persistence services
-  * demo records are deterministic and idempotent
-  * demo records are removable without deleting real user data
-* authentication operational cleanup:
-  * register action restored with a minimal local/API account creation flow
-  * forgot-password action restored with truthful local/admin recovery guidance
-  * dead visible auth controls are forbidden
-
-The application now has:
-
-* restrained Fluent enterprise UX
-* keyboard-first workflow behavior
-* truthful operational surfaces
-* lightweight visual trees
-* virtualization-safe rendering
-* coherent interaction grammar
-* operationally predictable workflows
-* deterministic local QA data for list/dashboard/archive/report/category testing
-
-# CURRENT QA READINESS
-
-The application is suitable for focused human QA of:
-
-* DocumentList filtering/search/paging/preview
-* archive/restore workflow using seeded archived documents
-* Dashboard counts/charts from real persisted data
-* Reports data surface from real dashboard statistics
-* Categories lookup surface from real persisted lookups
-* System server/user/config information and demo-data operations
-
-Known areas that still require human validation:
-
-* Reports must be opened in the WPF UI after the latest StaticResource fix to confirm the previous "Provide value on ..." / "A new guard page for the stack cannot be created" crash is fully closed.
-* Toast/notification placement has been remediated in code but needs visual validation on different DPI/window sizes.
-* scanned-image PDF extraction remains unsupported because OCR is intentionally deferred.
-* full VI/EN localization is deferred; do not introduce runtime localization complexity without explicit instruction.
-
-# DEMO DATA STATE
-
-The API startup path seeds exactly 40 removable demo documents through real application/persistence services.
-
-Demo rows are identified by:
-
-* document_number LIKE `DEMO-2026-%`
-* notes containing `DEMO-QA-2026-05`
-
-Admin cleanup is available through:
-
-* `DELETE api/demo-data`
-* System screen `Clear Demo Data`
-
-Cleanup must delete only marked demo rows and must preserve real user data. Reseeding is available through:
-
+* `GET api/demo-data/count`
 * `POST api/demo-data/seed`
-* System screen `Seed Demo Data`
+* `DELETE api/demo-data`
 
-IMPORTANT:
+# Screenshot Evidence
 
-Do NOT:
+Canonical screenshot evidence belongs in `artifacts/screenshots/`.
 
-* re-modernize the same screens
-* re-polish visuals endlessly
-* add speculative UI refinements
-* add placeholder workflows
-* add fake interactive controls
-* hide broken features instead of fixing them
-* replace real workflows with placeholder cards
-* implement fake UI-only data
-* redesign keyboard routing architecture
-* introduce animation-heavy UI
-* introduce visual-tree complexity
-* create dashboard-style UI clutter
-* introduce startup-dashboard aesthetics
-* introduce cloud-dependent OCR or AI extraction
-* introduce LLM-first extraction workflows
-* introduce speculative identity/email/OAuth systems
+Use the committed screenshot harness:
 
-The current state is intentionally restrained.
+```powershell
+dotnet run --project .\tools\DashboardScreenshotHarness\DashboardScreenshotHarness.csproj -- --api-url=http://localhost:5033/
+dotnet run --project .\tools\DashboardScreenshotHarness\DashboardScreenshotHarness.csproj -- --api-url=http://localhost:5033/ radial-total-hover
+dotnet run --project .\tools\DashboardScreenshotHarness\DashboardScreenshotHarness.csproj -- --api-url=http://localhost:5033/ login
+```
 
-# CURRENT ENGINEERING PRIORITY
+Canonical outputs:
 
-Future work should prioritize:
+* `artifacts/screenshots/dashboard-final-full.png`
+* `artifacts/screenshots/dashboard-department-panel.png`
+* `artifacts/screenshots/dashboard-radial-total-hover-full.png`
+* `artifacts/screenshots/dashboard-radial-total-hover.png`
+* `artifacts/screenshots/login-final.png`
 
-* REQUIRED-NOW: verify Reports opens in WPF without the previous StaticResource crash and modal-dialog spam
-* REQUIRED-NOW: verify exactly 40 demo documents appear after launch and remain idempotent across restarts
-* REQUIRED-NOW: verify Clear Demo Data removes only marked demo rows and reseeding restores exactly 40 rows
-* REQUIRED-NOW: verify Archive / Reports / Categories / System open stably and are minimally QA-usable
-* REQUIRED-NOW: verify register and forgot-password actions are truthful and stable in the login UI
-* real operator workflow feedback
-* human-driven QA findings
-* operational friction remediation
-* workflow trust
-* predictable keyboard behavior
-* runtime stability
+# Verification Workflow
 
-NOT:
+Always run before claiming success:
 
-* speculative modernization
-* visual experimentation
-* architecture rewrites
-* feature creep
+```powershell
+dotnet build .\DocumentManagement.Wpf\DocumentManagement.Wpf.csproj
+```
 
-# IMPORTANT ENGINEERING PRINCIPLE
+Run tests when the change touches source behavior, demo data, API/application/infrastructure contracts, or shared UI behavior:
 
-The software should evolve through:
+```powershell
+dotnet test .\DocumentManagement.Tests\DocumentManagement.Tests.csproj
+```
 
-small evidence-driven operational improvements
+If a running API locks normal build/test output, use an alternate test output path:
 
-NOT:
+```powershell
+dotnet test .\DocumentManagement.Tests\DocumentManagement.Tests.csproj -p:OutputPath="D:\QuanLyVanBan - V1.05\artifacts\test-out\"
+```
 
-continuous speculative polishing.
+For full smoke verification when appropriate:
 
-# SESSION CHECKPOINT - 2026-05-14
+```powershell
+powershell -ExecutionPolicy Bypass -File .\tools\verify.ps1 -SkipSmoke
+powershell -ExecutionPolicy Bypass -File .\tools\verify-all.ps1
+```
 
-## VERIFIED TODAY
+When generating dashboard screenshots, ensure the API is running and healthy:
 
-* WPF build passed.
-* API build passed.
-* Tests passed: 30/30.
-* `verify-all.ps1` passed after NuGet/network restore escalation.
-* Runtime QA verified Archive / Reports / Categories / System navigation.
-* Reports opened without StaticResource crash, modal-dialog spam, or guard-page stack crash.
-* Demo data path verified:
-  * exactly 40 demo documents
-  * 8 archived demo documents
-  * seed idempotent
-  * restart preserves 40
-  * clear removes 40 marked demo rows only
-  * reseed restores 40
-* Register API path works and creates STAFF account.
-* Forgot-password/register WPF UI activation still needs focused manual or instrumented validation.
+```powershell
+Invoke-RestMethod http://localhost:5033/health
+```
 
-## NEW DASHBOARD UI RULES
+# Repository Hygiene
 
-* Do NOT redesign the whole Tổng quan page.
-* Chart reference images are component-level visual targets, not full-page redesign permission.
-* Radial KPI chart belongs only inside the existing “Cơ cấu hiệu lực văn bản” panel.
-* Department 3D chart belongs only inside the existing “Văn bản theo phòng ban” panel.
-* Preserve the original dashboard layout unless a concrete QA issue requires change.
-* Do not replace the entire dashboard with hero infographic layouts.
-* Do not move shell navigation, main dashboard structure, or unrelated panels.
-* Use Canvas/lightweight rendering for custom charts.
-* Keep visual style restrained: Fluent, white/silver, glassmorphism nhẹ, soft shadow, minimal neon.
-* Avoid startup-dashboard aesthetics, excessive glow, heavy animation, visual-tree complexity.
+Commit source, docs, and canonical screenshot evidence only. Keep temporary build outputs, transient databases, logs, and copied binaries out of git.
 
-## CURRENT OPEN ITEMS
+Before committing:
 
-* Focused validation/fix for forgot-password/register WPF activation.
-* Continue visual refinement of:
-  * “Cơ cấu hiệu lực văn bản” radial KPI chart
-  * “Văn bản theo phòng ban” 3D department chart
-* Both chart refinements must stay inside their existing panels only.
-* Require screenshot evidence before claiming visual completion.
-
-## DASHBOARD REFINEMENT DIRECTION - CONTINUITY RULES
-
-The dashboard is intentionally:
-
-* restrained
-* enterprise-oriented
-* Fluent / Windows 11 inspired
-* operational
-* calm
-* low-noise
-
-The dashboard must NOT evolve into:
-
-* startup-dashboard aesthetics
-* infographic-heavy layouts
-* crypto analytics UI
-* over-rendered glassmorphism
-* showcase-style chart experiments
-
-Future dashboard work must preserve:
-
-* lightweight rendering
-* flattened visual structures
-* low visual noise
-* dashboard consistency
-* enterprise operational UX
-
-Do NOT allow future redesign drift. Component-level visual references are allowed only to refine a specific existing panel, not to replace the dashboard layout or interaction model.
-
-## "VAN BAN THEO PHONG BAN" CHART DECISIONS
-
-Current accepted direction:
-
-* smaller and lighter 3D columns
-* calmer typography
-* reduced visual heaviness
-* improved chart proportions
-* restrained spatial depth
-* cleaner composition
-* lower visual noise
-* subtle backplate/floor depth that supports the bars without becoming decorative clutter
-
-Explicitly rejected directions:
-
-* oversized 3D bars
-* giant typography
-* oversized platform/base
-* heavy glow effects
-* thick glassmorphism
-* startup-dashboard visuals
-* fake bottom navigation dock:
-  * TONG QUAN
-  * PHONG BAN
-  * BAO CAO
-  * THONG KE
-
-The fake navigation dock was removed intentionally and must not be reintroduced, hidden, collapsed, or recreated as a chart decoration.
-
-Required design alignment:
-
-* The department chart should visually align with the "Van ban ban hanh theo thang" panel.
-* Alignment means shared dashboard design language, similar panel treatment, similar spacing rhythm, similar lightweight top-right action controls, and similar Fluent enterprise hierarchy.
-* Do not clone the exact monthly chart style. Preserve the department chart's lightweight 3D identity.
-
-## CURRENT OPEN DASHBOARD REFINEMENT TASKS
-
-1. Continue refining "Van ban theo phong ban":
-   * improve spatial depth subtly
-   * improve panel integration
-   * align visual language with the monthly chart panel
-   * maintain restrained enterprise style
-
-2. Add lightweight top-right action controls:
-   * filter
-   * date/calendar
-   * overflow/menu
-
-3. Preserve dashboard consistency:
-   * avoid isolated custom chart aesthetics
-   * avoid visual clutter
-   * maintain balanced dashboard hierarchy
-
-These controls and refinements must remain subtle, lightweight, enterprise-oriented, and Canvas-friendly where custom chart rendering is involved.
+* run `git status`.
+* remove temporary output folders under `artifacts/` unless they are canonical screenshots.
+* verify screenshots reflect the final UI state.
+* run build and relevant tests.
+* use a descriptive conventional commit message.

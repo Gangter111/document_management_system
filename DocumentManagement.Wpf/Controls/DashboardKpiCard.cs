@@ -22,6 +22,10 @@ public class DashboardKpiCard : Border
         DependencyProperty.Register(nameof(SelectedMetric), typeof(string), typeof(DashboardKpiCard),
             new FrameworkPropertyMetadata(RadialDocumentChart.TotalMetric, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnVisualChanged));
 
+    public static readonly DependencyProperty HoveredMetricProperty =
+        DependencyProperty.Register(nameof(HoveredMetric), typeof(string), typeof(DashboardKpiCard),
+            new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnVisualChanged));
+
     public static readonly DependencyProperty TitleProperty =
         DependencyProperty.Register(nameof(Title), typeof(string), typeof(DashboardKpiCard),
             new FrameworkPropertyMetadata(string.Empty, OnVisualChanged));
@@ -52,6 +56,12 @@ public class DashboardKpiCard : Border
     {
         get => (string)GetValue(SelectedMetricProperty);
         set => SetValue(SelectedMetricProperty, value);
+    }
+
+    public string HoveredMetric
+    {
+        get => (string)GetValue(HoveredMetricProperty);
+        set => SetValue(HoveredMetricProperty, value);
     }
 
     public string Title
@@ -94,8 +104,20 @@ public class DashboardKpiCard : Border
         UseLayoutRounding = true;
 
         Loaded += (_, _) => Build();
-        MouseEnter += (_, _) => Build();
-        MouseLeave += (_, _) => Build();
+        MouseEnter += (_, _) =>
+        {
+            HoveredMetric = MetricKey;
+            Build();
+        };
+        MouseLeave += (_, _) =>
+        {
+            if (string.Equals(HoveredMetric, MetricKey, StringComparison.Ordinal))
+            {
+                HoveredMetric = string.Empty;
+            }
+
+            Build();
+        };
         MouseLeftButtonDown += (_, e) =>
         {
             SelectedMetric = MetricKey;
@@ -103,7 +125,18 @@ public class DashboardKpiCard : Border
         };
     }
 
-    private bool IsActive => IsMouseOver || string.Equals(SelectedMetric, MetricKey, StringComparison.Ordinal);
+    private bool IsActive
+    {
+        get
+        {
+            if (!string.IsNullOrWhiteSpace(HoveredMetric))
+            {
+                return string.Equals(HoveredMetric, MetricKey, StringComparison.Ordinal);
+            }
+
+            return string.Equals(SelectedMetric, MetricKey, StringComparison.Ordinal);
+        }
+    }
 
     private static void OnVisualChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
@@ -116,8 +149,9 @@ public class DashboardKpiCard : Border
     private void Build()
     {
         var active = IsActive;
+        var muted = (!string.IsNullOrWhiteSpace(HoveredMetric) || !string.IsNullOrWhiteSpace(SelectedMetric)) && !active;
         Background = active ? CardSelectedBrush : CardBrush;
-        Opacity = string.IsNullOrWhiteSpace(SelectedMetric) || active ? 1 : 0.64;
+        Opacity = muted ? 0.64 : 1;
         Effect = new DropShadowEffect
         {
             BlurRadius = active ? 14 : 9,

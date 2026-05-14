@@ -1,6 +1,7 @@
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Domain.Entities;
 using DocumentManagement.Infrastructure.Data;
+using System.Globalization;
 
 namespace DocumentManagement.Infrastructure.Services;
 
@@ -8,7 +9,79 @@ public class DemoDataService : IDemoDataService
 {
     public const string DemoCreatedBy = "demo-seed";
     public const string DemoBatchId = "DEMO-QA-2026-05";
-    private const int RequiredDemoCount = 40;
+    private const int RequiredDemoCount = 100;
+    private const int IssuedDemoCount = 68;
+    private const int EffectiveIssuedCount = 45;
+    private const int ExpiredIssuedCount = IssuedDemoCount - EffectiveIssuedCount;
+    private const int ArchivedDemoCount = 24;
+    private const int ArchivedDocumentsPerMonth = ArchivedDemoCount / 12;
+    private const int DraftDemoCount = 8;
+
+    private static readonly DateTime DemoAnchorDate = new(2026, 5, 14);
+    private static readonly int[] MonthlyIssuedCounts = { 3, 4, 5, 4, 6, 7, 5, 8, 7, 9, 6, 4 };
+    private static readonly int[] DraftMonthOffsets = { 8, 9, 9, 10, 10, 11, 11, 11 };
+
+    private static readonly string[] Departments =
+    {
+        "Phòng Kinh doanh",
+        "Phòng Kế toán",
+        "Phòng Pháp chế",
+        "Phòng HCNS",
+        "Phòng CNTT",
+        "Phòng Vận hành",
+        "Ban Giám đốc",
+        "Phòng Kinh doanh",
+        "Phòng Kế toán",
+        "Phòng Vận hành",
+        "Phòng Kinh doanh",
+        "Phòng Pháp chế",
+        "Phòng Kế toán",
+        "Phòng HCNS"
+    };
+
+    private static readonly string[] ExternalOrganizations =
+    {
+        "UBND Thành phố",
+        "Sở Nội vụ",
+        "Sở Tài chính",
+        "Sở Thông tin và Truyền thông",
+        "Cục Thuế Thành phố",
+        "Bảo hiểm Xã hội Thành phố",
+        "Ban Quản lý dự án",
+        "Ngân hàng TMCP Phương Nam",
+        "Công ty TNHH Minh An",
+        "Trung tâm Lưu trữ"
+    };
+
+    private static readonly string[] Signers =
+    {
+        "Nguyễn Văn An",
+        "Trần Thị Bình",
+        "Lê Minh Quang",
+        "Phạm Thu Hà",
+        "Đỗ Hoàng Nam",
+        "Võ Minh Đức",
+        "Hoàng Thanh Tâm",
+        "Bùi Quốc Huy",
+        "Mai Anh Thư",
+        "Đặng Hữu Phúc"
+    };
+
+    private static readonly string[] Handlers = { "manager", "publisher", "staff", "admin" };
+
+    private static readonly DemoDocumentKind[] DocumentKinds =
+    {
+        new("Quyết định", "QD", 2, "OUTGOING"),
+        new("Thông báo", "TB", 3, "OUTGOING"),
+        new("Công văn", "CV", 1, "INCOMING"),
+        new("Báo cáo", "BC", 4, "OUTGOING"),
+        new("Kế hoạch", "KH", 4, "OUTGOING"),
+        new("Tờ trình", "TTr", 1, "OUTGOING"),
+        new("Biên bản", "BB", 4, "OUTGOING"),
+        new("Hợp đồng", "HD", 1, "INCOMING"),
+        new("Quy chế", "QC", 2, "OUTGOING"),
+        new("Quy định", "QDi", 2, "OUTGOING")
+    };
 
     private readonly IDbConnectionFactory _connectionFactory;
     private readonly IDocumentService _documentService;
@@ -36,10 +109,11 @@ public class DemoDataService : IDemoDataService
 
         await ClearLegacySeedRowsAsync(cancellationToken);
 
-        foreach (var document in BuildDocuments())
+        foreach (var seed in BuildDocuments())
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await _documentService.CreateAsync(document);
+            var id = await _documentService.CreateAsync(seed.Document);
+            await UpdateDemoTimestampsAsync(id, seed.CreatedAt, seed.UpdatedAt, cancellationToken);
         }
 
         return RequiredDemoCount;
@@ -120,111 +194,291 @@ ORDER BY id;";
         return ids;
     }
 
-    private static IEnumerable<Document> BuildDocuments()
+    private async Task UpdateDemoTimestampsAsync(
+        long id,
+        DateTime createdAt,
+        DateTime updatedAt,
+        CancellationToken cancellationToken)
     {
-        var senders = new[]
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync(cancellationToken);
+
+        await using var command = connection.CreateCommand();
+        command.CommandText = @"
+UPDATE documents
+SET created_at = @createdAt,
+    updated_at = @updatedAt
+WHERE id = @id;";
+        command.AddParameter("createdAt", FormatTimestamp(createdAt));
+        command.AddParameter("updatedAt", FormatTimestamp(updatedAt));
+        command.AddParameter("id", id);
+
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    private static IEnumerable<DemoDocumentSeed> BuildDocuments()
+    {
+        var specs = BuildDocumentSpecs();
+
+        return specs
+            .OrderBy(spec => spec.IssueDate)
+            .ThenBy(spec => spec.SortOrder)
+            .Select((spec, index) => BuildSeed(index + 1, spec));
+    }
+
+    private static List<DemoDocumentSpec> BuildDocumentSpecs()
+    {
+        var specs = new List<DemoDocumentSpec>(RequiredDemoCount);
+        var startMonth = new DateTime(DemoAnchorDate.Year, DemoAnchorDate.Month, 1).AddMonths(-11);
+        var issuedOrdinal = 0;
+
+        for (var monthOffset = 0; monthOffset < MonthlyIssuedCounts.Length; monthOffset++)
         {
-            "UBND Thành phố",
-            "Sở Nội vụ",
-            "Sở Tài chính",
-            "Ban Quản lý dự án",
-            "Công ty TNHH Minh An",
-            "Trung tâm Lưu trữ"
-        };
+            var month = startMonth.AddMonths(monthOffset);
+            var documentsInMonth = MonthlyIssuedCounts[monthOffset];
 
-        var departments = new[]
-        {
-            "Ban Giám đốc",
-            "Phòng HCNS",
-            "Phòng Kinh doanh",
-            "Phòng Kế toán",
-            "Phòng Pháp chế"
-        };
-
-        var handlers = new[] { "manager", "publisher", "staff", "admin" };
-        var signers = new[] { "Nguyễn Văn An", "Trần Thị Bình", "Lê Minh Quang", "Phạm Thu Hà", "Đỗ Hoàng Nam" };
-
-        for (var n = 1; n <= RequiredDemoCount; n++)
-        {
-            var statusId = GetStatusId(n);
-            var dueDate = IsExpired(n)
-                ? new DateTime(2026, 2, 1).AddDays(-n)
-                : new DateTime(2026, 2, 1).AddDays(n * 2);
-            var issueDate = new DateTime(2026, 1, 5).AddDays(n * 3);
-
-            yield return new Document
+            for (var indexInMonth = 0; indexInMonth < documentsInMonth; indexInMonth++)
             {
-                DocumentType = n % 3 == 0 ? "OUTGOING" : "INCOMING",
-                DocumentNumber = $"DEMO-2026-{n:000}",
-                ReferenceNumber = $"PG-2026/{n:000}",
-                Title = GetTitle(n),
-                Summary = "Dữ liệu demo QA cục bộ dùng cho kiểm thử lọc, tìm kiếm, phân trang, báo cáo và lưu trữ.",
-                ContentText = "Nội dung demo được tạo qua application service và lưu trong database thật để các màn hình dùng cùng một nguồn dữ liệu.",
-                IssueDate = issueDate.ToString("yyyy-MM-dd"),
-                ReceivedDate = issueDate.AddDays(1).ToString("yyyy-MM-dd"),
-                DueDate = dueDate.ToString("yyyy-MM-dd"),
-                SenderName = senders[n % senders.Length],
-                ReceiverName = departments[n % departments.Length],
-                SignerName = signers[n % signers.Length],
-                CategoryId = (n % 4) + 1,
-                StatusId = statusId,
-                ConfidentialityLevel = n % 18 == 0 ? "CONFIDENTIAL" : "NORMAL",
-                UrgencyLevel = GetUrgency(n),
-                ProcessingDepartment = departments[n % departments.Length],
-                AssignedTo = handlers[n % handlers.Length],
-                Notes = $"{DemoBatchId}; {(statusId == 5 ? "Đã lưu trữ để kiểm thử Archive và Restore." : "Dữ liệu demo vận hành.")}",
-                IsExpired = IsExpired(n),
-                OcrStatus = "DEMO",
-                CreatedBy = DemoCreatedBy,
-                UpdatedBy = DemoCreatedBy
-            };
+                issuedOrdinal++;
+                specs.Add(new DemoDocumentSpec(
+                    IssueDate: GetIssueDate(month, indexInMonth, issuedOrdinal),
+                    StatusId: 4,
+                    IsExpired: issuedOrdinal <= ExpiredIssuedCount,
+                    KindIndex: issuedOrdinal + monthOffset,
+                    DepartmentIndex: issuedOrdinal + monthOffset * 2,
+                    SignerIndex: issuedOrdinal + monthOffset,
+                    OrganizationIndex: issuedOrdinal + monthOffset * 3,
+                    SortOrder: specs.Count));
+            }
         }
-    }
 
-    private static long GetStatusId(int n)
-    {
-        if (n is 5 or 10 or 15 or 20 or 25 or 30 or 35 or 40)
+        var archivedOrdinal = 0;
+        for (var monthOffset = 0; monthOffset < 12; monthOffset++)
         {
-            return 5;
+            var month = startMonth.AddMonths(monthOffset);
+            for (var indexInMonth = 0; indexInMonth < ArchivedDocumentsPerMonth; indexInMonth++)
+            {
+                archivedOrdinal++;
+                specs.Add(new DemoDocumentSpec(
+                    IssueDate: GetIssueDate(month, indexInMonth + 2, archivedOrdinal + 70),
+                    StatusId: 5,
+                    IsExpired: false,
+                    KindIndex: archivedOrdinal + 4,
+                    DepartmentIndex: archivedOrdinal * 2,
+                    SignerIndex: archivedOrdinal + 3,
+                    OrganizationIndex: archivedOrdinal + 5,
+                    SortOrder: specs.Count));
+            }
         }
 
-        if (n is 1 or 7 or 13 or 19 or 31)
+        for (var draftOrdinal = 0; draftOrdinal < DraftDemoCount; draftOrdinal++)
         {
-            return 1;
+            var month = startMonth.AddMonths(DraftMonthOffsets[draftOrdinal]);
+            specs.Add(new DemoDocumentSpec(
+                IssueDate: GetIssueDate(month, draftOrdinal, draftOrdinal + 130),
+                StatusId: 1,
+                IsExpired: false,
+                KindIndex: draftOrdinal + 6,
+                DepartmentIndex: draftOrdinal * 3,
+                SignerIndex: draftOrdinal + 6,
+                OrganizationIndex: draftOrdinal + 2,
+                SortOrder: specs.Count));
         }
 
-        return 4;
+        if (issuedOrdinal != IssuedDemoCount || specs.Count != RequiredDemoCount)
+        {
+            throw new InvalidOperationException("Demo data distribution is misconfigured.");
+        }
+
+        return specs;
     }
 
-    private static bool IsExpired(int n)
+    private static DemoDocumentSeed BuildSeed(int n, DemoDocumentSpec spec)
     {
-        return n is 6 or 12 or 18 or 24 or 32 or 38;
+        var kind = DocumentKinds[spec.KindIndex % DocumentKinds.Length];
+        var department = Departments[spec.DepartmentIndex % Departments.Length];
+        var organization = ExternalOrganizations[spec.OrganizationIndex % ExternalOrganizations.Length];
+        var signer = Signers[spec.SignerIndex % Signers.Length];
+        var documentNumber = $"DEMO-2026-{n:000}";
+        var referenceNumber = $"{kind.CodePrefix}-{spec.IssueDate:yyyy}/{spec.IssueDate:MM}-{n:000}";
+        var createdAt = spec.IssueDate.AddDays(-((n % 5) + 1)).AddHours(8 + (n % 8)).AddMinutes((n * 7) % 50);
+        var updatedAt = GetUpdatedAt(spec, createdAt, n);
+
+        var document = new Document
+        {
+            DocumentType = kind.Direction,
+            DocumentNumber = documentNumber,
+            ReferenceNumber = referenceNumber,
+            Title = GetTitle(kind.Name, spec.IssueDate, department, n),
+            Summary = GetSummary(kind.Name, department, spec.StatusId, spec.IsExpired),
+            ContentText = GetContentText(kind.Name, department, referenceNumber),
+            IssueDate = FormatDate(spec.IssueDate),
+            ReceivedDate = FormatDate(spec.IssueDate.AddDays(kind.Direction == "INCOMING" ? 1 : 0)),
+            DueDate = GetDueDate(spec, n),
+            SenderName = kind.Direction == "INCOMING" ? organization : department,
+            ReceiverName = kind.Direction == "INCOMING" ? department : organization,
+            SignerName = signer,
+            CategoryId = kind.CategoryId,
+            StatusId = spec.StatusId,
+            ConfidentialityLevel = n % 17 == 0 ? "CONFIDENTIAL" : "NORMAL",
+            UrgencyLevel = GetUrgency(n, spec.StatusId),
+            ProcessingDepartment = department,
+            AssignedTo = Handlers[n % Handlers.Length],
+            Notes = $"{DemoBatchId}; {kind.Name}; {GetOperationalNote(spec.StatusId, spec.IsExpired)}",
+            IsExpired = spec.IsExpired,
+            OcrStatus = "DEMO",
+            CreatedBy = DemoCreatedBy,
+            UpdatedBy = DemoCreatedBy
+        };
+
+        return new DemoDocumentSeed(document, createdAt, updatedAt);
     }
 
-    private static string GetUrgency(int n)
+    private static DateTime GetIssueDate(DateTime month, int indexInMonth, int ordinal)
     {
-        if (n is 4 or 12 or 22 or 34)
+        var maxDay = month.Year == DemoAnchorDate.Year && month.Month == DemoAnchorDate.Month
+            ? Math.Max(2, DemoAnchorDate.Day - 1)
+            : Math.Min(26, DateTime.DaysInMonth(month.Year, month.Month));
+        var day = 2 + ((indexInMonth * 5 + ordinal * 3) % Math.Max(1, maxDay - 1));
+
+        return new DateTime(month.Year, month.Month, Math.Min(day, maxDay));
+    }
+
+    private static DateTime GetUpdatedAt(DemoDocumentSpec spec, DateTime createdAt, int n)
+    {
+        var updatedAt = spec.StatusId switch
+        {
+            1 => createdAt.AddDays((n % 4) + 1),
+            5 => spec.IssueDate.AddDays(80 + (n % 20)).AddHours(15),
+            _ => spec.IssueDate.AddDays((n % 9) + 1).AddHours(16)
+        };
+
+        return updatedAt > DemoAnchorDate
+            ? DemoAnchorDate.AddHours(-(n % 8)).AddMinutes(-((n * 3) % 45))
+            : updatedAt;
+    }
+
+    private static string? GetDueDate(DemoDocumentSpec spec, int n)
+    {
+        if (spec.StatusId == 1)
+        {
+            return null;
+        }
+
+        var dueDate = spec.IsExpired
+            ? spec.IssueDate.AddDays(72 + (n % 22))
+            : DemoAnchorDate.AddDays(95 + (n % 120));
+
+        return FormatDate(dueDate);
+    }
+
+    private static string GetUrgency(int n, long statusId)
+    {
+        if (statusId == 1)
+        {
+            return "NORMAL";
+        }
+
+        if (n % 19 == 0 || n % 23 == 0)
         {
             return "VERY_URGENT";
         }
 
-        return n is 2 or 9 or 16 or 23 or 28 or 37
+        return n % 7 == 0 || n % 11 == 0
             ? "URGENT"
             : "NORMAL";
     }
 
-    private static string GetTitle(int n)
+    private static string GetTitle(string kind, DateTime issueDate, string department, int n)
     {
-        return (n % 8) switch
+        var month = issueDate.ToString("MM", CultureInfo.InvariantCulture);
+        var quarter = ((issueDate.Month - 1) / 3) + 1;
+
+        return kind switch
         {
-            0 => $"Rà soát hồ sơ hợp đồng mua sắm quý {(n % 4) + 1}",
-            1 => $"Thông báo lịch họp điều hành tuần {n}",
-            2 => $"Báo cáo tiến độ xử lý văn bản nội bộ số {n}",
-            3 => $"Quyết định phân công xử lý hồ sơ dự án {n}",
-            4 => $"Công văn phối hợp kiểm tra hiện trường đợt {n}",
-            5 => $"Kế hoạch đào tạo nghiệp vụ văn thư tháng {(n % 12) + 1}",
-            6 => $"Tờ trình phê duyệt ngân sách vận hành số {n}",
-            _ => $"Biên bản nghiệm thu hạng mục hành chính số {n}"
+            "Quyết định" => n % 2 == 0
+                ? $"Quyết định phân công nhiệm vụ {department} quý {quarter}"
+                : $"Quyết định phê duyệt kế hoạch vận hành tháng {month}",
+            "Thông báo" => n % 2 == 0
+                ? $"Thông báo lịch họp điều hành tuần {((n - 1) % 52) + 1}"
+                : $"Thông báo triển khai quy trình xử lý văn bản tháng {month}",
+            "Công văn" => n % 2 == 0
+                ? $"Công văn phối hợp rà soát hồ sơ lưu trữ tháng {month}"
+                : $"Công văn triển khai hệ thống lưu trữ văn bản điện tử",
+            "Báo cáo" => n % 2 == 0
+                ? $"Báo cáo tình hình vận hành tháng {month}"
+                : $"Báo cáo tiến độ xử lý văn bản nội bộ quý {quarter}",
+            "Kế hoạch" => n % 2 == 0
+                ? $"Kế hoạch đào tạo nhân sự nội bộ quý {quarter}"
+                : $"Kế hoạch kiểm tra hồ sơ nghiệp vụ tháng {month}",
+            "Tờ trình" => n % 2 == 0
+                ? $"Tờ trình phê duyệt ngân sách mua sắm quý {quarter}"
+                : $"Tờ trình điều chỉnh kế hoạch vận hành tháng {month}",
+            "Biên bản" => n % 2 == 0
+                ? $"Biên bản nghiệm thu thiết bị CNTT đợt {((n - 1) % 6) + 1}"
+                : $"Biên bản họp rà soát hồ sơ {department}",
+            "Hợp đồng" => n % 2 == 0
+                ? $"Hợp đồng dịch vụ bảo trì hệ thống lưu trữ năm 2026"
+                : $"Hợp đồng cung cấp thiết bị văn phòng quý {quarter}",
+            "Quy chế" => n % 2 == 0
+                ? $"Quy chế quản lý hồ sơ điện tử nội bộ"
+                : $"Quy chế phối hợp xử lý văn bản liên phòng ban",
+            _ => n % 2 == 0
+                ? $"Quy định luân chuyển văn bản nội bộ tháng {month}"
+                : $"Quy định cập nhật phân quyền khai thác hồ sơ"
         };
     }
+
+    private static string GetSummary(string kind, string department, long statusId, bool isExpired)
+    {
+        var state = statusId switch
+        {
+            1 => "đang ở trạng thái dự thảo nội bộ",
+            5 => "đã hoàn tất và chuyển lưu trữ",
+            _ when isExpired => "đã ban hành và hết hiệu lực theo thời hạn xử lý",
+            _ => "đã ban hành và còn hiệu lực theo kế hoạch"
+        };
+
+        return $"{kind} thuộc {department}, {state}; dùng làm dữ liệu demo cho tìm kiếm, dashboard, báo cáo và lưu trữ.";
+    }
+
+    private static string GetContentText(string kind, string department, string referenceNumber)
+    {
+        return $"{kind} số tham chiếu {referenceNumber}. Nội dung demo mô phỏng nghiệp vụ {department}, được tạo qua application service và lưu trong database thật để toàn bộ màn hình dùng cùng một nguồn dữ liệu.";
+    }
+
+    private static string GetOperationalNote(long statusId, bool isExpired)
+    {
+        return statusId switch
+        {
+            1 => "Dự thảo nội bộ dùng để kiểm thử trạng thái chưa ban hành.",
+            5 => "Đã lưu trữ để kiểm thử Archive và Restore.",
+            _ when isExpired => "Văn bản đã hết hiệu lực để kiểm thử thống kê và cảnh báo.",
+            _ => "Dữ liệu demo vận hành còn hiệu lực."
+        };
+    }
+
+    private static string FormatDate(DateTime date)
+    {
+        return date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatTimestamp(DateTime date)
+    {
+        return date.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+    }
+
+    private sealed record DemoDocumentKind(string Name, string CodePrefix, long CategoryId, string Direction);
+
+    private sealed record DemoDocumentSpec(
+        DateTime IssueDate,
+        long StatusId,
+        bool IsExpired,
+        int KindIndex,
+        int DepartmentIndex,
+        int SignerIndex,
+        int OrganizationIndex,
+        int SortOrder);
+
+    private sealed record DemoDocumentSeed(Document Document, DateTime CreatedAt, DateTime UpdatedAt);
 }
