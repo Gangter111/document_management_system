@@ -27,6 +27,7 @@
     <ProjectReference Include="..\DocumentManagement.Application\DocumentManagement.Application.csproj" />
     <ProjectReference Include="..\DocumentManagement.Domain\DocumentManagement.Domain.csproj" />
     <ProjectReference Include="..\DocumentManagement.Api\DocumentManagement.Api.csproj" />
+    <ProjectReference Include="..\DocumentManagement.Infrastructure\DocumentManagement.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

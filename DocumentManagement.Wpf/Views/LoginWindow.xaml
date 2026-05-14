@@ -362,7 +362,8 @@
                                 VerticalAlignment="Center"
                                 Margin="0,2,0,0">
                         <Button Style="{StaticResource GhostLinkButtonStyle}"
-                                Content="Quên mật khẩu?"/>
+                                Content="Quên mật khẩu?"
+                                Click="ForgotPasswordButton_Click"/>
                         <Border Width="1"
                                 Height="16"
                                 Background="#D7DDE0"
@@ -370,7 +371,8 @@
                         <Button Style="{StaticResource GhostLinkButtonStyle}"
                                 Foreground="{StaticResource LoginGreenBrush}"
                                 FontWeight="SemiBold"
-                                Content="Đăng ký tài khoản"/>
+                                Content="Đăng ký tài khoản"
+                                Click="RegisterButton_Click"/>
                         <Border Width="1"
                                 Height="16"
                                 Background="#D7DDE0"

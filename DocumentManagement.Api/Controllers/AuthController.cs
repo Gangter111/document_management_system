@@ -83,6 +83,68 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("register")]
+    public async Task<ActionResult<LoginResponse>> Register([FromBody] RegisterRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Username))
+        {
+            return BadRequest(new LoginResponse
+            {
+                Success = false,
+                Message = "Tên đăng nhập không được để trống."
+            });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 6)
+        {
+            return BadRequest(new LoginResponse
+            {
+                Success = false,
+                Message = "Mật khẩu phải có ít nhất 6 ký tự."
+            });
+        }
+
+        var userSession = await _authService.RegisterAsync(
+            request.Username,
+            request.Password,
+            request.FullName,
+            request.Department);
+
+        if (userSession == null)
+        {
+            return BadRequest(new LoginResponse
+            {
+                Success = false,
+                Message = "Không thể đăng ký. Tên đăng nhập có thể đã tồn tại."
+            });
+        }
+
+        var userId = GetLongValue(userSession, "UserId")
+            ?? GetLongValue(userSession, "Id")
+            ?? 0;
+        var username = GetStringValue(userSession, "Username") ?? request.Username;
+        var fullName = GetStringValue(userSession, "DisplayName")
+            ?? GetStringValue(userSession, "FullName")
+            ?? username;
+        var role = GetRoleValue(userSession)
+            ?? GetStringValue(userSession, "Role")
+            ?? "STAFF";
+        var department = GetStringValue(userSession, "Department") ?? string.Empty;
+        var token = _jwtService.GenerateToken(userId, username, fullName, role, department);
+
+        return Ok(new LoginResponse
+        {
+            Success = true,
+            Message = "Đăng ký tài khoản thành công.",
+            UserId = userId,
+            Username = username,
+            FullName = fullName,
+            Role = role,
+            Department = department,
+            Token = token
+        });
+    }
+
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
     {

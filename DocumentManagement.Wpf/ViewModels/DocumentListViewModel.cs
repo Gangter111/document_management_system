@@ -299,7 +299,7 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
         ? "Không có văn bản phù hợp"
         : $"{CurrentPageCount:N0}/{TotalCount:N0} văn bản trong bộ lọc hiện tại";
 
-    public string PreviewTitle => SelectedDocument?.Title ?? "Chưa chọn văn bản";
+    public string PreviewTitle => SelectedDocument?.Title ?? string.Empty;
 
     public string PreviewNextAction
     {
@@ -307,7 +307,7 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
         {
             if (SelectedDocument == null)
             {
-                return "Chọn một dòng để xem chi tiết và thao tác.";
+                return "Chọn văn bản để xem chi tiết.";
             }
 
             if (SelectedDocument.IsArchived)
@@ -413,6 +413,20 @@ public class DocumentListViewModel : BaseViewModel, IDisposable
 
         RefreshPermissions();
         await InitializeAsync();
+    }
+
+    public void SelectQueueByCode(string code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return;
+        }
+
+        var queue = Queues.FirstOrDefault(x => string.Equals(x.Code, code, StringComparison.OrdinalIgnoreCase));
+        if (queue != null)
+        {
+            SelectedQueue = queue;
+        }
     }
 
     public void Deactivate()

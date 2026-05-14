@@ -1,6 +1,7 @@
 ﻿using DocumentManagement.Contracts.Auth;
 using DocumentManagement.Contracts.Common;
 using DocumentManagement.Contracts.Dashboard;
+using DocumentManagement.Contracts.DemoData;
 using DocumentManagement.Contracts.Documents;
 using Microsoft.Extensions.Configuration;
 using System.IO;
@@ -105,6 +106,39 @@ public class ApiService
         };
     }
 
+    public async Task<LoginResponse> RegisterAsync(string username, string password, string fullName, string department)
+    {
+        var request = new RegisterRequest
+        {
+            Username = username,
+            Password = password,
+            FullName = fullName,
+            Department = department
+        };
+
+        var response = await _httpClient.PostAsJsonAsync("api/auth/register", request);
+
+        if (response.StatusCode == HttpStatusCode.BadRequest)
+        {
+            var badRequest = await response.Content.ReadFromJsonAsync<LoginResponse>();
+
+            return badRequest ?? new LoginResponse
+            {
+                Success = false,
+                Message = "Dữ liệu đăng ký không hợp lệ."
+            };
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<LoginResponse>()
+               ?? new LoginResponse
+               {
+                   Success = false,
+                   Message = "API không trả về dữ liệu đăng ký."
+               };
+    }
+
     public async Task<bool> ChangePasswordAsync(long userId, string newPassword)
     {
         var request = new ChangePasswordRequest
@@ -130,6 +164,24 @@ public class ApiService
         var result = await _httpClient.GetFromJsonAsync<DashboardDto>("api/dashboard");
 
         return result ?? new DashboardDto();
+    }
+
+    public async Task<DemoDataResponse> SeedDemoDataAsync()
+    {
+        var response = await _httpClient.PostAsync("api/demo-data/seed", null);
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<DemoDataResponse>()
+               ?? new DemoDataResponse();
+    }
+
+    public async Task<DemoDataResponse> ClearDemoDataAsync()
+    {
+        var response = await _httpClient.DeleteAsync("api/demo-data");
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<DemoDataResponse>()
+               ?? new DemoDataResponse();
     }
 
     public async Task<List<LookupItemDto>> GetCategoriesAsync()

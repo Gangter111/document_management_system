@@ -10,6 +10,8 @@ namespace DocumentManagement.Wpf.Views;
 
 public partial class MainWindow : Window
 {
+    private const double ToastEdgeMargin = 18;
+
     private readonly MainViewModel _viewModel;
     private readonly IServiceProvider _serviceProvider;
     private readonly INotificationService _notificationService;
@@ -122,14 +124,7 @@ public partial class MainWindow : Window
             CornerRadius = new CornerRadius(14),
             BorderBrush = new SolidColorBrush(Color.FromRgb(229, 231, 235)),
             BorderThickness = new Thickness(1),
-            Padding = new Thickness(0),
-            Effect = new System.Windows.Media.Effects.DropShadowEffect
-            {
-                Color = Colors.Black,
-                BlurRadius = 20,
-                ShadowDepth = 3,
-                Opacity = 0.16
-            }
+            Padding = new Thickness(0)
         };
 
         var rootGrid = new Grid();
@@ -213,8 +208,7 @@ public partial class MainWindow : Window
         {
             Owner = this,
             Content = rootBorder,
-            Width = 380,
-            SizeToContent = SizeToContent.Height,
+            SizeToContent = SizeToContent.WidthAndHeight,
             WindowStyle = WindowStyle.None,
             ResizeMode = ResizeMode.NoResize,
             AllowsTransparency = true,
@@ -227,6 +221,7 @@ public partial class MainWindow : Window
 
         toastWindow.Loaded += (_, _) =>
         {
+            toastWindow.UpdateLayout();
             PositionToast(toastWindow);
         };
 
@@ -264,6 +259,7 @@ public partial class MainWindow : Window
         var ownerLeft = Left;
         var ownerTop = Top;
         var ownerWidth = ActualWidth;
+        var ownerHeight = ActualHeight;
 
         if (double.IsNaN(ownerLeft) || double.IsInfinity(ownerLeft))
         {
@@ -280,8 +276,29 @@ public partial class MainWindow : Window
             ownerWidth = Width;
         }
 
-        toastWindow.Left = ownerLeft + ownerWidth - toastWindow.Width - 32;
-        toastWindow.Top = ownerTop + 92;
+        if (ownerHeight <= 0)
+        {
+            ownerHeight = Height;
+        }
+
+        var toastWidth = toastWindow.ActualWidth > 0 ? toastWindow.ActualWidth : toastWindow.Width;
+        var toastHeight = toastWindow.ActualHeight > 0 ? toastWindow.ActualHeight : toastWindow.Height;
+
+        if (double.IsNaN(toastHeight) || double.IsInfinity(toastHeight) || toastHeight <= 0)
+        {
+            toastHeight = 120;
+        }
+
+        var minLeft = ownerLeft;
+        var maxLeft = ownerLeft + ownerWidth - toastWidth;
+        var minTop = ownerTop;
+        var maxTop = ownerTop + ownerHeight - toastHeight;
+
+        var desiredLeft = ownerLeft + ownerWidth - toastWidth - ToastEdgeMargin;
+        var desiredTop = ownerTop + ToastEdgeMargin;
+
+        toastWindow.Left = Math.Max(minLeft, Math.Min(maxLeft, desiredLeft));
+        toastWindow.Top = Math.Max(minTop, Math.Min(maxTop, desiredTop));
     }
 
     private static SolidColorBrush GetAccentBrush(NotificationType type)

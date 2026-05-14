@@ -20,6 +20,57 @@ public class AuthService : IAuthService
 
     public UserSession? CurrentUser => _currentUser ?? GetUserFromClaims();
 
+    public async Task<UserSession?> RegisterAsync(string username, string password, string fullName, string department)
+    {
+        username = username.Trim();
+        fullName = string.IsNullOrWhiteSpace(fullName) ? username : fullName.Trim();
+        department = string.IsNullOrWhiteSpace(department) ? "Chưa cấu hình" : department.Trim();
+
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        {
+            return null;
+        }
+
+        await using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        var staffRoleId = await GetRoleIdAsync(connection, "Staff");
+        if (staffRoleId <= 0)
+        {
+            return null;
+        }
+
+        await using (var existsCmd = connection.CreateCommand())
+        {
+            existsCmd.CommandText = _connectionFactory.Provider == DatabaseProvider.SqlServer
+                ? "SELECT TOP 1 Id FROM Users WHERE LOWER(LTRIM(RTRIM(Username))) = LOWER(LTRIM(RTRIM(@username)));"
+                : "SELECT Id FROM Users WHERE LOWER(TRIM(Username)) = LOWER(TRIM(@username)) LIMIT 1;";
+            existsCmd.AddParameter("username", username);
+
+            var existing = await existsCmd.ExecuteScalarAsync();
+            if (existing != null && existing != DBNull.Value)
+            {
+                return null;
+            }
+        }
+
+        await using (var insertCmd = connection.CreateCommand())
+        {
+            insertCmd.CommandText = @"
+INSERT INTO Users(Username, PasswordHash, FullName, Department, IsActive, RoleId)
+VALUES (@username, @passwordHash, @fullName, @department, 1, @roleId);";
+            insertCmd.AddParameter("username", username);
+            insertCmd.AddParameter("passwordHash", BCrypt.Net.BCrypt.HashPassword(password));
+            insertCmd.AddParameter("fullName", fullName);
+            insertCmd.AddParameter("department", department);
+            insertCmd.AddParameter("roleId", staffRoleId);
+
+            await insertCmd.ExecuteNonQueryAsync();
+        }
+
+        return await LoginAsync(username, password);
+    }
+
     public async Task<UserSession?> LoginAsync(string username, string password)
     {
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
@@ -145,6 +196,20 @@ WHERE Id = @userId
             "PUBLISHER" => "PUBLISHER",
             _ => "STAFF"
         };
+    }
+
+    private async Task<long> GetRoleIdAsync(System.Data.Common.DbConnection connection, string roleName)
+    {
+        await using var cmd = connection.CreateCommand();
+        cmd.CommandText = _connectionFactory.Provider == DatabaseProvider.SqlServer
+            ? "SELECT TOP 1 Id FROM Roles WHERE LOWER(LTRIM(RTRIM(Name))) = LOWER(LTRIM(RTRIM(@name)));"
+            : "SELECT Id FROM Roles WHERE LOWER(TRIM(Name)) = LOWER(TRIM(@name)) LIMIT 1;";
+        cmd.AddParameter("name", roleName);
+
+        var result = await cmd.ExecuteScalarAsync();
+        return result == null || result == DBNull.Value
+            ? 0
+            : Convert.ToInt64(result);
     }
 
     private UserSession? GetUserFromClaims()

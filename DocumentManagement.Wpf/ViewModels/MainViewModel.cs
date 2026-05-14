@@ -1,5 +1,8 @@
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Windows.Input;
+using DocumentManagement.Contracts.Common;
+using DocumentManagement.Contracts.Dashboard;
 using DocumentManagement.Wpf.Commands;
 using DocumentManagement.Wpf.Services;
 using DocumentManagement.Wpf.Views;
@@ -40,7 +43,11 @@ public class MainViewModel : BaseViewModel
                 disposable.Dispose();
             }
 
-            SetProperty(ref _currentView, value);
+            if (SetProperty(ref _currentView, value))
+            {
+                OnPropertyChanged(nameof(IsDashboardActive));
+                OnPropertyChanged(nameof(IsCommandSearchVisible));
+            }
         }
     }
 
@@ -109,13 +116,17 @@ public class MainViewModel : BaseViewModel
 
     public bool CanViewTasks => false;
 
-    public bool CanViewReports => false;
+    public bool CanViewReports => true;
 
-    public bool CanViewArchive => false;
+    public bool CanViewArchive => true;
 
-    public bool CanViewCategories => false;
+    public bool CanViewCategories => true;
 
-    public bool CanViewSettings => false;
+    public bool CanViewSettings => true;
+
+    public bool IsDashboardActive => CurrentView is DashboardViewModel;
+
+    public bool IsCommandSearchVisible => !IsDashboardActive;
 
     public bool CanBackup =>
         string.Equals(CurrentRoleName, "Admin", StringComparison.OrdinalIgnoreCase)
@@ -168,10 +179,10 @@ public class MainViewModel : BaseViewModel
         ShowDashboardCommand = new RelayCommand(_ => ShowDashboard(), _ => CanViewDashboard);
         ShowDocumentListCommand = new RelayCommand(async _ => await ShowDocumentsAsync(), _ => CanViewDocuments);
         CreateDocumentCommand = new RelayCommand(async _ => await CreateDocumentAsync(), _ => CanCreateDocument);
-        ShowArchiveCommand = new RelayCommand(_ => ShowPlaceholder("Lưu trữ", "Các văn bản lưu trữ sẽ được tổng hợp tại đây."), _ => CanViewArchive);
-        ShowReportsCommand = new RelayCommand(_ => ShowPlaceholder("Báo cáo", "Khu vực báo cáo thống kê văn bản, tình trạng hiệu lực và phòng ban xử lý."), _ => CanViewReports);
-        ShowCategoriesCommand = new RelayCommand(_ => ShowPlaceholder("Danh mục", "Quản lý loại văn bản, trạng thái, độ mật và độ khẩn."), _ => CanViewCategories);
-        ShowSettingsCommand = new RelayCommand(_ => ShowPlaceholder("Hệ thống", "Cấu hình người dùng, phân quyền và tham số vận hành."), _ => CanViewSettings);
+        ShowArchiveCommand = new RelayCommand(async _ => await ShowArchiveAsync(), _ => CanViewArchive);
+        ShowReportsCommand = new RelayCommand(async _ => await ShowReportsAsync(), _ => CanViewReports);
+        ShowCategoriesCommand = new RelayCommand(async _ => await ShowCategoriesAsync(), _ => CanViewCategories);
+        ShowSettingsCommand = new RelayCommand(_ => ShowSystemInfo(), _ => CanViewSettings);
 
         BackupCommand = new RelayCommand(
             async _ => await BackupAsync(),
@@ -211,6 +222,8 @@ public class MainViewModel : BaseViewModel
         OnPropertyChanged(nameof(CanViewArchive));
         OnPropertyChanged(nameof(CanViewCategories));
         OnPropertyChanged(nameof(CanViewSettings));
+        OnPropertyChanged(nameof(IsDashboardActive));
+        OnPropertyChanged(nameof(IsCommandSearchVisible));
         OnPropertyChanged(nameof(CanBackup));
         OnPropertyChanged(nameof(CanRestore));
         OnPropertyChanged(nameof(CanRunBackupCommand));
@@ -287,9 +300,165 @@ public class MainViewModel : BaseViewModel
         }
     }
 
+    private async Task ShowArchiveAsync()
+    {
+        if (!CanViewArchive || !CanViewDocuments)
+        {
+            _notificationService.ShowWarning(
+                "Ban khong co quyen xem kho luu tru.",
+                "Tu choi truy cap");
+            return;
+        }
+
+        try
+        {
+            var vm = _serviceProvider.GetRequiredService<DocumentListViewModel>();
+            CurrentView = vm;
+            vm.SelectQueueByCode("ARCHIVED");
+            await vm.LoadAsync();
+            vm.SelectQueueByCode("ARCHIVED");
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                $"Khong the mo kho luu tru: {ex.Message}",
+                "Loi");
+        }
+    }
+
+    private async Task ShowReportsAsync()
+    {
+        try
+        {
+            var vm = new OperationalReportsViewModel();
+            CurrentView = vm;
+
+            var dashboard = await _apiService.GetDashboardAsync();
+            vm.Apply(dashboard);
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                $"Khong the tai bao cao: {ex.Message}",
+                "Loi bao cao");
+        }
+    }
+
+    private async Task ShowCategoriesAsync()
+    {
+        try
+        {
+            var vm = new LookupCatalogViewModel();
+            CurrentView = vm;
+
+            var categories = await _apiService.GetCategoriesAsync();
+            var statuses = await _apiService.GetStatusesAsync();
+            vm.Apply(categories, statuses);
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                $"Khong the tai danh muc: {ex.Message}",
+                "Loi danh muc");
+        }
+    }
+
+    private void ShowSystemInfo()
+    {
+        CurrentView = new SystemInfoViewModel(
+            CurrentDisplayName,
+            CurrentRoleName,
+            CurrentDepartmentName,
+            _apiService.BaseUrl,
+            CanBackup,
+            CanRestore,
+            BackupCommand,
+            RestoreCommand,
+            new RelayCommand(_ => OpenServerSettings()),
+            new RelayCommand(async _ => await SeedDemoDataAsync(), _ => CanRestore),
+            new RelayCommand(async _ => await ClearDemoDataAsync(), _ => CanRestore));
+    }
+
+    private void OpenServerSettings()
+    {
+        var window = _serviceProvider.GetRequiredService<ServerSettingsWindow>();
+        window.Owner = global::System.Windows.Application.Current?.MainWindow;
+        window.ShowDialog();
+
+        if (CurrentView is SystemInfoViewModel systemInfo)
+        {
+            systemInfo.ApiBaseUrl = _apiService.BaseUrl;
+        }
+    }
+
+    private async Task SeedDemoDataAsync()
+    {
+        try
+        {
+            IsSystemOperationRunning = true;
+            var result = await _apiService.SeedDemoDataAsync();
+            await RefreshCurrentViewAsync();
+            _notificationService.ShowSuccess(
+                $"Demo data sẵn sàng: {result.ActiveDemoCount:N0} văn bản.",
+                "Demo data");
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                $"Không thể tạo demo data: {ex.Message}",
+                "Demo data");
+        }
+        finally
+        {
+            IsSystemOperationRunning = false;
+        }
+    }
+
+    private async Task ClearDemoDataAsync()
+    {
+        var confirmed = _confirmDialogService.Confirm(
+            "Chỉ các văn bản demo có mã DEMO-2026 và marker demo batch sẽ bị xóa mềm. Dữ liệu thật không bị ảnh hưởng. Tiếp tục?",
+            "Clear Demo Data",
+            "Clear Demo Data",
+            "Hủy",
+            ConfirmDialogType.Warning);
+
+        if (!confirmed)
+        {
+            return;
+        }
+
+        try
+        {
+            IsSystemOperationRunning = true;
+            var result = await _apiService.ClearDemoDataAsync();
+            await RefreshCurrentViewAsync();
+            _notificationService.ShowSuccess(
+                $"Đã xóa mềm {result.AffectedCount:N0} văn bản demo. Còn lại: {result.ActiveDemoCount:N0}.",
+                "Demo data");
+        }
+        catch (Exception ex)
+        {
+            _notificationService.ShowError(
+                $"Không thể clear demo data: {ex.Message}",
+                "Demo data");
+        }
+        finally
+        {
+            IsSystemOperationRunning = false;
+        }
+    }
+
     private void ShowPlaceholder(string title, string description)
     {
         CurrentView = new PlaceholderViewModel(title, description);
+    }
+
+    private void ShowUnavailableModule(string title)
+    {
+        ShowPlaceholder(
+            title,
+            "Chức năng này chưa sẵn sàng cho vận hành. Vui lòng sử dụng các luồng văn bản hiện có trong khi chờ triển khai chính thức.");
     }
 
     public async Task OpenDocumentAsync(long documentId)
@@ -493,6 +662,18 @@ public class MainViewModel : BaseViewModel
         if (CurrentView is DocumentListViewModel listVm)
         {
             await listVm.LoadAsync();
+            return;
+        }
+
+        if (CurrentView is OperationalReportsViewModel)
+        {
+            await ShowReportsAsync();
+            return;
+        }
+
+        if (CurrentView is LookupCatalogViewModel)
+        {
+            await ShowCategoriesAsync();
         }
     }
 }
@@ -508,4 +689,158 @@ public class PlaceholderViewModel : BaseViewModel
     public string Title { get; }
 
     public string Description { get; }
+}
+
+public class OperationalReportsViewModel : BaseViewModel
+{
+    private int _totalDocuments;
+    private int _issuedDocuments;
+    private int _expiredDocuments;
+    private int _effectiveDocuments;
+    private string _topDepartment = "Chua co du lieu";
+    private int _topDepartmentCount;
+
+    public int TotalDocuments
+    {
+        get => _totalDocuments;
+        private set => SetProperty(ref _totalDocuments, value);
+    }
+
+    public int IssuedDocuments
+    {
+        get => _issuedDocuments;
+        private set => SetProperty(ref _issuedDocuments, value);
+    }
+
+    public int ExpiredDocuments
+    {
+        get => _expiredDocuments;
+        private set => SetProperty(ref _expiredDocuments, value);
+    }
+
+    public int EffectiveDocuments
+    {
+        get => _effectiveDocuments;
+        private set => SetProperty(ref _effectiveDocuments, value);
+    }
+
+    public string TopDepartment
+    {
+        get => _topDepartment;
+        private set => SetProperty(ref _topDepartment, value);
+    }
+
+    public int TopDepartmentCount
+    {
+        get => _topDepartmentCount;
+        private set => SetProperty(ref _topDepartmentCount, value);
+    }
+
+    public ObservableCollection<DashboardChartItemDto> EffectivenessChart { get; } = new();
+
+    public ObservableCollection<DashboardChartItemDto> MonthlyIssuedChart { get; } = new();
+
+    public ObservableCollection<DashboardChartItemDto> DepartmentIssuedChart { get; } = new();
+
+    public void Apply(DashboardDto dashboard)
+    {
+        TotalDocuments = dashboard.Summary.TotalDocuments;
+        IssuedDocuments = dashboard.Summary.IssuedDocuments;
+        ExpiredDocuments = dashboard.Summary.ExpiredDocuments;
+        EffectiveDocuments = dashboard.Summary.EffectiveDocuments;
+        TopDepartment = dashboard.Summary.TopIssuingDepartment;
+        TopDepartmentCount = dashboard.Summary.TopIssuingDepartmentCount;
+
+        Replace(EffectivenessChart, dashboard.EffectivenessChart);
+        Replace(MonthlyIssuedChart, dashboard.MonthlyIssuedChart);
+        Replace(DepartmentIssuedChart, dashboard.DepartmentIssuedChart);
+    }
+
+    private static void Replace(ObservableCollection<DashboardChartItemDto> target, IEnumerable<DashboardChartItemDto> source)
+    {
+        target.Clear();
+        foreach (var item in source)
+        {
+            target.Add(item);
+        }
+    }
+}
+
+public class LookupCatalogViewModel : BaseViewModel
+{
+    public ObservableCollection<LookupItemDto> Categories { get; } = new();
+
+    public ObservableCollection<LookupItemDto> Statuses { get; } = new();
+
+    public void Apply(IEnumerable<LookupItemDto> categories, IEnumerable<LookupItemDto> statuses)
+    {
+        Categories.Clear();
+        foreach (var category in categories.OrderBy(x => x.Name))
+        {
+            Categories.Add(category);
+        }
+
+        Statuses.Clear();
+        foreach (var status in statuses.OrderBy(x => x.Id))
+        {
+            Statuses.Add(status);
+        }
+    }
+}
+
+public class SystemInfoViewModel : BaseViewModel
+{
+    private string _apiBaseUrl;
+
+    public SystemInfoViewModel(
+        string displayName,
+        string roleName,
+        string departmentName,
+        string apiBaseUrl,
+        bool canBackup,
+        bool canRestore,
+        ICommand backupCommand,
+        ICommand restoreCommand,
+        ICommand serverSettingsCommand,
+        ICommand seedDemoDataCommand,
+        ICommand clearDemoDataCommand)
+    {
+        DisplayName = displayName;
+        RoleName = roleName;
+        DepartmentName = departmentName;
+        _apiBaseUrl = apiBaseUrl;
+        CanBackup = canBackup;
+        CanRestore = canRestore;
+        BackupCommand = backupCommand;
+        RestoreCommand = restoreCommand;
+        ServerSettingsCommand = serverSettingsCommand;
+        SeedDemoDataCommand = seedDemoDataCommand;
+        ClearDemoDataCommand = clearDemoDataCommand;
+    }
+
+    public string DisplayName { get; }
+
+    public string RoleName { get; }
+
+    public string DepartmentName { get; }
+
+    public string ApiBaseUrl
+    {
+        get => _apiBaseUrl;
+        set => SetProperty(ref _apiBaseUrl, value);
+    }
+
+    public bool CanBackup { get; }
+
+    public bool CanRestore { get; }
+
+    public ICommand BackupCommand { get; }
+
+    public ICommand RestoreCommand { get; }
+
+    public ICommand ServerSettingsCommand { get; }
+
+    public ICommand SeedDemoDataCommand { get; }
+
+    public ICommand ClearDemoDataCommand { get; }
 }

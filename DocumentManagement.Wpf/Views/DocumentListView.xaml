@@ -556,7 +556,35 @@
                         BorderBrush="{StaticResource FluentBorderSoftBrush}"
                         BorderThickness="0,0,0,1"
                         Padding="10,8">
+                    <Grid>
+                        <TextBlock Text="{Binding PreviewNextAction}"
+                                   FontSize="{StaticResource FontSizeSmall}"
+                                   Foreground="{StaticResource FluentTextSoftBrush}"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasSelectedDocument}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
                     <StackPanel>
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSelectedDocument}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <TextBlock Text="{Binding SelectedDocument.PreviewMeta}"
                                    FontSize="{StaticResource FontSizeSmall}"
                                    Foreground="{StaticResource FluentTextMutedBrush}"/>
@@ -580,10 +608,21 @@
                                        TextWrapping="Wrap"/>
                         </Border>
                     </StackPanel>
+                    </Grid>
                 </Border>
 
                 <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
                     <StackPanel Margin="10,8">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasSelectedDocument}" Value="True">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
                         <TextBlock Text="Hành động" Style="{StaticResource WorkflowSectionLabelStyle}"/>
                         <Button Style="{StaticResource WorkflowPrimaryCommandButtonStyle}"
                                 Command="{Binding ArchiveSelectedCommand}"
@@ -649,6 +688,16 @@
                             Orientation="Horizontal"
                             VerticalAlignment="Center"
                             Margin="9,0">
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding HasSelectedDocument}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
                     <Button Style="{StaticResource WorkflowCommandButtonStyle}"
                             Command="{Binding OpenSelectedDocumentCommand}"
                             Content="Mở"

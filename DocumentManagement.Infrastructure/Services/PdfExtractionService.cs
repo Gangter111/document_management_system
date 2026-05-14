@@ -47,7 +47,7 @@ public class PdfExtractionService : IOcrService
         }
         catch (Exception)
         {
-            return "CẢNH BÁO: Không trích xuất được văn bản từ PDF. File có thể là PDF scan ảnh hoặc đã bị bảo vệ. OCR chưa được bật; vui lòng nhập thủ công.";
+            return "CẢNH BÁO: Không tìm thấy text layer trong PDF. PDF scan ảnh hiện chưa hỗ trợ OCR.";
         }
         return sb.ToString();
     }

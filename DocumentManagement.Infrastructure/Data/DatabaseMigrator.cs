@@ -249,6 +249,7 @@ CREATE TABLE IF NOT EXISTS Users (
 
         if (count > 0)
         {
+            ExecuteNonQuery(connection, "UPDATE document_statuses SET name = 'Đã lưu trữ' WHERE id = 5 AND name = 'Hoàn thành';");
             return;
         }
 
@@ -284,7 +285,7 @@ INSERT INTO document_statuses (id, name, is_active) VALUES
 (2, 'Chờ duyệt', 1),
 (3, 'Đã ban hành', 1),
 (4, 'Đang xử lý', 1),
-(5, 'Hoàn thành', 1);";
+(5, 'Đã lưu trữ', 1);";
 
         cmd.ExecuteNonQuery();
     }
@@ -313,6 +314,153 @@ VALUES ($name);";
         SeedUser(connection, "manager", "manager123", "Manager User", "Manager", "Phòng HCNS");
         SeedUser(connection, "publisher", "publisher123", "Publisher User", "Publisher", "Phòng HCNS");
         SeedUser(connection, "staff", "staff123", "Staff User", "Staff", "Phòng Kinh doanh");
+    }
+
+    private static void SeedOperationalDocuments(SqliteConnection connection)
+    {
+        using var countCmd = connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM documents;";
+
+        var totalCount = Convert.ToInt32(countCmd.ExecuteScalar() ?? 0);
+
+        using var seededCountCmd = connection.CreateCommand();
+        seededCountCmd.CommandText = "SELECT COUNT(*) FROM documents WHERE created_by = 'seed';";
+        var seededCount = Convert.ToInt32(seededCountCmd.ExecuteScalar() ?? 0);
+
+        if (totalCount > 0 && seededCount != totalCount)
+        {
+            return;
+        }
+
+        if (seededCount == 40)
+        {
+            return;
+        }
+
+        if (seededCount > 0)
+        {
+            ExecuteNonQuery(connection, "DELETE FROM documents WHERE created_by = 'seed';");
+        }
+
+        ExecuteNonQuery(
+            connection,
+            @"
+WITH RECURSIVE seed(n) AS (
+    SELECT 1
+    UNION ALL
+    SELECT n + 1 FROM seed WHERE n < 40
+)
+INSERT INTO documents (
+    document_type,
+    document_number,
+    reference_number,
+    title,
+    summary,
+    content_text,
+    issue_date,
+    received_date,
+    due_date,
+    sender_name,
+    receiver_name,
+    signer_name,
+    category_id,
+    status_id,
+    confidentiality_level,
+    urgency_level,
+    processing_department,
+    assigned_to,
+    notes,
+    is_active,
+    is_expired,
+    ocr_status,
+    created_at,
+    updated_at,
+    created_by,
+    updated_by
+)
+SELECT
+    CASE WHEN n % 3 = 0 THEN 'OUTGOING' ELSE 'INCOMING' END,
+    'QA-2026-' || printf('%03d', n),
+    'PG-' || strftime('%Y', '2026-01-01') || '/' || printf('%03d', n),
+    CASE n % 8
+        WHEN 0 THEN 'Rà soát hồ sơ hợp đồng mua sắm quý ' || ((n % 4) + 1)
+        WHEN 1 THEN 'Thông báo lịch họp điều hành tuần ' || n
+        WHEN 2 THEN 'Báo cáo tiến độ xử lý văn bản nội bộ số ' || n
+        WHEN 3 THEN 'Quyết định phân công xử lý hồ sơ dự án ' || n
+        WHEN 4 THEN 'Công văn phối hợp kiểm tra hiện trường đợt ' || n
+        WHEN 5 THEN 'Kế hoạch đào tạo nghiệp vụ văn thư tháng ' || ((n % 12) + 1)
+        WHEN 6 THEN 'Tờ trình phê duyệt ngân sách vận hành số ' || n
+        ELSE 'Biên bản nghiệm thu hạng mục hành chính số ' || n
+    END,
+    'Dữ liệu QA cục bộ dùng để kiểm thử lọc, tìm kiếm, phân trang, dashboard, báo cáo và lưu trữ.',
+    'Nội dung văn bản được tạo deterministically trong SQLite qua migrator để đi qua API và repository thật.',
+    date('2026-01-05', '+' || (n * 3) || ' days'),
+    date('2026-01-06', '+' || (n * 3) || ' days'),
+    CASE
+        WHEN n IN (6, 12, 18, 24, 32, 38) THEN date('2026-02-01', '-' || n || ' days')
+        ELSE date('2026-02-01', '+' || (n * 2) || ' days')
+    END,
+    CASE n % 6
+        WHEN 0 THEN 'UBND Thành phố'
+        WHEN 1 THEN 'Sở Nội vụ'
+        WHEN 2 THEN 'Sở Tài chính'
+        WHEN 3 THEN 'Ban Quản lý dự án'
+        WHEN 4 THEN 'Công ty TNHH Minh An'
+        ELSE 'Trung tâm Lưu trữ'
+    END,
+    CASE n % 5
+        WHEN 0 THEN 'Ban Giám đốc'
+        WHEN 1 THEN 'Phòng HCNS'
+        WHEN 2 THEN 'Phòng Kinh doanh'
+        WHEN 3 THEN 'Phòng Kế toán'
+        ELSE 'Phòng Pháp chế'
+    END,
+    CASE n % 5
+        WHEN 0 THEN 'Nguyễn Văn An'
+        WHEN 1 THEN 'Trần Thị Bình'
+        WHEN 2 THEN 'Lê Minh Quang'
+        WHEN 3 THEN 'Phạm Thu Hà'
+        ELSE 'Đỗ Hoàng Nam'
+    END,
+    (n % 4) + 1,
+    CASE
+        WHEN n IN (5, 10, 15, 20, 25, 30, 35, 40) THEN 5
+        WHEN n IN (1, 7, 13, 19, 31) THEN 1
+        WHEN n IN (3, 8, 14, 21, 27, 33, 39) THEN 3
+        ELSE 4
+    END,
+    CASE WHEN n % 18 = 0 THEN 'CONFIDENTIAL' ELSE 'NORMAL' END,
+    CASE
+        WHEN n IN (4, 12, 22, 34) THEN 'VERY_URGENT'
+        WHEN n IN (2, 9, 16, 23, 28, 37) THEN 'URGENT'
+        ELSE 'NORMAL'
+    END,
+    CASE n % 5
+        WHEN 0 THEN 'Ban Giám đốc'
+        WHEN 1 THEN 'Phòng HCNS'
+        WHEN 2 THEN 'Phòng Kinh doanh'
+        WHEN 3 THEN 'Phòng Kế toán'
+        ELSE 'Phòng Pháp chế'
+    END,
+    CASE n % 4
+        WHEN 0 THEN 'manager'
+        WHEN 1 THEN 'publisher'
+        WHEN 2 THEN 'staff'
+        ELSE 'admin'
+    END,
+    CASE
+        WHEN n IN (5, 10, 15, 20, 25, 30, 35, 40) THEN 'Đã lưu trữ để kiểm thử Archive và khôi phục.'
+        WHEN n IN (6, 12, 18, 24, 32, 38) THEN 'Quá hạn để kiểm thử bộ lọc expired.'
+        ELSE 'Dữ liệu kiểm thử vận hành.'
+    END,
+    1,
+    CASE WHEN n IN (6, 12, 18, 24, 32, 38) THEN 1 ELSE 0 END,
+    'SEEDED',
+    datetime('2026-01-05', '+' || n || ' hours'),
+    datetime('2026-03-01', '+' || n || ' hours'),
+    'seed',
+    'seed'
+FROM seed;");
     }
 
     private static void SeedUser(

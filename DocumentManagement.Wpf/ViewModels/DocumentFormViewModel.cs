@@ -373,7 +373,7 @@ public class DocumentFormViewModel : BaseViewModel
             if (!HasExtractedContent(result))
             {
                 _notificationService.ShowWarning(
-                    "Không tìm thấy văn bản có thể trích xuất trong PDF. PDF scan ảnh hiện cần nhập thủ công.",
+                    "Không tìm thấy text layer trong PDF. PDF scan ảnh hiện chưa hỗ trợ OCR.",
                     "Không có văn bản PDF");
                 return;
             }

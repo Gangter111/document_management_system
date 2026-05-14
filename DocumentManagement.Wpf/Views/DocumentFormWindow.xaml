@@ -74,6 +74,7 @@
         <Style x:Key="FormMultilineTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource FormTextBoxStyle}">
             <Setter Property="Padding" Value="10,8"/>
             <Setter Property="VerticalContentAlignment" Value="Top"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FluentBorderStrongBrush}"/>
         </Style>
 
         <Style x:Key="FormComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource AppComboBoxStyle}">
@@ -99,8 +100,9 @@
         </Style>
 
         <Style x:Key="FormSectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource FluentCaptionTextStyle}">
-            <Setter Property="Margin" Value="0,2,0,10"/>
-            <Setter Property="Foreground" Value="{StaticResource FluentTextSoftBrush}"/>
+            <Setter Property="Margin" Value="0,2,0,8"/>
+            <Setter Property="Padding" Value="0,6,0,0"/>
+            <Setter Property="Foreground" Value="{StaticResource FluentTextMutedBrush}"/>
         </Style>
 
         <Style x:Key="FormFooterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
@@ -121,7 +123,7 @@
         <!-- HEADER -->
         <Border Grid.Row="0"
                 Background="{StaticResource FluentSurfaceBrush}"
-                BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                BorderBrush="{StaticResource FluentBorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="14,0">
 
@@ -166,7 +168,7 @@
                 <!-- UPLOAD -->
                 <Border Grid.Row="0"
                         Background="{StaticResource FluentSurfaceBrush}"
-                        BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                        BorderBrush="{StaticResource FluentBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius6}"
                         Padding="10"
@@ -197,7 +199,7 @@
 
                         <Border Grid.Column="2"
                                 Background="{StaticResource FluentSurfaceMutedBrush}"
-                                BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                                BorderBrush="{StaticResource FluentBorderBrush}"
                                 BorderThickness="1"
                                 CornerRadius="{StaticResource Radius4}"
                                 Padding="8,0"
@@ -408,11 +410,14 @@
                                      Style="{StaticResource FormTextBoxStyle}"/>
                         </StackPanel>
 
-                        <TextBlock Grid.Row="9"
-                                   Grid.ColumnSpan="2"
-                                   Text="NỘI DUNG VĂN BẢN"
-                                   Style="{StaticResource FormSectionTitleStyle}"
-                                   Margin="0,2,0,10"/>
+                        <Border Grid.Row="9"
+                                Grid.ColumnSpan="2"
+                                BorderBrush="{StaticResource FluentBorderBrush}"
+                                BorderThickness="0,1,0,0"
+                                Margin="0,4,0,8">
+                            <TextBlock Text="NỘI DUNG VĂN BẢN"
+                                       Style="{StaticResource FormSectionTitleStyle}"/>
+                        </Border>
 
                         <StackPanel Grid.Row="10"
                                     Grid.ColumnSpan="2"
@@ -448,7 +453,7 @@
         <Border Grid.Row="2"
                 Background="{StaticResource FluentSurfaceBrush}"
                 Padding="14,9"
-                BorderBrush="{StaticResource FluentBorderSoftBrush}"
+                BorderBrush="{StaticResource FluentBorderBrush}"
                 BorderThickness="0,1,0,0"
                 Margin="0">
 

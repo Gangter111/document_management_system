@@ -3,8 +3,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:controls="clr-namespace:DocumentManagement.Wpf.Controls"
              xmlns:conv="clr-namespace:DocumentManagement.Wpf.Converters"
-             Background="#EAF5EE"
+             Background="#F6FAF7"
              UseLayoutRounding="True"
              SnapsToDevicePixels="True">
 
@@ -15,14 +16,16 @@
         <SolidColorBrush x:Key="DashboardGreen" Color="#2FA52C"/>
         <SolidColorBrush x:Key="DashboardGreenDark" Color="#168333"/>
         <SolidColorBrush x:Key="DashboardGreenSoft" Color="#EEF8EC"/>
-        <SolidColorBrush x:Key="DashboardBorder" Color="#C5D8CA"/>
+        <SolidColorBrush x:Key="DashboardBorder" Color="#9BB3A6"/>
+        <SolidColorBrush x:Key="DashboardBorderSoft" Color="#C6D6CD"/>
+        <SolidColorBrush x:Key="DashboardHeaderBorder" Color="#0E6828"/>
         <SolidColorBrush x:Key="DashboardGridLine" Color="#D9ECDD"/>
 
         <Style x:Key="DashboardPanelStyle" TargetType="Border">
             <Setter Property="Background" Value="#FFFFFC"/>
             <Setter Property="BorderBrush" Value="{StaticResource DashboardBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="{StaticResource Radius6}"/>
+            <Setter Property="CornerRadius" Value="14"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
         </Style>
@@ -43,7 +46,7 @@
             <Setter Property="Background" Value="#FFFFFC"/>
             <Setter Property="BorderBrush" Value="{StaticResource DashboardBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CornerRadius" Value="{StaticResource Radius6}"/>
+            <Setter Property="CornerRadius" Value="14"/>
             <Setter Property="Padding" Value="10,8"/>
         </Style>
 
@@ -80,7 +83,7 @@
                 Background="#FFFFFC"
                 BorderBrush="{StaticResource DashboardBorder}"
                 BorderThickness="1"
-                CornerRadius="{StaticResource Radius6}">
+                CornerRadius="14">
             <Grid Margin="8">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="146"/>
@@ -133,7 +136,10 @@
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0">
-                        <Border Background="{StaticResource DashboardGreen}">
+                        <Border Background="{StaticResource DashboardGreen}"
+                                BorderBrush="{StaticResource DashboardHeaderBorder}"
+                                BorderThickness="1"
+                                CornerRadius="14">
                             <TextBlock Text="TỔNG QUAN VĂN BẢN"
                                        Foreground="White"
                                        FontSize="20"
@@ -148,8 +154,9 @@
                                 VerticalAlignment="Center"
                                 Margin="0,0,8,0"
                                 Background="#FFFFFC"
-                                BorderBrush="#E2B66C"
+                                BorderBrush="#8FB39C"
                                 BorderThickness="1"
+                                CornerRadius="14"
                                 Padding="8,3">
                             <Image Source="pack://application:,,,/Assets/Images/logo-tach.png"
                                    Stretch="Uniform"
@@ -201,17 +208,9 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Văn bản theo phòng ban" Style="{StaticResource PanelTitleStyle}"/>
-                                <lvc:CartesianChart Grid.Row="1"
-                                                    Margin="10,4,10,8"
-                                                    Series="{Binding DepartmentIssuedSeries}"
-                                                    LegendLocation="None">
-                                    <lvc:CartesianChart.AxisX>
-                                        <lvc:Axis Labels="{Binding DepartmentIssuedLabels}" Separator="{x:Static lvc:DefaultAxes.CleanSeparator}"/>
-                                    </lvc:CartesianChart.AxisX>
-                                    <lvc:CartesianChart.AxisY>
-                                        <lvc:Axis MinValue="0"/>
-                                    </lvc:CartesianChart.AxisY>
-                                </lvc:CartesianChart>
+                                <controls:DepartmentDocuments3DChart Grid.Row="1"
+                                                                     ItemsSource="{Binding DepartmentIssuedItems}"
+                                                                     Margin="6,0,6,4"/>
                             </Grid>
                         </Border>
 
@@ -253,35 +252,62 @@
                                     <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
                                 <TextBlock Text="Cơ cấu hiệu lực văn bản" Style="{StaticResource PanelTitleStyle}"/>
-                                <Grid Grid.Row="1" Margin="8">
+                                <Grid Grid.Row="1" Margin="6">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="130"/>
+                                        <ColumnDefinition Width="1.48*"/>
+                                        <ColumnDefinition Width="0.95*"/>
                                     </Grid.ColumnDefinitions>
 
-                                    <lvc:PieChart Series="{Binding EffectivenessSeries}"
-                                                  LegendLocation="None"
-                                                  HoverPushOut="4"
-                                                  InnerRadius="58"/>
+                                    <Viewbox Stretch="Uniform"
+                                             HorizontalAlignment="Stretch"
+                                             VerticalAlignment="Stretch"
+                                             Margin="-10,-12,-4,-10">
+                                        <controls:RadialDocumentChart Width="600"
+                                                                      Height="600"
+                                                                      TotalDocuments="{Binding TotalDocuments}"
+                                                                      IssuedDocuments="{Binding IssuedDocuments}"
+                                                                      EffectiveDocuments="{Binding EffectiveDocuments}"
+                                                                      ExpiredDocuments="{Binding ExpiredDocuments}"
+                                                                      SelectedMetric="{Binding SelectedMetric, Mode=TwoWay}"/>
+                                    </Viewbox>
 
                                     <StackPanel Grid.Column="1"
                                                 VerticalAlignment="Center"
-                                                Margin="10,0,0,0">
-                                        <TextBlock Text="Tổng văn bản"
-                                                   Foreground="{StaticResource TextMutedBrush}"
-                                                   FontSize="12"
-                                                   TextAlignment="Center"/>
-                                        <TextBlock Text="{Binding TotalDocuments, StringFormat={}{0:N0}}"
-                                                   Foreground="{StaticResource DashboardGreenDark}"
-                                                   FontSize="24"
-                                                   FontWeight="Bold"
-                                                   TextAlignment="Center"
-                                                   Margin="0,4,0,12"/>
-                                        <TextBlock Text="{Binding TopIssuingDepartment, StringFormat=Đơn vị nổi bật: {0}}"
-                                                   Foreground="{StaticResource TextMutedBrush}"
-                                                   FontSize="11"
-                                                   TextWrapping="Wrap"
-                                                   TextAlignment="Center"/>
+                                                Margin="4,0,0,0">
+                                        <controls:DashboardKpiCard Title="Tổng số"
+                                                                   MetricKey="Total"
+                                                                   SelectedMetric="{Binding SelectedMetric, Mode=TwoWay}"
+                                                                   ValueText="100%"
+                                                                   IconKind="Pie"
+                                                                   AccentBrush="#94A3B8"
+                                                                   ValueBrush="#64748B"/>
+
+                                        <controls:DashboardKpiCard Title="Phát hành"
+                                                                   MetricKey="Issued"
+                                                                   SelectedMetric="{Binding SelectedMetric, Mode=TwoWay}"
+                                                                   ValueText="{Binding IssuedPercentText}"
+                                                                   IconKind="Send"
+                                                                   AccentBrush="#2563EB"
+                                                                   ValueBrush="#2563EB"
+                                                                   Margin="0,8,0,0"/>
+
+                                        <controls:DashboardKpiCard Title="Còn hiệu lực"
+                                                                   MetricKey="Effective"
+                                                                   SelectedMetric="{Binding SelectedMetric, Mode=TwoWay}"
+                                                                   ValueText="{Binding EffectivePercentText}"
+                                                                   IconKind="Shield"
+                                                                   AccentBrush="#10B981"
+                                                                   ValueBrush="#10B981"
+                                                                   Margin="0,8,0,0"/>
+
+                                        <controls:DashboardKpiCard Title="Hết hiệu lực"
+                                                                   MetricKey="Expired"
+                                                                   SelectedMetric="{Binding SelectedMetric, Mode=TwoWay}"
+                                                                   ValueText="{Binding ExpiredPercentText}"
+                                                                   IconKind="Expired"
+                                                                   AccentBrush="#EF4444"
+                                                                   ValueBrush="#EF4444"
+                                                                   Margin="0,8,0,0"/>
                                     </StackPanel>
                                 </Grid>
                             </Grid>

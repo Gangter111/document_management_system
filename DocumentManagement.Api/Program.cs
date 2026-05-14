@@ -122,6 +122,7 @@ builder.Services.AddScoped<IDashboardRepository, DashboardRepository>();
 builder.Services.AddScoped<IAttachmentRepository, AttachmentRepository>();
 
 builder.Services.AddScoped<IDocumentService, DocumentService>();
+builder.Services.AddScoped<IDemoDataService, DemoDataService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
 builder.Services.AddScoped<IOcrService, PdfExtractionService>();
@@ -182,6 +183,9 @@ using (var scope = app.Services.CreateScope())
     {
         throw new InvalidOperationException("Database provider không được hỗ trợ.");
     }
+
+    var demoDataService = scope.ServiceProvider.GetRequiredService<IDemoDataService>();
+    demoDataService.EnsureSeededAsync().GetAwaiter().GetResult();
 }
 
 // =======================

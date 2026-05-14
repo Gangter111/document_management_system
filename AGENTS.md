@@ -370,3 +370,128 @@ NOT:
 
 continuous speculative polishing.
 
+# SESSION CHECKPOINT - 2026-05-14
+
+## VERIFIED TODAY
+
+* WPF build passed.
+* API build passed.
+* Tests passed: 30/30.
+* `verify-all.ps1` passed after NuGet/network restore escalation.
+* Runtime QA verified Archive / Reports / Categories / System navigation.
+* Reports opened without StaticResource crash, modal-dialog spam, or guard-page stack crash.
+* Demo data path verified:
+  * exactly 40 demo documents
+  * 8 archived demo documents
+  * seed idempotent
+  * restart preserves 40
+  * clear removes 40 marked demo rows only
+  * reseed restores 40
+* Register API path works and creates STAFF account.
+* Forgot-password/register WPF UI activation still needs focused manual or instrumented validation.
+
+## NEW DASHBOARD UI RULES
+
+* Do NOT redesign the whole Tổng quan page.
+* Chart reference images are component-level visual targets, not full-page redesign permission.
+* Radial KPI chart belongs only inside the existing “Cơ cấu hiệu lực văn bản” panel.
+* Department 3D chart belongs only inside the existing “Văn bản theo phòng ban” panel.
+* Preserve the original dashboard layout unless a concrete QA issue requires change.
+* Do not replace the entire dashboard with hero infographic layouts.
+* Do not move shell navigation, main dashboard structure, or unrelated panels.
+* Use Canvas/lightweight rendering for custom charts.
+* Keep visual style restrained: Fluent, white/silver, glassmorphism nhẹ, soft shadow, minimal neon.
+* Avoid startup-dashboard aesthetics, excessive glow, heavy animation, visual-tree complexity.
+
+## CURRENT OPEN ITEMS
+
+* Focused validation/fix for forgot-password/register WPF activation.
+* Continue visual refinement of:
+  * “Cơ cấu hiệu lực văn bản” radial KPI chart
+  * “Văn bản theo phòng ban” 3D department chart
+* Both chart refinements must stay inside their existing panels only.
+* Require screenshot evidence before claiming visual completion.
+
+## DASHBOARD REFINEMENT DIRECTION - CONTINUITY RULES
+
+The dashboard is intentionally:
+
+* restrained
+* enterprise-oriented
+* Fluent / Windows 11 inspired
+* operational
+* calm
+* low-noise
+
+The dashboard must NOT evolve into:
+
+* startup-dashboard aesthetics
+* infographic-heavy layouts
+* crypto analytics UI
+* over-rendered glassmorphism
+* showcase-style chart experiments
+
+Future dashboard work must preserve:
+
+* lightweight rendering
+* flattened visual structures
+* low visual noise
+* dashboard consistency
+* enterprise operational UX
+
+Do NOT allow future redesign drift. Component-level visual references are allowed only to refine a specific existing panel, not to replace the dashboard layout or interaction model.
+
+## "VAN BAN THEO PHONG BAN" CHART DECISIONS
+
+Current accepted direction:
+
+* smaller and lighter 3D columns
+* calmer typography
+* reduced visual heaviness
+* improved chart proportions
+* restrained spatial depth
+* cleaner composition
+* lower visual noise
+* subtle backplate/floor depth that supports the bars without becoming decorative clutter
+
+Explicitly rejected directions:
+
+* oversized 3D bars
+* giant typography
+* oversized platform/base
+* heavy glow effects
+* thick glassmorphism
+* startup-dashboard visuals
+* fake bottom navigation dock:
+  * TONG QUAN
+  * PHONG BAN
+  * BAO CAO
+  * THONG KE
+
+The fake navigation dock was removed intentionally and must not be reintroduced, hidden, collapsed, or recreated as a chart decoration.
+
+Required design alignment:
+
+* The department chart should visually align with the "Van ban ban hanh theo thang" panel.
+* Alignment means shared dashboard design language, similar panel treatment, similar spacing rhythm, similar lightweight top-right action controls, and similar Fluent enterprise hierarchy.
+* Do not clone the exact monthly chart style. Preserve the department chart's lightweight 3D identity.
+
+## CURRENT OPEN DASHBOARD REFINEMENT TASKS
+
+1. Continue refining "Van ban theo phong ban":
+   * improve spatial depth subtly
+   * improve panel integration
+   * align visual language with the monthly chart panel
+   * maintain restrained enterprise style
+
+2. Add lightweight top-right action controls:
+   * filter
+   * date/calendar
+   * overflow/menu
+
+3. Preserve dashboard consistency:
+   * avoid isolated custom chart aesthetics
+   * avoid visual clutter
+   * maintain balanced dashboard hierarchy
+
+These controls and refinements must remain subtle, lightweight, enterprise-oriented, and Canvas-friendly where custom chart rendering is involved.

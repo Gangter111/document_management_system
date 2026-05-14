@@ -32,6 +32,163 @@
             <views:DashboardView />
         </DataTemplate>
 
+        <DataTemplate DataType="{x:Type vm:OperationalReportsViewModel}">
+            <Grid Background="{StaticResource FluentCanvasBrush}" Margin="18">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <TextBlock Text="Báo cáo vận hành"
+                           Style="{StaticResource FluentTitleTextStyle}"
+                           FontSize="22"/>
+
+                <UniformGrid Grid.Row="2" Columns="4">
+                    <Border Style="{StaticResource AppCardStyle}" Margin="0,0,10,0" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Tổng văn bản" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Text="{Binding TotalDocuments}" Style="{StaticResource FluentTitleTextStyle}" FontSize="24"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource AppCardStyle}" Margin="0,0,10,0" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Đã ban hành" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Text="{Binding IssuedDocuments}" Style="{StaticResource FluentTitleTextStyle}" FontSize="24"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource AppCardStyle}" Margin="0,0,10,0" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Còn hiệu lực" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Text="{Binding EffectiveDocuments}" Style="{StaticResource FluentTitleTextStyle}" FontSize="24"/>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource AppCardStyle}" Padding="16">
+                        <StackPanel>
+                            <TextBlock Text="Quá hạn" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Text="{Binding ExpiredDocuments}" Style="{StaticResource FluentTitleTextStyle}" FontSize="24"/>
+                        </StackPanel>
+                    </Border>
+                </UniformGrid>
+
+                <Grid Grid.Row="4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource AppCardStyle}" Padding="14">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Theo phòng ban" Style="{StaticResource SectionTitleTextStyle}" Margin="0,0,0,10"/>
+                            <DataGrid ItemsSource="{Binding DepartmentIssuedChart}"
+                                      Style="{StaticResource AppDataGridStyle}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Phòng ban" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="Số lượng" Binding="{Binding Value}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource AppCardStyle}" Padding="14">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Theo tháng" Style="{StaticResource SectionTitleTextStyle}" Margin="0,0,0,10"/>
+                            <DataGrid ItemsSource="{Binding MonthlyIssuedChart}"
+                                      Style="{StaticResource AppDataGridStyle}"
+                                      AutoGenerateColumns="False"
+                                      IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Tháng" Binding="{Binding Name}" Width="*"/>
+                                    <DataGridTextColumn Header="Số lượng" Binding="{Binding Value}" Width="110"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:LookupCatalogViewModel}">
+            <Grid Background="{StaticResource FluentCanvasBrush}" Margin="18">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="16"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Danh mục vận hành" Style="{StaticResource FluentTitleTextStyle}" FontSize="22"/>
+                <Grid Grid.Row="2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Style="{StaticResource AppCardStyle}" Padding="14">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Loại văn bản" Style="{StaticResource SectionTitleTextStyle}" Margin="0,0,0,10"/>
+                            <DataGrid ItemsSource="{Binding Categories}" Style="{StaticResource AppDataGridStyle}" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80"/>
+                                    <DataGridTextColumn Header="Tên danh mục" Binding="{Binding Name}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                    <Border Grid.Column="2" Style="{StaticResource AppCardStyle}" Padding="14">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Top" Text="Trạng thái" Style="{StaticResource SectionTitleTextStyle}" Margin="0,0,0,10"/>
+                            <DataGrid ItemsSource="{Binding Statuses}" Style="{StaticResource AppDataGridStyle}" AutoGenerateColumns="False" IsReadOnly="True">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="ID" Binding="{Binding Id}" Width="80"/>
+                                    <DataGridTextColumn Header="Tên trạng thái" Binding="{Binding Name}" Width="*"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </DockPanel>
+                    </Border>
+                </Grid>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:SystemInfoViewModel}">
+            <Grid Background="{StaticResource FluentCanvasBrush}" Margin="18">
+                <Border Style="{StaticResource AppCardStyle}" Padding="18" MaxWidth="720" HorizontalAlignment="Left" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="Hệ thống" Style="{StaticResource FluentTitleTextStyle}" FontSize="22"/>
+                        <TextBlock Text="Thông tin vận hành hiện tại" Style="{StaticResource FluentMutedTextStyle}" Margin="0,4,0,18"/>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                                <RowDefinition Height="28"/>
+                            </Grid.RowDefinitions>
+                            <TextBlock Text="Người dùng" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Grid.Column="1" Text="{Binding DisplayName}" Style="{StaticResource FluentBodyTextStyle}"/>
+                            <TextBlock Grid.Row="1" Text="Vai trò" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding RoleName}" Style="{StaticResource FluentBodyTextStyle}"/>
+                            <TextBlock Grid.Row="2" Text="Phòng ban" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DepartmentName}" Style="{StaticResource FluentBodyTextStyle}"/>
+                            <TextBlock Grid.Row="3" Text="API server" Style="{StaticResource FluentCaptionTextStyle}"/>
+                            <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding ApiBaseUrl}" Style="{StaticResource FluentBodyTextStyle}" TextTrimming="CharacterEllipsis"/>
+                        </Grid>
+                        <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
+                            <Button Content="Cấu hình máy chủ" Command="{Binding ServerSettingsCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="140" Height="34"/>
+                            <Button Content="Backup" Command="{Binding BackupCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="92" Height="34" Margin="10,0,0,0"/>
+                            <Button Content="Restore" Command="{Binding RestoreCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="92" Height="34" Margin="10,0,0,0"/>
+                            <Button Content="Seed Demo Data" Command="{Binding SeedDemoDataCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="130" Height="34" Margin="10,0,0,0"/>
+                            <Button Content="Clear Demo Data" Command="{Binding ClearDemoDataCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="130" Height="34" Margin="10,0,0,0"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type vm:PlaceholderViewModel}">
             <Grid Background="{StaticResource FluentCanvasBrush}">
                 <Border Width="480"
@@ -67,8 +224,8 @@
                 BorderThickness="0,0,0,1">
             <Grid Margin="9,0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="206"/>
-                    <ColumnDefinition Width="540"/>
+                    <ColumnDefinition Width="42"/>
+                    <ColumnDefinition Width="0"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -88,11 +245,6 @@
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center"/>
                     </Border>
-                    <TextBlock Text="Phú Gia DMS"
-                               Margin="8,0,0,0"
-                               Style="{StaticResource FluentTitleTextStyle}"
-                               FontSize="13"
-                               VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <Border Grid.Column="1"
@@ -101,7 +253,8 @@
                         BorderBrush="{StaticResource FluentBorderSoftBrush}"
                         BorderThickness="1"
                         CornerRadius="{StaticResource Radius6}"
-                        VerticalAlignment="Center">
+                        VerticalAlignment="Center"
+                        Visibility="Collapsed">
                     <Grid Margin="8,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="18"/>
@@ -139,7 +292,8 @@
                            Style="{StaticResource FluentMutedTextStyle}"
                            FontSize="12"
                            VerticalAlignment="Center"
-                           TextTrimming="CharacterEllipsis"/>
+                           TextTrimming="CharacterEllipsis"
+                           Visibility="Collapsed"/>
 
                 <StackPanel Grid.Column="3"
                             Orientation="Horizontal"
@@ -195,12 +349,6 @@
                             <TextBlock Text="Navigation"
                                        Style="{StaticResource FluentCaptionTextStyle}"
                                        VerticalAlignment="Center"/>
-                            <Button Style="{StaticResource FluentIconButtonStyle}"
-                                    HorizontalAlignment="Right"
-                                    ToolTip="Menu">
-                                <materialDesign:PackIcon Kind="Menu"
-                                                         Style="{StaticResource ShellIconStyle}"/>
-                            </Button>
                         </Grid>
                     </Border>
 

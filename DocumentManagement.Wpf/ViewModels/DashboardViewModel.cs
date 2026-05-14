@@ -19,6 +19,7 @@ public class DashboardViewModel : BaseViewModel
     private string _topIssuingDepartment = "Chưa có dữ liệu";
     private int _topIssuingDepartmentCount;
     private double _averageIssuedPerMonth;
+    private string _selectedMetric = "Total";
 
     private bool _isLoading;
     private bool _hasError;
@@ -27,25 +28,49 @@ public class DashboardViewModel : BaseViewModel
     public int TotalDocuments
     {
         get => _totalDocuments;
-        set => SetProperty(ref _totalDocuments, value);
+        set
+        {
+            if (SetProperty(ref _totalDocuments, value))
+            {
+                RefreshKpiPercentages();
+            }
+        }
     }
 
     public int IssuedDocuments
     {
         get => _issuedDocuments;
-        set => SetProperty(ref _issuedDocuments, value);
+        set
+        {
+            if (SetProperty(ref _issuedDocuments, value))
+            {
+                RefreshKpiPercentages();
+            }
+        }
     }
 
     public int EffectiveDocuments
     {
         get => _effectiveDocuments;
-        set => SetProperty(ref _effectiveDocuments, value);
+        set
+        {
+            if (SetProperty(ref _effectiveDocuments, value))
+            {
+                RefreshKpiPercentages();
+            }
+        }
     }
 
     public int ExpiredDocuments
     {
         get => _expiredDocuments;
-        set => SetProperty(ref _expiredDocuments, value);
+        set
+        {
+            if (SetProperty(ref _expiredDocuments, value))
+            {
+                RefreshKpiPercentages();
+            }
+        }
     }
 
     public string TopIssuingDepartment
@@ -73,6 +98,8 @@ public class DashboardViewModel : BaseViewModel
     public SeriesCollection MonthlyIssuedSeries { get; } = new();
 
     public SeriesCollection DepartmentIssuedSeries { get; } = new();
+
+    public ObservableCollection<DashboardChartItemDto> DepartmentIssuedItems { get; } = new();
 
     public List<string> MonthlyIssuedLabels { get; private set; } = new();
 
@@ -111,9 +138,59 @@ public class DashboardViewModel : BaseViewModel
 
     public bool HasMonthlyIssuedChartData => MonthlyIssuedSeries.Count > 0;
 
-    public bool HasDepartmentIssuedChartData => DepartmentIssuedSeries.Count > 0;
+    public bool HasDepartmentIssuedChartData => DepartmentIssuedItems.Count > 0;
 
     public ICommand RefreshCommand { get; }
+
+    public string SelectedMetric
+    {
+        get => _selectedMetric;
+        set
+        {
+            if (SetProperty(ref _selectedMetric, string.IsNullOrWhiteSpace(value) ? "Total" : value))
+            {
+                OnPropertyChanged(nameof(SelectedMetricTitle));
+                OnPropertyChanged(nameof(SelectedMetricValue));
+                OnPropertyChanged(nameof(SelectedMetricDetail));
+            }
+        }
+    }
+
+    public double IssuedPercent => GetPercent(IssuedDocuments);
+
+    public double EffectivePercent => GetPercent(EffectiveDocuments);
+
+    public double ExpiredPercent => GetPercent(ExpiredDocuments);
+
+    public string IssuedPercentText => FormatPercent(IssuedPercent);
+
+    public string EffectivePercentText => FormatPercent(EffectivePercent);
+
+    public string ExpiredPercentText => FormatPercent(ExpiredPercent);
+
+    public string SelectedMetricTitle => SelectedMetric switch
+    {
+        "Issued" => "Phát hành",
+        "Effective" => "Còn hiệu lực",
+        "Expired" => "Hết hiệu lực",
+        _ => "Tổng số"
+    };
+
+    public string SelectedMetricValue => SelectedMetric switch
+    {
+        "Issued" => IssuedDocuments.ToString("N0"),
+        "Effective" => EffectiveDocuments.ToString("N0"),
+        "Expired" => ExpiredDocuments.ToString("N0"),
+        _ => TotalDocuments.ToString("N0")
+    };
+
+    public string SelectedMetricDetail => SelectedMetric switch
+    {
+        "Issued" => $"{IssuedPercentText} trong tổng số văn bản",
+        "Effective" => $"{EffectivePercentText} còn hiệu lực",
+        "Expired" => $"{ExpiredPercentText} hết hiệu lực",
+        _ => "100% tổng hồ sơ đang theo dõi"
+    };
 
     public DashboardViewModel(ApiService apiService)
     {
@@ -234,10 +311,20 @@ public class DashboardViewModel : BaseViewModel
     private void BuildDepartmentIssuedChart(IReadOnlyList<DashboardChartItemDto> items)
     {
         DepartmentIssuedSeries.Clear();
+        DepartmentIssuedItems.Clear();
 
         DepartmentIssuedLabels = items
             .Select(item => item.Name)
             .ToList();
+
+        foreach (var item in items.Where(item => item.Value > 0))
+        {
+            DepartmentIssuedItems.Add(new DashboardChartItemDto
+            {
+                Name = item.Name,
+                Value = item.Value
+            });
+        }
 
         DepartmentIssuedSeries.Add(new ColumnSeries
         {
@@ -247,6 +334,7 @@ public class DashboardViewModel : BaseViewModel
         });
 
         OnPropertyChanged(nameof(DepartmentIssuedLabels));
+        OnPropertyChanged(nameof(DepartmentIssuedItems));
         OnPropertyChanged(nameof(HasDepartmentIssuedChartData));
     }
 
@@ -264,6 +352,7 @@ public class DashboardViewModel : BaseViewModel
         EffectivenessSeries.Clear();
         MonthlyIssuedSeries.Clear();
         DepartmentIssuedSeries.Clear();
+        DepartmentIssuedItems.Clear();
 
         MonthlyIssuedLabels = new List<string>();
         DepartmentIssuedLabels = new List<string>();
@@ -279,6 +368,35 @@ public class DashboardViewModel : BaseViewModel
         OnPropertyChanged(nameof(HasDepartmentIssuedChartData));
         OnPropertyChanged(nameof(MonthlyIssuedLabels));
         OnPropertyChanged(nameof(DepartmentIssuedLabels));
+        OnPropertyChanged(nameof(DepartmentIssuedItems));
+        RefreshKpiPercentages();
+    }
+
+    private void RefreshKpiPercentages()
+    {
+        OnPropertyChanged(nameof(IssuedPercent));
+        OnPropertyChanged(nameof(EffectivePercent));
+        OnPropertyChanged(nameof(ExpiredPercent));
+        OnPropertyChanged(nameof(IssuedPercentText));
+        OnPropertyChanged(nameof(EffectivePercentText));
+        OnPropertyChanged(nameof(ExpiredPercentText));
+        OnPropertyChanged(nameof(SelectedMetricValue));
+        OnPropertyChanged(nameof(SelectedMetricDetail));
+    }
+
+    private double GetPercent(int value)
+    {
+        if (TotalDocuments <= 0)
+        {
+            return 0;
+        }
+
+        return Math.Clamp(value / (double)TotalDocuments * 100.0, 0, 100);
+    }
+
+    private static string FormatPercent(double value)
+    {
+        return $"{value:0}%";
     }
 }
 

@@ -19,6 +19,20 @@ public partial class ServerSettingsWindow : Window
 
         ServerUrlTextBox.Text = _settingsService.GetApiBaseUrl();
         StatusText.Text = $"Cấu hình lưu tại: {_settingsService.SettingsPath}";
+
+        Loaded += (_, _) => CenterRelativeToOwner();
+    }
+
+    private void CenterRelativeToOwner()
+    {
+        if (Owner == null || Owner.ActualWidth <= 0 || Owner.ActualHeight <= 0)
+        {
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+            return;
+        }
+
+        Left = Owner.Left + Math.Max(0, (Owner.ActualWidth - ActualWidth) / 2);
+        Top = Owner.Top + Math.Max(0, (Owner.ActualHeight - ActualHeight) / 2);
     }
 
     private async void TestButton_Click(object sender, RoutedEventArgs e)
