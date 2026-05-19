@@ -2,6 +2,7 @@
 using DocumentManagement.Api.Services;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.Auth;
+using DocumentManagement.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace DocumentManagement.Api.Controllers;
@@ -12,11 +13,13 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly JwtService _jwtService;
+    private readonly IAuditLogRepository _auditLogRepository;
 
-    public AuthController(IAuthService authService, JwtService jwtService)
+    public AuthController(IAuthService authService, JwtService jwtService, IAuditLogRepository auditLogRepository)
     {
         _authService = authService;
         _jwtService = jwtService;
+        _auditLogRepository = auditLogRepository;
     }
 
     [HttpPost("login")]
@@ -44,6 +47,7 @@ public class AuthController : ControllerBase
 
         if (userSession == null)
         {
+            await WriteLoginFailureAuditAsync(request.Username);
             return Unauthorized(new LoginResponse
             {
                 Success = false,
@@ -245,5 +249,19 @@ public class AuthController : ControllerBase
         }
 
         return null;
+    }
+
+    private async Task WriteLoginFailureAuditAsync(string username)
+    {
+        await _auditLogRepository.AddAsync(new AuditLog
+        {
+            EntityName = "Auth",
+            EntityId = 0,
+            Action = "LOGIN_FAILURE",
+            ChangedColumns = "FAILURE",
+            NewValues = string.IsNullOrWhiteSpace(username) ? null : username.Trim(),
+            Username = "anonymous",
+            CreatedAt = DateTime.UtcNow
+        });
     }
 }

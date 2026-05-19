@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Contracts.DemoData;
+using DocumentManagement.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,14 @@ namespace DocumentManagement.Api.Controllers;
 public class DemoDataController : ControllerBase
 {
     private readonly IDemoDataService _demoDataService;
+    private readonly IAuditLogRepository _auditLogRepository;
 
-    public DemoDataController(IDemoDataService demoDataService)
+    public DemoDataController(
+        IDemoDataService demoDataService,
+        IAuditLogRepository auditLogRepository)
     {
         _demoDataService = demoDataService;
+        _auditLogRepository = auditLogRepository;
     }
 
     [HttpGet("count")]
@@ -34,12 +39,11 @@ public class DemoDataController : ControllerBase
     {
         var permissionResult = RequireAdmin();
         if (permissionResult != null)
-        {
             return permissionResult;
-        }
 
         var affected = await _demoDataService.EnsureSeededAsync(cancellationToken);
         var count = await _demoDataService.GetActiveDemoCountAsync(cancellationToken);
+        await WriteAuditAsync("DEMO_DATA_SEED", affected, count);
 
         return Ok(new DemoDataResponse
         {
@@ -56,12 +60,11 @@ public class DemoDataController : ControllerBase
     {
         var permissionResult = RequireAdmin();
         if (permissionResult != null)
-        {
             return permissionResult;
-        }
 
         var affected = await _demoDataService.ClearAsync(cancellationToken);
         var count = await _demoDataService.GetActiveDemoCountAsync(cancellationToken);
+        await WriteAuditAsync("DEMO_DATA_CLEAR", affected, count);
 
         return Ok(new DemoDataResponse
         {
@@ -80,6 +83,27 @@ public class DemoDataController : ControllerBase
         return string.Equals(role, "ADMIN", StringComparison.OrdinalIgnoreCase)
                || string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase)
             ? null
-            : StatusCode(StatusCodes.Status403Forbidden, "Chỉ Admin được quản lý demo data.");
+            : StatusCode(StatusCodes.Status403Forbidden, "Administrator permission is required.");
+    }
+
+    private string GetUsername()
+    {
+        return User.FindFirst(ClaimTypes.Name)?.Value
+               ?? User.Identity?.Name
+               ?? "system";
+    }
+
+    private async Task WriteAuditAsync(string action, int affected, int activeCount)
+    {
+        await _auditLogRepository.AddAsync(new AuditLog
+        {
+            EntityName = "DemoData",
+            EntityId = 0,
+            Action = action,
+            ChangedColumns = "SUCCESS",
+            NewValues = $"correlationId={HttpContext.TraceIdentifier};affected={affected};activeCount={activeCount}",
+            Username = GetUsername(),
+            CreatedAt = DateTime.UtcNow
+        });
     }
 }
