@@ -119,7 +119,7 @@ public partial class MainWindow : Window
 
         var rootBorder = new Border
         {
-            Width = 380,
+            Width = 440,
             Background = Brushes.White,
             CornerRadius = new CornerRadius(14),
             BorderBrush = new SolidColorBrush(Color.FromRgb(229, 231, 235)),
@@ -152,7 +152,10 @@ public partial class MainWindow : Window
         contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         contentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-        var textPanel = new StackPanel();
+        var textPanel = new StackPanel
+        {
+            MaxWidth = 354
+        };
 
         var titleText = new TextBlock
         {
@@ -160,7 +163,9 @@ public partial class MainWindow : Window
             Foreground = titleBrush,
             FontWeight = FontWeights.Bold,
             FontSize = 14,
-            TextWrapping = TextWrapping.Wrap
+            TextWrapping = TextWrapping.Wrap,
+            LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+            LineHeight = 18
         };
 
         var messageText = new TextBlock

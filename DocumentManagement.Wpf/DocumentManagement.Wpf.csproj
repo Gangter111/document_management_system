@@ -16,6 +16,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\DocumentManagement.Contracts\DocumentManagement.Contracts.csproj" />
+		<ProjectReference Include="..\DocumentManagement.Intelligence\DocumentManagement.Intelligence.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

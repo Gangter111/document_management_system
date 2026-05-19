@@ -87,6 +87,28 @@ ORDER BY upload_date DESC;";
         return result;
     }
 
+    public async Task<List<DocumentAttachment>> GetAllAsync()
+    {
+        using var connection = _connectionFactory.CreateConnection();
+        await connection.OpenAsync();
+
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
+SELECT *
+FROM document_attachments
+ORDER BY id ASC;";
+
+        using var reader = await command.ExecuteReaderAsync();
+        var result = new List<DocumentAttachment>();
+
+        while (await reader.ReadAsync())
+        {
+            result.Add(Map(reader));
+        }
+
+        return result;
+    }
+
     public async Task<bool> DeleteByIdAsync(long id)
     {
         using var connection = _connectionFactory.CreateConnection();
@@ -98,5 +120,23 @@ ORDER BY upload_date DESC;";
 
         var rows = await command.ExecuteNonQueryAsync();
         return rows > 0;
+    }
+
+    private static DocumentAttachment Map(System.Data.Common.DbDataReader reader)
+    {
+        return new DocumentAttachment
+        {
+            Id = reader.GetInt64(reader.GetOrdinal("id")),
+            DocumentId = reader.GetInt64(reader.GetOrdinal("document_id")),
+            OriginalFileName = reader["original_file_name"]?.ToString() ?? string.Empty,
+            StoredFileName = reader["stored_file_name"]?.ToString() ?? string.Empty,
+            StoredFilePath = reader["stored_file_path"]?.ToString() ?? string.Empty,
+            FileExtension = reader["file_extension"]?.ToString(),
+            MimeType = reader["mime_type"]?.ToString(),
+            FileSize = reader["file_size"] == DBNull.Value ? 0 : Convert.ToInt64(reader["file_size"]),
+            FileHash = reader["file_hash"]?.ToString(),
+            ExtractedText = reader["extracted_text"]?.ToString(),
+            UploadDate = reader["upload_date"]?.ToString() ?? string.Empty
+        };
     }
 }

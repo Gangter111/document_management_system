@@ -1,5 +1,6 @@
 using System.Text;
 using DocumentManagement.Api.Health;
+using DocumentManagement.Api.Security;
 using DocumentManagement.Api.Services;
 using DocumentManagement.Application.Interfaces;
 using DocumentManagement.Application.Services;
@@ -9,12 +10,19 @@ using DocumentManagement.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+StartupSecurityValidator.Validate(builder.Configuration, builder.Environment);
+var runtimePaths = RuntimePathValidator.ResolveAndValidate(
+    builder.Configuration,
+    builder.Environment,
+    builder.Environment.ContentRootPath);
 
 builder.Host.UseWindowsService(options =>
 {
@@ -23,12 +31,14 @@ builder.Host.UseWindowsService(options =>
 
 builder.Host.UseSerilog((context, services, configuration) =>
 {
+    var logPath = runtimePaths.LogFilePath;
+
     configuration
         .MinimumLevel.Information()
         .Enrich.FromLogContext()
         .WriteTo.Console()
         .WriteTo.File(
-            path: Path.Combine(AppContext.BaseDirectory, "logs", "api-.log"),
+            path: logPath,
             rollingInterval: RollingInterval.Day,
             retainedFileCountLimit: 30);
 });
@@ -65,7 +75,15 @@ else
         Directory.CreateDirectory(databaseDirectory);
     }
 
-    connectionFactory = new SqliteConnectionFactory($"Data Source={databasePath}");
+    var sqliteConnectionString = new SqliteConnectionStringBuilder
+    {
+        DataSource = databasePath,
+        Mode = SqliteOpenMode.ReadWriteCreate,
+        Cache = SqliteCacheMode.Shared,
+        DefaultTimeout = 30
+    }.ToString();
+
+    connectionFactory = new SqliteConnectionFactory(sqliteConnectionString);
     databaseDialect = new SqliteDialect();
 }
 
@@ -125,9 +143,27 @@ builder.Services.AddScoped<IDocumentService, DocumentService>();
 builder.Services.AddScoped<IDemoDataService, DemoDataService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAttachmentService, AttachmentService>();
+builder.Services.Configure<PdfOcrOptions>(builder.Configuration.GetSection("PdfExtraction:Ocr"));
+builder.Services.AddScoped<IPdfPageImageRenderer, ExternalPdfPageImageRenderer>();
+builder.Services.AddScoped<IPdfOcrEngine, TesseractCommandLineOcrEngine>();
+builder.Services.AddScoped<IImagePreprocessor, BmpImagePreprocessor>();
+builder.Services.AddScoped<IOcrNormalizationService, VietnameseOcrNormalizationService>();
+builder.Services.AddScoped<ITextBlockSegmenter, VietnameseTextBlockSegmenter>();
+builder.Services.AddScoped<ILayoutAnalyzer, VietnameseLayoutAnalyzer>();
+builder.Services.AddScoped<IDocumentClassifier, VietnameseAdministrativeDocumentClassifier>();
+builder.Services.AddScoped<IFieldExtractor, VietnameseAdministrativeFieldExtractor>();
+builder.Services.AddScoped<ISemanticParser, VietnameseSemanticParser>();
+builder.Services.AddScoped<IValidationService, VietnameseValidationService>();
+builder.Services.AddScoped<IConfidenceScorer, VietnameseConfidenceScorer>();
 builder.Services.AddScoped<IOcrService, PdfExtractionService>();
+builder.Services.AddScoped<IPdfExtractionWorker, PdfExtractionService>();
+builder.Services.AddScoped<ISqliteBackupRestoreService, SqliteBackupRestoreService>();
+builder.Services.AddScoped<IAttachmentStorageReconciliationService, AttachmentStorageReconciliationService>();
 builder.Services.AddSingleton<IFileStorageService>(_ =>
-    new LocalFileStorageService(Path.Combine(rootPath, "storage", "attachments")));
+{
+    return new LocalFileStorageService(runtimePaths.AttachmentsPath);
+});
+builder.Services.AddSingleton(runtimePaths);
 
 builder.Services.AddScoped<JwtService>();
 
@@ -177,7 +213,7 @@ using (var scope = app.Services.CreateScope())
     }
     else if (activeConnectionFactory is SqliteConnectionFactory sqliteConnectionFactory)
     {
-        DatabaseMigrator.Migrate(sqliteConnectionFactory);
+        DatabaseMigrator.Migrate(sqliteConnectionFactory, seedDefaultUsers: app.Environment.IsDevelopment());
     }
     else
     {
@@ -224,6 +260,25 @@ if (app.Environment.IsDevelopment())
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.Use(async (context, next) =>
+{
+    var maintenanceMode = context.RequestServices
+        .GetRequiredService<IConfiguration>()
+        .GetValue<bool>("Maintenance:Mode");
+
+    if (maintenanceMode &&
+        !context.Request.Path.StartsWithSegments("/health") &&
+        !context.Request.Path.StartsWithSegments("/api/backup") &&
+        !context.Request.Path.StartsWithSegments("/api/admin-operations"))
+    {
+        context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+        await context.Response.WriteAsJsonAsync(new { message = "System is in maintenance mode." });
+        return;
+    }
+
+    await next();
+});
 
 app.MapHealthChecks("/health");
 app.MapControllers();

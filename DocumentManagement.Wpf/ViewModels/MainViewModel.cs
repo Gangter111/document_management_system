@@ -6,6 +6,7 @@ using DocumentManagement.Contracts.Dashboard;
 using DocumentManagement.Wpf.Commands;
 using DocumentManagement.Wpf.Services;
 using DocumentManagement.Wpf.Views;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Win32;
 
@@ -19,6 +20,7 @@ public class MainViewModel : BaseViewModel
     private readonly ClientPermissionService _permissionService;
     private readonly INotificationService _notificationService;
     private readonly IConfirmDialogService _confirmDialogService;
+    private readonly bool _isIntelligenceReviewEnabled;
 
     private BaseViewModel? _currentView;
     private bool _isSystemOperationRunning;
@@ -157,6 +159,8 @@ public class MainViewModel : BaseViewModel
 
     public ICommand ShowSettingsCommand { get; }
 
+    public ICommand OpenIntelligenceReviewCommand { get; }
+
     public ICommand BackupCommand { get; }
 
     public ICommand RestoreCommand { get; }
@@ -167,7 +171,8 @@ public class MainViewModel : BaseViewModel
         ApiAuthService authService,
         ClientPermissionService permissionService,
         INotificationService notificationService,
-        IConfirmDialogService confirmDialogService)
+        IConfirmDialogService confirmDialogService,
+        IConfiguration configuration)
     {
         _serviceProvider = serviceProvider;
         _apiService = apiService;
@@ -175,6 +180,7 @@ public class MainViewModel : BaseViewModel
         _permissionService = permissionService;
         _notificationService = notificationService;
         _confirmDialogService = confirmDialogService;
+        _isIntelligenceReviewEnabled = configuration.GetValue("Features:IntelligenceReviewEnabled", false);
 
         ShowDashboardCommand = new RelayCommand(_ => ShowDashboard(), _ => CanViewDashboard);
         ShowDocumentListCommand = new RelayCommand(async _ => await ShowDocumentsAsync(), _ => CanViewDocuments);
@@ -183,6 +189,7 @@ public class MainViewModel : BaseViewModel
         ShowReportsCommand = new RelayCommand(async _ => await ShowReportsAsync(), _ => CanViewReports);
         ShowCategoriesCommand = new RelayCommand(async _ => await ShowCategoriesAsync(), _ => CanViewCategories);
         ShowSettingsCommand = new RelayCommand(_ => ShowSystemInfo(), _ => CanViewSettings);
+        OpenIntelligenceReviewCommand = new RelayCommand(_ => OpenIntelligenceReview(), _ => _isIntelligenceReviewEnabled);
 
         BackupCommand = new RelayCommand(
             async _ => await BackupAsync(),
@@ -249,6 +256,7 @@ public class MainViewModel : BaseViewModel
         (ShowReportsCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (ShowCategoriesCommand as RelayCommand)?.RaiseCanExecuteChanged();
         (ShowSettingsCommand as RelayCommand)?.RaiseCanExecuteChanged();
+        (OpenIntelligenceReviewCommand as RelayCommand)?.RaiseCanExecuteChanged();
         RaiseSystemCommandState();
     }
 
@@ -376,7 +384,24 @@ public class MainViewModel : BaseViewModel
             RestoreCommand,
             new RelayCommand(_ => OpenServerSettings()),
             new RelayCommand(async _ => await SeedDemoDataAsync(), _ => CanRestore),
-            new RelayCommand(async _ => await ClearDemoDataAsync(), _ => CanRestore));
+            new RelayCommand(async _ => await ClearDemoDataAsync(), _ => CanRestore),
+            OpenIntelligenceReviewCommand,
+            _isIntelligenceReviewEnabled);
+    }
+
+    private void OpenIntelligenceReview()
+    {
+        if (!_isIntelligenceReviewEnabled)
+        {
+            _notificationService.ShowWarning(
+                "Document Intelligence review dang tat trong cau hinh.",
+                "Document Intelligence");
+            return;
+        }
+
+        var window = _serviceProvider.GetRequiredService<DocumentExtractionReviewWindow>();
+        window.Owner = global::System.Windows.Application.Current?.MainWindow;
+        window.ShowDialog();
     }
 
     private void OpenServerSettings()
@@ -803,7 +828,9 @@ public class SystemInfoViewModel : BaseViewModel
         ICommand restoreCommand,
         ICommand serverSettingsCommand,
         ICommand seedDemoDataCommand,
-        ICommand clearDemoDataCommand)
+        ICommand clearDemoDataCommand,
+        ICommand intelligenceReviewCommand,
+        bool isIntelligenceReviewEnabled)
     {
         DisplayName = displayName;
         RoleName = roleName;
@@ -816,6 +843,8 @@ public class SystemInfoViewModel : BaseViewModel
         ServerSettingsCommand = serverSettingsCommand;
         SeedDemoDataCommand = seedDemoDataCommand;
         ClearDemoDataCommand = clearDemoDataCommand;
+        IntelligenceReviewCommand = intelligenceReviewCommand;
+        IsIntelligenceReviewEnabled = isIntelligenceReviewEnabled;
     }
 
     public string DisplayName { get; }
@@ -843,4 +872,8 @@ public class SystemInfoViewModel : BaseViewModel
     public ICommand SeedDemoDataCommand { get; }
 
     public ICommand ClearDemoDataCommand { get; }
+
+    public ICommand IntelligenceReviewCommand { get; }
+
+    public bool IsIntelligenceReviewEnabled { get; }
 }

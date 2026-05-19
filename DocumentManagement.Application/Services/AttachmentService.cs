@@ -7,13 +7,16 @@ public class AttachmentService : IAttachmentService
 {
     private readonly IAttachmentRepository _attachmentRepository;
     private readonly IFileStorageService _fileStorageService;
+    private readonly IAuditLogRepository? _auditLogRepository;
 
     public AttachmentService(
         IAttachmentRepository attachmentRepository,
-        IFileStorageService fileStorageService)
+        IFileStorageService fileStorageService,
+        IAuditLogRepository? auditLogRepository = null)
     {
         _attachmentRepository = attachmentRepository;
         _fileStorageService = fileStorageService;
+        _auditLogRepository = auditLogRepository;
     }
 
     public async Task<long> UploadAsync(long documentId, string sourceFilePath)
@@ -39,7 +42,18 @@ public class AttachmentService : IAttachmentService
             UploadDate = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")
         };
 
-        return await _attachmentRepository.CreateAsync(attachment);
+        try
+        {
+            var id = await _attachmentRepository.CreateAsync(attachment);
+            await WriteAuditAsync("ATTACHMENT_UPLOAD", id, "SUCCESS");
+            return id;
+        }
+        catch
+        {
+            _fileStorageService.DeleteFile(saved.StoredFilePath);
+            await WriteAuditAsync("ATTACHMENT_UPLOAD_FAILURE", documentId, "FAILURE");
+            throw;
+        }
     }
 
     public Task<List<DocumentAttachment>> GetByDocumentIdAsync(long documentId)
@@ -63,5 +77,21 @@ public class AttachmentService : IAttachmentService
             ".jpeg" => "image/jpeg",
             _ => "application/octet-stream"
         };
+    }
+
+    private async Task WriteAuditAsync(string action, long entityId, string changedColumns)
+    {
+        if (_auditLogRepository == null)
+            return;
+
+        await _auditLogRepository.AddAsync(new AuditLog
+        {
+            EntityName = "Attachment",
+            EntityId = entityId,
+            Action = action,
+            ChangedColumns = changedColumns,
+            Username = "system",
+            CreatedAt = DateTime.UtcNow
+        });
     }
 }

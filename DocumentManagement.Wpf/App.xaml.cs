@@ -4,6 +4,7 @@ using System.Windows.Threading;
 using DocumentManagement.Wpf.Services;
 using DocumentManagement.Wpf.ViewModels;
 using DocumentManagement.Wpf.Views;
+using DocumentManagement.Intelligence.Review;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -92,6 +93,7 @@ public partial class App : Application
         services.AddTransient<DocumentSearchCoordinator>();
         services.AddTransient<DocumentWorkflowCommandService>();
         services.AddTransient<DocumentExportService>();
+        services.AddSingleton<IntelligenceReviewService>();
 
         services.AddSingleton<INotificationService, NotificationService>();
         services.AddSingleton<IConfirmDialogService, ConfirmDialogService>();
@@ -101,9 +103,11 @@ public partial class App : Application
         services.AddTransient<DocumentFormViewModel>();
         services.AddTransient<DocumentDetailViewModel>();
         services.AddTransient<DashboardViewModel>();
+        services.AddTransient<DocumentExtractionReviewViewModel>();
 
         services.AddTransient<LoginWindow>();
         services.AddTransient<ServerSettingsWindow>();
+        services.AddTransient<DocumentExtractionReviewWindow>();
         services.AddTransient<MainWindow>();
     }
 

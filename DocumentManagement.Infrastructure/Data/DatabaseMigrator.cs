@@ -4,10 +4,12 @@ namespace DocumentManagement.Infrastructure.Data;
 
 public static class DatabaseMigrator
 {
-    public static void Migrate(SqliteConnectionFactory connectionFactory)
+    public static void Migrate(SqliteConnectionFactory connectionFactory, bool seedDefaultUsers = true)
     {
         using var connection = connectionFactory.CreateConnection();
         connection.Open();
+
+        ConfigureSqlite(connection);
 
         EnsureDocumentsTable(connection);
         EnsureCategoriesTable(connection);
@@ -19,7 +21,18 @@ public static class DatabaseMigrator
         SeedCategories(connection);
         SeedStatuses(connection);
         SeedRoles(connection);
-        SeedDefaultUsers(connection);
+        if (seedDefaultUsers)
+        {
+            SeedDefaultUsers(connection);
+        }
+    }
+
+    private static void ConfigureSqlite(SqliteConnection connection)
+    {
+        ExecuteNonQuery(connection, "PRAGMA journal_mode=WAL;");
+        ExecuteNonQuery(connection, "PRAGMA synchronous=NORMAL;");
+        ExecuteNonQuery(connection, "PRAGMA busy_timeout=5000;");
+        ExecuteNonQuery(connection, "PRAGMA foreign_keys=ON;");
     }
 
     private static void EnsureDocumentsTable(SqliteConnection connection)

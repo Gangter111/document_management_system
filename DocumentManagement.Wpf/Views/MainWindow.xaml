@@ -183,6 +183,13 @@
                             <Button Content="Restore" Command="{Binding RestoreCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="92" Height="34" Margin="10,0,0,0"/>
                             <Button Content="Seed Demo Data" Command="{Binding SeedDemoDataCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="130" Height="34" Margin="10,0,0,0"/>
                             <Button Content="Clear Demo Data" Command="{Binding ClearDemoDataCommand}" Style="{StaticResource SecondaryButtonStyle}" MinWidth="130" Height="34" Margin="10,0,0,0"/>
+                            <Button Content="Review MinerU JSON"
+                                    Command="{Binding IntelligenceReviewCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    MinWidth="150"
+                                    Height="34"
+                                    Margin="10,0,0,0"
+                                    Visibility="{Binding IsIntelligenceReviewEnabled, Converter={StaticResource BooleanToVisibilityConverter}}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
