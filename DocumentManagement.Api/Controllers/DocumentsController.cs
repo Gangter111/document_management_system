@@ -5,6 +5,8 @@ using DocumentManagement.Contracts.Documents;
 using DocumentManagement.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PdfExtractionException = DocumentManagement.Application.Models.PdfExtractionException;
+using PdfExtractionJobRequest = DocumentManagement.Application.Models.PdfExtractionJobRequest;
 
 namespace DocumentManagement.Api.Controllers;
 
@@ -13,15 +15,23 @@ namespace DocumentManagement.Api.Controllers;
 [Authorize]
 public class DocumentsController : ControllerBase
 {
+    private const long MaxPdfExtractionBytes = 20L * 1024L * 1024L;
+
     private readonly IDocumentService _documentService;
     private readonly IOcrService? _ocrService;
+    private readonly IPdfExtractionWorker? _pdfExtractionWorker;
+    private readonly IAuditLogRepository? _auditLogRepository;
 
     public DocumentsController(
         IDocumentService documentService,
-        IOcrService? ocrService = null)
+        IOcrService? ocrService = null,
+        IPdfExtractionWorker? pdfExtractionWorker = null,
+        IAuditLogRepository? auditLogRepository = null)
     {
         _documentService = documentService;
         _ocrService = ocrService;
+        _pdfExtractionWorker = pdfExtractionWorker;
+        _auditLogRepository = auditLogRepository;
     }
 
     [HttpGet]
@@ -119,7 +129,7 @@ public class DocumentsController : ControllerBase
 
     [HttpPost("extract-pdf")]
     [RequestSizeLimit(20 * 1024 * 1024)]
-    public async Task<ActionResult<AutoFillDocumentResultDto>> ExtractPdf(IFormFile file)
+    public async Task<ActionResult<AutoFillDocumentResultDto>> ExtractPdf(IFormFile file, CancellationToken cancellationToken)
     {
         var permissionResult = RequireCreatePermission();
 
@@ -133,31 +143,62 @@ public class DocumentsController : ControllerBase
             return BadRequest("Vui lòng chọn file PDF.");
         }
 
+        if (file.Length > MaxPdfExtractionBytes)
+        {
+            return BadRequest("File PDF vượt quá giới hạn 20 MB.");
+        }
+
         if (!string.Equals(Path.GetExtension(file.FileName), ".pdf", StringComparison.OrdinalIgnoreCase))
         {
             return BadRequest("Hệ thống chỉ hỗ trợ file PDF.");
         }
 
-        var tempDirectory = Path.Combine(Path.GetTempPath(), "DocumentManagement", "pdf-extract");
+        if (!await HasPdfHeaderAsync(file, cancellationToken))
+        {
+            return BadRequest("Nội dung file không phải PDF hợp lệ.");
+        }
+
+        var correlationId = HttpContext.TraceIdentifier;
+        if (string.IsNullOrWhiteSpace(correlationId))
+            correlationId = Guid.NewGuid().ToString("N");
+
+        var tempDirectory = Path.Combine(Path.GetTempPath(), "DocumentManagement", "pdf-extract", SanitizeToken(correlationId));
         Directory.CreateDirectory(tempDirectory);
 
-        var tempPath = Path.Combine(tempDirectory, $"{Guid.NewGuid():N}.pdf");
+        var tempPath = Path.Combine(tempDirectory, "upload.pdf");
 
         try
         {
-            await using (var stream = System.IO.File.Create(tempPath))
+            await using (var stream = new FileStream(
+                             tempPath,
+                             FileMode.CreateNew,
+                             FileAccess.Write,
+                             FileShare.None,
+                             bufferSize: 81920,
+                             options: FileOptions.Asynchronous | FileOptions.SequentialScan))
             {
-                await file.CopyToAsync(stream);
+                await file.CopyToAsync(stream, cancellationToken);
             }
 
-            if (_ocrService == null)
+            if (_ocrService == null && _pdfExtractionWorker == null)
             {
                 return StatusCode(
                     StatusCodes.Status503ServiceUnavailable,
                     "Chức năng trích xuất PDF chưa được cấu hình trên máy chủ.");
             }
 
-            var result = await _ocrService.ExtractAndParseAsync(tempPath);
+            using var extractionTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            extractionTimeout.CancelAfter(TimeSpan.FromSeconds(30));
+
+            var job = new PdfExtractionJobRequest(
+                correlationId,
+                Path.GetFileName(tempPath),
+                tempPath,
+                file.Length,
+                TimeSpan.FromSeconds(30));
+            var result = _pdfExtractionWorker != null
+                ? await _pdfExtractionWorker.ExtractAsync(job, extractionTimeout.Token)
+                : await _ocrService!.ExtractAndParseAsync(tempPath, extractionTimeout.Token);
 
             return Ok(new AutoFillDocumentResultDto
             {
@@ -167,22 +208,90 @@ public class DocumentsController : ControllerBase
                 IssueDate = result.IssueDate,
                 SenderName = result.SenderName,
                 ReceiverName = result.ReceiverName,
+                SignerName = result.SignerName,
                 UrgencyLevel = result.UrgencyLevel,
                 ContentText = result.ContentText,
-                IsFromOcr = result.IsFromOcr
+                IsFromOcr = result.IsFromOcr,
+                OcrConfidence = result.OcrConfidence,
+                IsPartialExtraction = result.IsPartialExtraction,
+                FailureKind = result.FailureKind,
+                FailureMessage = result.FailureMessage,
+                DocumentKind = result.DocumentKind,
+                RequiresManualReview = result.RequiresManualReview,
+                Fields = result.Fields.Select(field => new ExtractedFieldDto
+                {
+                    FieldName = field.FieldName,
+                    Value = field.Value,
+                    Confidence = field.Confidence,
+                    SourceText = field.SourceText,
+                    ExtractionMethod = field.ExtractionMethod,
+                    RequiresReview = field.RequiresReview
+                }).ToList(),
+                ReviewReasons = result.ReviewReasons.ToList(),
+                ExtractionTrace = result.ExtractionTrace.Select(trace => new ExtractionTraceDto
+                {
+                    Stage = trace.Stage,
+                    Message = trace.Message
+                }).ToList()
+            });
+        }
+        catch (PdfExtractionException ex)
+        {
+            await WriteAuditAsync("PDF_EXTRACTION_FAILURE", "PdfExtraction", 0, GetCurrentUsername(), ex.FailureKind);
+            return BadRequest(new AutoFillDocumentResultDto
+            {
+                FailureKind = ex.FailureKind,
+                FailureMessage = ex.Message
             });
         }
         finally
         {
             try
             {
-                System.IO.File.Delete(tempPath);
+                if (Directory.Exists(tempDirectory))
+                    Directory.Delete(tempDirectory, recursive: true);
             }
             catch
             {
                 // Best effort cleanup for temporary upload files.
             }
         }
+    }
+
+    private static string SanitizeToken(string value)
+    {
+        var filtered = new string(value.Where(char.IsLetterOrDigit).ToArray());
+        return string.IsNullOrWhiteSpace(filtered) ? Guid.NewGuid().ToString("N") : filtered;
+    }
+
+    private static async Task<bool> HasPdfHeaderAsync(IFormFile file, CancellationToken cancellationToken)
+    {
+        var header = new byte[4];
+        await using var stream = file.OpenReadStream();
+        var read = await stream.ReadAsync(header.AsMemory(0, header.Length), cancellationToken);
+
+        return read == 4
+               && header[0] == 0x25
+               && header[1] == 0x50
+               && header[2] == 0x44
+               && header[3] == 0x46;
+    }
+
+    private async Task WriteAuditAsync(string action, string entityName, long entityId, string username, string? reason)
+    {
+        if (_auditLogRepository == null)
+            return;
+
+        await _auditLogRepository.AddAsync(new AuditLog
+        {
+            EntityName = entityName,
+            EntityId = entityId,
+            Action = action,
+            ChangedColumns = "FAILURE",
+            NewValues = $"correlationId={HttpContext.TraceIdentifier};reason={reason}",
+            Username = username,
+            CreatedAt = DateTime.UtcNow
+        });
     }
 
     [HttpPut("{id:long}")]

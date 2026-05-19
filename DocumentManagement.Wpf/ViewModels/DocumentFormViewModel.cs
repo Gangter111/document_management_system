@@ -10,6 +10,7 @@ namespace DocumentManagement.Wpf.ViewModels;
 public class DocumentFormViewModel : BaseViewModel
 {
     private const long IssuedStatusId = 4;
+    private const string ScannedImageOnlyFailureKind = "scanned_image_only";
 
     private readonly ApiService _apiService;
     private readonly ApiAuthService _authService;
@@ -36,6 +37,11 @@ public class DocumentFormViewModel : BaseViewModel
     private string? _assignedTo;
     private string? _notes;
     private string? _selectedFilePath;
+    private string? _extractionMessage;
+    private string _extractionMessageKind = "Info";
+    private bool _hasPendingExtractionReview;
+    private IReadOnlyDictionary<string, ExtractedFieldDto> _lastExtractionFields =
+        new Dictionary<string, ExtractedFieldDto>();
 
     private long? _categoryId;
     private long? _statusId = IssuedStatusId;
@@ -82,7 +88,11 @@ public class DocumentFormViewModel : BaseViewModel
     public string DocumentNumber
     {
         get => _documentNumber;
-        set => SetProperty(ref _documentNumber, value);
+        set
+        {
+            if (SetProperty(ref _documentNumber, value))
+                MarkReviewed("DocumentNumber");
+        }
     }
 
     public string? ReferenceNumber
@@ -94,7 +104,11 @@ public class DocumentFormViewModel : BaseViewModel
     public string Title
     {
         get => _title;
-        set => SetProperty(ref _title, value);
+        set
+        {
+            if (SetProperty(ref _title, value))
+                MarkReviewed("Title");
+        }
     }
 
     public string? Summary
@@ -112,7 +126,11 @@ public class DocumentFormViewModel : BaseViewModel
     public DateTime? IssueDate
     {
         get => _issueDate;
-        set => SetProperty(ref _issueDate, value);
+        set
+        {
+            if (SetProperty(ref _issueDate, value))
+                MarkReviewed("IssueDate");
+        }
     }
 
     public DateTime? ReceivedDate
@@ -130,19 +148,31 @@ public class DocumentFormViewModel : BaseViewModel
     public string? SenderName
     {
         get => _senderName;
-        set => SetProperty(ref _senderName, value);
+        set
+        {
+            if (SetProperty(ref _senderName, value))
+                MarkReviewed("SenderName");
+        }
     }
 
     public string? ReceiverName
     {
         get => _receiverName;
-        set => SetProperty(ref _receiverName, value);
+        set
+        {
+            if (SetProperty(ref _receiverName, value))
+                MarkReviewed("ReceiverName");
+        }
     }
 
     public string? SignerName
     {
         get => _signerName;
-        set => SetProperty(ref _signerName, value);
+        set
+        {
+            if (SetProperty(ref _signerName, value))
+                MarkReviewed("SignerName");
+        }
     }
 
     public string ConfidentialityLevel
@@ -200,6 +230,7 @@ public class DocumentFormViewModel : BaseViewModel
         {
             if (SetProperty(ref _selectedFilePath, value))
             {
+                ClearExtractionMessage();
                 OnPropertyChanged(nameof(HasFile));
                 OnPropertyChanged(nameof(CanAutoFill));
                 RaiseCommandStatesChanged();
@@ -208,6 +239,45 @@ public class DocumentFormViewModel : BaseViewModel
     }
 
     public bool HasFile => !string.IsNullOrWhiteSpace(SelectedFilePath);
+
+    public string? ExtractionMessage
+    {
+        get => _extractionMessage;
+        private set
+        {
+            if (SetProperty(ref _extractionMessage, value))
+            {
+                OnPropertyChanged(nameof(HasExtractionMessage));
+            }
+        }
+    }
+
+    public string ExtractionMessageKind
+    {
+        get => _extractionMessageKind;
+        private set => SetProperty(ref _extractionMessageKind, value);
+    }
+
+    public bool HasExtractionMessage => !string.IsNullOrWhiteSpace(ExtractionMessage);
+
+    public bool HasPendingExtractionReview
+    {
+        get => _hasPendingExtractionReview;
+        private set => SetProperty(ref _hasPendingExtractionReview, value);
+    }
+
+    public bool DocumentNumberNeedsReview => NeedsReview("DocumentNumber");
+    public bool TitleNeedsReview => NeedsReview("Title");
+    public bool IssueDateNeedsReview => NeedsReview("IssueDate");
+    public bool SenderNameNeedsReview => NeedsReview("SenderName");
+    public bool ReceiverNameNeedsReview => NeedsReview("ReceiverName");
+    public bool SignerNameNeedsReview => NeedsReview("SignerName");
+    public string? DocumentNumberExtractionSource => SourceFor("DocumentNumber");
+    public string? TitleExtractionSource => SourceFor("Title");
+    public string? IssueDateExtractionSource => SourceFor("IssueDate");
+    public string? SenderNameExtractionSource => SourceFor("SenderName");
+    public string? ReceiverNameExtractionSource => SourceFor("ReceiverName");
+    public string? SignerNameExtractionSource => SourceFor("SignerName");
 
     public ICommand BrowseFileCommand { get; }
 
@@ -262,6 +332,9 @@ public class DocumentFormViewModel : BaseViewModel
         CategoryId = null;
         StatusId = IssuedStatusId;
         SelectedFilePath = null;
+        _lastExtractionFields = new Dictionary<string, ExtractedFieldDto>();
+        HasPendingExtractionReview = false;
+        RaiseExtractionFieldStateChanged();
 
         OnPropertyChanged(nameof(IsEditMode));
         RefreshAccessState();
@@ -350,9 +423,9 @@ public class DocumentFormViewModel : BaseViewModel
         {
             SelectedFilePath = dialog.FileName;
 
-            _notificationService.ShowInfo(
+            SetExtractionMessage(
                 "Đã chọn file PDF. Bấm Trích xuất văn bản PDF để lấy thông tin từ PDF có lớp chữ.",
-                "Đã chọn tệp");
+                "Info");
         }
     }
 
@@ -360,36 +433,102 @@ public class DocumentFormViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(SelectedFilePath))
         {
-            _notificationService.ShowWarning(
-                "Vui lòng chọn file PDF trước.",
-                "Thiếu file PDF");
+            SetExtractionMessage(
+                "Vui lòng chọn file PDF trước khi trích xuất văn bản.",
+                "Warning");
             return;
         }
 
         try
         {
+            SetExtractionMessage(
+                "Đang trích xuất văn bản PDF. Nếu đây là PDF scan ảnh, hệ thống sẽ thử OCR cục bộ trong giới hạn an toàn.",
+                "Info");
             var result = await _apiService.ExtractPdfAsync(SelectedFilePath);
+
+            if (IsScannedImageOnly(result))
+            {
+                SetExtractionMessage(
+                    "PDF này là tệp hợp lệ nhưng có vẻ là văn bản scan dạng ảnh.\n" +
+                    "OCR cục bộ chưa khả dụng hoặc không đọc được chữ trong tệp này, nên hệ thống chưa thể điền thông tin tự động.\n" +
+                    "Bạn vẫn có thể nhập thông tin văn bản thủ công.",
+                    "Info");
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.FailureKind))
+            {
+                SetExtractionMessage(
+                    GetExtractionFailureMessage(result),
+                    "Warning");
+                return;
+            }
 
             if (!HasExtractedContent(result))
             {
-                _notificationService.ShowWarning(
+                SetExtractionMessage(
                     "Không tìm thấy text layer trong PDF. PDF scan ảnh hiện chưa hỗ trợ OCR.",
-                    "Không có văn bản PDF");
+                    "Info");
                 return;
             }
 
             ApplyAutoFillResult(result);
+            _lastExtractionFields = result.Fields.ToDictionary(field => field.FieldName, StringComparer.Ordinal);
+            HasPendingExtractionReview = result.RequiresManualReview;
+            RaiseExtractionFieldStateChanged();
 
-            _notificationService.ShowSuccess(
-                "Đã trích xuất văn bản từ PDF. Vui lòng kiểm tra lại các trường trước khi lưu.",
-                "Trích xuất PDF");
+            if (result.RequiresManualReview)
+            {
+                var reasons = result.ReviewReasons.Count == 0
+                    ? "Một số trường OCR có độ tin cậy thấp."
+                    : string.Join(" ", result.ReviewReasons);
+                SetExtractionMessage(
+                    "OCR đã hoàn tất nhưng cần người dùng rà soát trước khi lưu. " + reasons,
+                    "Warning");
+            }
+            else if (result.IsFromOcr)
+            {
+                SetExtractionMessage(
+                    "Đã trích xuất nội dung từ PDF scan bằng OCR. Vui lòng kiểm tra lại dữ liệu.",
+                    result.IsPartialExtraction ? "Warning" : "Info");
+            }
+            else
+            {
+                SetExtractionMessage(
+                    "Đã trích xuất văn bản từ PDF. Vui lòng kiểm tra lại các trường trước khi lưu.",
+                    "Info");
+            }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _notificationService.ShowError(
-                "Không thể trích xuất văn bản từ PDF. PDF scan ảnh hiện cần nhập thủ công: " + ex.Message,
-                "Lỗi trích xuất PDF");
+            SetExtractionMessage(
+                "Không thể trích xuất văn bản từ PDF lúc này.\n" +
+                "Tệp vẫn có thể được lưu cùng hồ sơ; vui lòng nhập thông tin văn bản thủ công.",
+                "Error");
         }
+    }
+
+    private void SetExtractionMessage(string message, string kind)
+    {
+        ExtractionMessageKind = kind;
+        ExtractionMessage = message;
+    }
+
+    private void ClearExtractionMessage()
+    {
+        ExtractionMessage = null;
+        ExtractionMessageKind = "Info";
+    }
+
+    private static string SanitizeInlineError(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return "Vui lòng kiểm tra lại tệp hoặc nhập thông tin thủ công.";
+
+        return message
+            .Replace("\r", " ")
+            .Replace("\n", " ")
+            .Trim();
     }
 
     private static bool HasExtractedContent(AutoFillDocumentResultDto result)
@@ -400,8 +539,39 @@ public class DocumentFormViewModel : BaseViewModel
                || (!string.IsNullOrWhiteSpace(result.ContentText) && !IsExtractionWarning(result.ContentText))
                || !string.IsNullOrWhiteSpace(result.SenderName)
                || !string.IsNullOrWhiteSpace(result.ReceiverName)
+               || !string.IsNullOrWhiteSpace(result.SignerName)
                || !string.IsNullOrWhiteSpace(result.UrgencyLevel)
                || !string.IsNullOrWhiteSpace(result.IssueDate);
+    }
+
+    private static bool IsScannedImageOnly(AutoFillDocumentResultDto result)
+    {
+        return string.Equals(
+            result.FailureKind,
+            ScannedImageOnlyFailureKind,
+            StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string GetExtractionFailureMessage(AutoFillDocumentResultDto result)
+    {
+        return result.FailureKind?.ToLowerInvariant() switch
+        {
+            "encrypted" =>
+                "PDF này có thể đang được mã hóa hoặc bảo vệ bằng mật khẩu.\n" +
+                "Hệ thống không thể đọc tự động nội dung, nhưng bạn vẫn có thể nhập thông tin thủ công.",
+            "too_large" =>
+                "PDF vượt quá giới hạn xử lý tự động hiện tại.\n" +
+                "Vui lòng nhập thông tin thủ công hoặc dùng tệp nhỏ hơn nếu cần trích xuất tự động.",
+            "timeout" =>
+                "Quá trình trích xuất PDF vượt quá thời gian cho phép.\n" +
+                "Hệ thống đã dừng xử lý để bảo vệ hiệu năng; bạn vẫn có thể nhập thông tin thủ công.",
+            "unsupported" =>
+                "Hệ thống chỉ hỗ trợ trích xuất tự động từ tệp PDF hợp lệ.\n" +
+                "Vui lòng kiểm tra lại tệp hoặc nhập thông tin thủ công.",
+            _ =>
+                "Hệ thống chưa thể trích xuất tự động nội dung từ PDF này.\n" +
+                "Tệp vẫn có thể được lưu cùng hồ sơ; vui lòng nhập thông tin văn bản thủ công."
+        };
     }
 
     private static bool IsExtractionWarning(string value)
@@ -411,34 +581,39 @@ public class DocumentFormViewModel : BaseViewModel
 
     private void ApplyAutoFillResult(AutoFillDocumentResultDto result)
     {
-        if (!string.IsNullOrWhiteSpace(result.DocumentNumber))
+        if (CanApply(result, nameof(result.DocumentNumber)) && !string.IsNullOrWhiteSpace(result.DocumentNumber))
         {
             DocumentNumber = result.DocumentNumber;
         }
 
-        if (!string.IsNullOrWhiteSpace(result.Title))
+        if (CanApply(result, nameof(result.Title)) && !string.IsNullOrWhiteSpace(result.Title))
         {
             Title = result.Title;
         }
 
-        if (!string.IsNullOrWhiteSpace(result.Summary))
+        if (CanApply(result, nameof(result.Title)) && !string.IsNullOrWhiteSpace(result.Summary))
         {
             Summary = result.Summary;
         }
 
-        if (!string.IsNullOrWhiteSpace(result.ContentText))
+        if (!result.IsFromOcr && !string.IsNullOrWhiteSpace(result.ContentText))
         {
             ContentText = result.ContentText;
         }
 
-        if (!string.IsNullOrWhiteSpace(result.SenderName))
+        if (CanApply(result, nameof(result.SenderName)) && !string.IsNullOrWhiteSpace(result.SenderName))
         {
             SenderName = result.SenderName;
         }
 
-        if (!string.IsNullOrWhiteSpace(result.ReceiverName))
+        if (CanApply(result, nameof(result.ReceiverName)) && !string.IsNullOrWhiteSpace(result.ReceiverName))
         {
             ReceiverName = result.ReceiverName;
+        }
+
+        if (CanApply(result, nameof(result.SignerName)) && !string.IsNullOrWhiteSpace(result.SignerName))
+        {
+            SignerName = result.SignerName;
         }
 
         if (!string.IsNullOrWhiteSpace(result.UrgencyLevel))
@@ -446,10 +621,27 @@ public class DocumentFormViewModel : BaseViewModel
             UrgencyLevel = result.UrgencyLevel;
         }
 
-        if (DateTime.TryParse(result.IssueDate, out var issueDate))
+        if (CanApply(result, nameof(result.IssueDate)) && DateTime.TryParse(result.IssueDate, out var issueDate))
         {
             IssueDate = issueDate;
         }
+    }
+
+    private static bool CanApply(AutoFillDocumentResultDto result, string propertyName)
+    {
+        var fieldName = propertyName switch
+        {
+            nameof(AutoFillDocumentResultDto.DocumentNumber) => "DocumentNumber",
+            nameof(AutoFillDocumentResultDto.Title) => "Title",
+            nameof(AutoFillDocumentResultDto.SenderName) => "SenderName",
+            nameof(AutoFillDocumentResultDto.ReceiverName) => "ReceiverName",
+            nameof(AutoFillDocumentResultDto.SignerName) => "SignerName",
+            nameof(AutoFillDocumentResultDto.IssueDate) => "IssueDate",
+            _ => propertyName
+        };
+
+        var field = result.Fields.FirstOrDefault(candidate => candidate.FieldName == fieldName);
+        return field == null || !field.RequiresReview;
     }
 
     private async Task SaveAsync(object? parameter)
@@ -495,6 +687,14 @@ public class DocumentFormViewModel : BaseViewModel
                 _notificationService.ShowWarning(
                     "Vui lòng nhập tiêu đề / trích yếu văn bản.",
                     "Thiếu dữ liệu");
+                return false;
+            }
+
+            if (HasPendingExtractionReview)
+            {
+                _notificationService.ShowWarning(
+                    "Có trường OCR đang cần rà soát thủ công trước khi lưu.",
+                    "Cần kiểm tra OCR");
                 return false;
             }
 
@@ -674,5 +874,49 @@ public class DocumentFormViewModel : BaseViewModel
         {
             deleteCommand.RaiseCanExecuteChanged();
         }
+    }
+
+    private bool NeedsReview(string fieldName)
+        => _lastExtractionFields.TryGetValue(fieldName, out var field) && field.RequiresReview;
+
+    private string? SourceFor(string fieldName)
+        => _lastExtractionFields.TryGetValue(fieldName, out var field)
+            ? $"Nguồn OCR: {field.SourceText}\nĐộ tin cậy: {field.Confidence:0.00}\nCách trích xuất: {field.ExtractionMethod}"
+            : null;
+
+    private void RaiseExtractionFieldStateChanged()
+    {
+        OnPropertyChanged(nameof(DocumentNumberNeedsReview));
+        OnPropertyChanged(nameof(TitleNeedsReview));
+        OnPropertyChanged(nameof(IssueDateNeedsReview));
+        OnPropertyChanged(nameof(SenderNameNeedsReview));
+        OnPropertyChanged(nameof(ReceiverNameNeedsReview));
+        OnPropertyChanged(nameof(SignerNameNeedsReview));
+        OnPropertyChanged(nameof(DocumentNumberExtractionSource));
+        OnPropertyChanged(nameof(TitleExtractionSource));
+        OnPropertyChanged(nameof(IssueDateExtractionSource));
+        OnPropertyChanged(nameof(SenderNameExtractionSource));
+        OnPropertyChanged(nameof(ReceiverNameExtractionSource));
+        OnPropertyChanged(nameof(SignerNameExtractionSource));
+    }
+
+    private void MarkReviewed(string fieldName)
+    {
+        if (!_lastExtractionFields.TryGetValue(fieldName, out var field) || !field.RequiresReview)
+            return;
+
+        var updated = _lastExtractionFields.ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal);
+        updated[fieldName] = new ExtractedFieldDto
+        {
+            FieldName = field.FieldName,
+            Value = field.Value,
+            Confidence = field.Confidence,
+            SourceText = field.SourceText,
+            ExtractionMethod = field.ExtractionMethod,
+            RequiresReview = false
+        };
+        _lastExtractionFields = updated;
+        HasPendingExtractionReview = _lastExtractionFields.Values.Any(candidate => candidate.RequiresReview);
+        RaiseExtractionFieldStateChanged();
     }
 }

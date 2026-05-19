@@ -19,6 +19,15 @@
         <SolidColorBrush x:Key="FormReadonlyBadgeBackgroundBrush" Color="#FFF7ED"/>
         <SolidColorBrush x:Key="FormReadonlyBadgeBorderBrush" Color="#FDBA74"/>
         <SolidColorBrush x:Key="FormReadonlyBadgeTextBrush" Color="#9A3412"/>
+        <SolidColorBrush x:Key="ExtractionInfoBackgroundBrush" Color="#EFF6FF"/>
+        <SolidColorBrush x:Key="ExtractionInfoBorderBrush" Color="#BFDBFE"/>
+        <SolidColorBrush x:Key="ExtractionInfoTextBrush" Color="#1E3A8A"/>
+        <SolidColorBrush x:Key="ExtractionWarningBackgroundBrush" Color="#FFFBEB"/>
+        <SolidColorBrush x:Key="ExtractionWarningBorderBrush" Color="#FDE68A"/>
+        <SolidColorBrush x:Key="ExtractionWarningTextBrush" Color="#92400E"/>
+        <SolidColorBrush x:Key="ExtractionErrorBackgroundBrush" Color="#FEF2F2"/>
+        <SolidColorBrush x:Key="ExtractionErrorBorderBrush" Color="#FECACA"/>
+        <SolidColorBrush x:Key="ExtractionErrorTextBrush" Color="#991B1B"/>
 
         <Style x:Key="LabelStyle" TargetType="TextBlock">
             <Setter Property="Margin" Value="0,0,0,5"/>
@@ -91,12 +100,67 @@
             <Setter Property="BorderBrush" Value="{StaticResource FluentBorderBrush}"/>
         </Style>
 
+        <Style x:Key="OcrReviewTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource FormTextBoxStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ExtractionWarningBackgroundBrush}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource ExtractionWarningBorderBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="OcrReviewDatePickerStyle" TargetType="DatePicker" BasedOn="{StaticResource FormDatePickerStyle}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding RelativeSource={RelativeSource Self}, Path=Tag}" Value="True">
+                    <Setter Property="Background" Value="{StaticResource ExtractionWarningBackgroundBrush}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource ExtractionWarningBorderBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="FileNameTextStyle" TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
             <Setter Property="MaxWidth" Value="360"/>
             <Setter Property="Foreground" Value="{StaticResource FluentTextMutedBrush}"/>
             <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        </Style>
+
+        <Style x:Key="ExtractionMessageBorderStyle" TargetType="Border">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Background" Value="{StaticResource ExtractionInfoBackgroundBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource ExtractionInfoBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="{StaticResource Radius4}"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="0,10,0,0"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ExtractionMessageKind}" Value="Warning">
+                    <Setter Property="Background" Value="{StaticResource ExtractionWarningBackgroundBrush}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource ExtractionWarningBorderBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ExtractionMessageKind}" Value="Error">
+                    <Setter Property="Background" Value="{StaticResource ExtractionErrorBackgroundBrush}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource ExtractionErrorBorderBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ExtractionMessageTextStyle" TargetType="TextBlock">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="Foreground" Value="{StaticResource ExtractionInfoTextBrush}"/>
+            <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+            <Setter Property="LineHeight" Value="19"/>
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ExtractionMessageKind}" Value="Warning">
+                    <Setter Property="Foreground" Value="{StaticResource ExtractionWarningTextBrush}"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ExtractionMessageKind}" Value="Error">
+                    <Setter Property="Foreground" Value="{StaticResource ExtractionErrorTextBrush}"/>
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
 
         <Style x:Key="FormSectionTitleStyle" TargetType="TextBlock" BasedOn="{StaticResource FluentCaptionTextStyle}">
@@ -175,6 +239,10 @@
                         Margin="0,0,0,10">
 
                     <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
@@ -182,14 +250,16 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <TextBlock Grid.Column="0"
+                        <TextBlock Grid.Row="0"
+                                   Grid.Column="0"
                                    Text="File PDF:"
                                    VerticalAlignment="Center"
                                    Margin="0,0,10,0"
                                    FontWeight="SemiBold"
                                    Foreground="{StaticResource FluentTextBrush}"/>
 
-                        <Button Grid.Column="1"
+                        <Button Grid.Row="0"
+                                Grid.Column="1"
                                 Content="Chọn file"
                                 MinWidth="92"
                                 Style="{StaticResource CompactCommandButtonStyle}"
@@ -197,7 +267,8 @@
                                 IsEnabled="{Binding CanBrowseFile}"
                                 Margin="0,0,12,0"/>
 
-                        <Border Grid.Column="2"
+                        <Border Grid.Row="0"
+                                Grid.Column="2"
                                 Background="{StaticResource FluentSurfaceMutedBrush}"
                                 BorderBrush="{StaticResource FluentBorderBrush}"
                                 BorderThickness="1"
@@ -210,13 +281,24 @@
                                        Style="{StaticResource FileNameTextStyle}"/>
                         </Border>
 
-                        <Button Grid.Column="3"
+                        <Button Grid.Row="0"
+                                Grid.Column="3"
                                 Content="Trích xuất văn bản PDF"
                                 MinWidth="166"
                                 Style="{StaticResource CompactPrimaryButtonStyle}"
                                 Command="{Binding AutoFillCommand}"
                                 IsEnabled="{Binding CanAutoFill}"
                                 ToolTip="Trích xuất văn bản từ PDF có lớp chữ. PDF scan ảnh cần nhập thủ công."/>
+                        <Border Grid.Row="1"
+                                Grid.Column="0"
+                                Grid.ColumnSpan="4"
+                                HorizontalAlignment="Stretch"
+                                Style="{StaticResource ExtractionMessageBorderStyle}"
+                                Visibility="{Binding HasExtractionMessage, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding ExtractionMessage}"
+                                       HorizontalAlignment="Stretch"
+                                       Style="{StaticResource ExtractionMessageTextStyle}"/>
+                        </Border>
                     </Grid>
                 </Border>
 
@@ -268,7 +350,9 @@
                                     Style="{StaticResource RightFormFieldPanelStyle}">
                             <TextBlock Text="Số hiệu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
                             <TextBox Text="{Binding DocumentNumber, UpdateSourceTrigger=PropertyChanged}"
-                                     Style="{StaticResource FormTextBoxStyle}"/>
+                                     Tag="{Binding DocumentNumberNeedsReview}"
+                                     ToolTip="{Binding DocumentNumberExtractionSource}"
+                                     Style="{StaticResource OcrReviewTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="1"
@@ -277,7 +361,9 @@
                             <TextBlock Text="Tiêu đề / Trích yếu văn bản (*)" Style="{StaticResource RequiredLabelStyle}"/>
                             <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
                                      FontWeight="SemiBold"
-                                     Style="{StaticResource FormTextBoxStyle}"/>
+                                     Tag="{Binding TitleNeedsReview}"
+                                     ToolTip="{Binding TitleExtractionSource}"
+                                     Style="{StaticResource OcrReviewTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="2"
@@ -304,7 +390,9 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Ngày ban hành" Style="{StaticResource LabelStyle}"/>
                             <DatePicker SelectedDate="{Binding IssueDate}"
-                                        Style="{StaticResource FormDatePickerStyle}"/>
+                                        Tag="{Binding IssueDateNeedsReview}"
+                                        ToolTip="{Binding IssueDateExtractionSource}"
+                                        Style="{StaticResource OcrReviewDatePickerStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="3"
@@ -340,7 +428,9 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Cơ quan ban hành / Người gửi" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding SenderName}"
-                                     Style="{StaticResource FormTextBoxStyle}"/>
+                                     Tag="{Binding SenderNameNeedsReview}"
+                                     ToolTip="{Binding SenderNameExtractionSource}"
+                                     Style="{StaticResource OcrReviewTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="5"
@@ -348,7 +438,9 @@
                                     Style="{StaticResource RightFormFieldPanelStyle}">
                             <TextBlock Text="Nơi nhận / Người nhận" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding ReceiverName}"
-                                     Style="{StaticResource FormTextBoxStyle}"/>
+                                     Tag="{Binding ReceiverNameNeedsReview}"
+                                     ToolTip="{Binding ReceiverNameExtractionSource}"
+                                     Style="{StaticResource OcrReviewTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="6"
@@ -356,7 +448,9 @@
                                     Style="{StaticResource LeftFormFieldPanelStyle}">
                             <TextBlock Text="Người ký" Style="{StaticResource LabelStyle}"/>
                             <TextBox Text="{Binding SignerName}"
-                                     Style="{StaticResource FormTextBoxStyle}"/>
+                                     Tag="{Binding SignerNameNeedsReview}"
+                                     ToolTip="{Binding SignerNameExtractionSource}"
+                                     Style="{StaticResource OcrReviewTextBoxStyle}"/>
                         </StackPanel>
 
                         <StackPanel Grid.Row="6"

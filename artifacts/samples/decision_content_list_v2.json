@@ -1,0 +1,380 @@
+[
+    [
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "QUYET DINH V/v miěn nhièm chúc vu Truó'ng phòng Hành chính"
+                    }
+                ],
+                "level": 1
+            },
+            "bbox": [
+                238,
+                152,
+                764,
+                200
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "ToNG GIAm DoC CONG TY Co PHAN NoNG sAN PHU GIA"
+                    }
+                ]
+            },
+            "bbox": [
+                191,
+                212,
+                813,
+                236
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Cǎn cir chirc nǎng, quyèn han cia Tóng Giám dóc Cong ty CP Nong san Phú Gia;"
+                    }
+                ]
+            },
+            "bbox": [
+                139,
+                236,
+                865,
+                259
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Cǎn cir vào nhu càu tó chirc và hoat dōng cua Cong ty;"
+                    }
+                ]
+            },
+            "bbox": [
+                139,
+                258,
+                638,
+                278
+            ]
+        },
+        {
+            "type": "title",
+            "content": {
+                "title_content": [
+                    {
+                        "type": "text",
+                        "content": "QUYET DINH:"
+                    }
+                ],
+                "level": 1
+            },
+            "bbox": [
+                411,
+                291,
+                598,
+                316
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Dièu 1. Miěn nhièm chúc vu Truong phòng Hành chính dói vói Ong: Nguyěn Thanh Hùng, sinh ngay 01 tháng 10 nǎm 1979"
+                    }
+                ]
+            },
+            "bbox": [
+                112,
+                326,
+                899,
+                376
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Dièu 2. Ong: Nguyěn Thanh Hùng có trách nhiem bàn giao còng viec, tài san và hò so lién quan cho nguòi droc phan còng thay thé theo dúng quy dinh cúa còng ty truóc ngay 01/10/2025;"
+                    }
+                ]
+            },
+            "bbox": [
+                114,
+                376,
+                900,
+                449
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Dièu 3. Sau khi duoc miěn nhiem, Ong Nguyěn Thanh Hùng tiép tuc thyc hien cōng vièc theo su phàn còng mói cua Còng ty (néu có);"
+                    }
+                ]
+            },
+            "bbox": [
+                114,
+                448,
+                902,
+                498
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Dièu 4. Các cá nhan, bo phan liēn quan có trách nhiem thi hành quyét dinh này. Quyét dinh này có hiéu luc kě tùr ngày ky. y"
+                    }
+                ]
+            },
+            "bbox": [
+                115,
+                495,
+                900,
+                546
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "CONGTYCONNSAPE L 0190270"
+                    }
+                ]
+            },
+            "bbox": [
+                463,
+                536,
+                969,
+                585
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Noi nhàn:"
+                    }
+                ]
+            },
+            "bbox": [
+                114,
+                586,
+                208,
+                604
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "-Nhur dièu 4;"
+                    }
+                ]
+            },
+            "bbox": [
+                115,
+                604,
+                228,
+                621
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "- Luu VT."
+                    }
+                ]
+            },
+            "bbox": [
+                115,
+                621,
+                205,
+                638
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "CONGTY"
+                    }
+                ]
+            },
+            "bbox": [
+                591,
+                601,
+                675,
+                618
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "COPHAN"
+                    }
+                ]
+            },
+            "bbox": [
+                589,
+                615,
+                678,
+                632
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "NONG SAN"
+                    }
+                ]
+            },
+            "bbox": [
+                579,
+                631,
+                684,
+                649
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "PHUGIA"
+                    }
+                ]
+            },
+            "bbox": [
+                588,
+                648,
+                677,
+                665
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "CHU TICH HDQT"
+                    }
+                ]
+            },
+            "bbox": [
+                707,
+                667,
+                862,
+                692
+            ]
+        },
+        {
+            "type": "paragraph",
+            "content": {
+                "paragraph_content": [
+                    {
+                        "type": "text",
+                        "content": "Pham Chanh Ha"
+                    }
+                ]
+            },
+            "bbox": [
+                682,
+                690,
+                895,
+                722
+            ]
+        },
+        {
+            "type": "page_header",
+            "content": {
+                "page_header_content": [
+                    {
+                        "type": "text",
+                        "content": "CONG TY CO PHAN NONG SAN PHU GIA s6: 3AS./QD-PG"
+                    }
+                ]
+            },
+            "bbox": [
+                124,
+                59,
+                342,
+                135
+            ]
+        },
+        {
+            "type": "page_header",
+            "content": {
+                "page_header_content": [
+                    {
+                        "type": "text",
+                        "content": "CONG HOA XA HOI CHU NGHIA VIET NAM Doc lap - Tur do - Hanh phúc"
+                    }
+                ]
+            },
+            "bbox": [
+                431,
+                55,
+                889,
+                97
+            ]
+        },
+        {
+            "type": "page_header",
+            "content": {
+                "page_header_content": [
+                    {
+                        "type": "text",
+                        "content": "Thanh Hóa, ngày .Llf tháng ..9.. nǎm 2025"
+                    }
+                ]
+            },
+            "bbox": [
+                504,
+                108,
+                895,
+                131
+            ]
+        }
+    ]
+]

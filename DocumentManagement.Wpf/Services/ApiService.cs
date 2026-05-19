@@ -316,14 +316,56 @@ public class ApiService
 
         if (response.StatusCode == HttpStatusCode.BadRequest)
         {
-            var message = await response.Content.ReadAsStringAsync();
-            throw new InvalidOperationException(message);
+            var failure = await TryReadAutoFillFailureAsync(response);
+            if (!string.IsNullOrWhiteSpace(failure.FailureKind))
+            {
+                return failure;
+            }
+
+            throw new InvalidOperationException(
+                string.IsNullOrWhiteSpace(failure.FailureMessage)
+                    ? "Không thể trích xuất thông tin từ PDF."
+                    : failure.FailureMessage);
         }
 
         response.EnsureSuccessStatusCode();
 
         return await response.Content.ReadFromJsonAsync<AutoFillDocumentResultDto>()
                ?? new AutoFillDocumentResultDto();
+    }
+
+    private static async Task<AutoFillDocumentResultDto> TryReadAutoFillFailureAsync(HttpResponseMessage response)
+    {
+        try
+        {
+            var result = await response.Content.ReadFromJsonAsync<AutoFillDocumentResultDto>();
+            if (result != null)
+            {
+                return result;
+            }
+        }
+        catch
+        {
+            // Fall back to a sanitized plain-text message below.
+        }
+
+        var message = await response.Content.ReadAsStringAsync();
+        return new AutoFillDocumentResultDto
+        {
+            FailureMessage = SanitizeApiMessage(message)
+        };
+    }
+
+    private static string SanitizeApiMessage(string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return "Không thể trích xuất thông tin từ PDF.";
+
+        return message
+            .Trim()
+            .Trim('"')
+            .Replace("\\r", " ")
+            .Replace("\\n", " ");
     }
 
     public async Task<byte[]> DownloadBackupAsync()
