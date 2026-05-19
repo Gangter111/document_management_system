@@ -24,3 +24,14 @@ keys/
 TestResults/
 coverage/
 publish/
+artifacts/publish/
+
+# Generated local verification and publication artifacts.
+artifacts/test-out/
+artifacts/wpf-build-out/
+artifacts/ocr-proof/
+
+# Runtime data roots when running from the repository.
+database/
+storage/
+backups/

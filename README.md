@@ -1,292 +1,263 @@
 # QuanLyVanBan / DocumentManagement
 
-QuanLyVanBan là hệ thống quản lý văn bản nội bộ cho doanh nghiệp hoặc phòng ban. Người dùng làm việc trên ứng dụng Windows, dữ liệu được lưu tập trung trên một máy server nội bộ.
+QuanLyVanBan is an enterprise document management system with a deterministic semantic review workflow for Vietnamese administrative and corporate documents. It combines a WPF desktop client, an ASP.NET Core API, persistence services, OCR/PDF infrastructure, and a provenance-first document intelligence layer.
 
-Tài liệu này viết theo hướng dễ hiểu cho người không chuyên IT. Các lệnh kỹ thuật chi tiết hơn nằm trong:
+The intelligence layer assists reviewers. It does not autonomously approve records, self-learn from user behavior, or become the authority for business data.
 
-- `docs/DEPLOYMENT.md`
-- `docs/HUONG_DAN_VAN_HANH_THUC_TE.md`
-
-## 1. Hệ Thống Dùng Để Làm Gì
-
-Hệ thống hỗ trợ:
-
-- Lưu hồ sơ văn bản đến, văn bản đi hoặc văn bản nội bộ.
-- Tạo, sửa, tìm kiếm, xem chi tiết và xóa mềm văn bản.
-- Theo dõi trạng thái xử lý: bản nháp, chờ duyệt, đã duyệt, đã ban hành, lưu trữ, từ chối.
-- Quản lý mức độ khẩn và mức độ bảo mật của văn bản.
-- Đính kèm file tài liệu.
-- Phân quyền theo vai trò người dùng.
-- Xem dashboard thống kê.
-- Ghi lịch sử thao tác để phục vụ kiểm tra sau này.
-- Trích xuất nội dung cơ bản từ file PDF.
-
-## 2. Hệ Thống Gồm Những Phần Nào
-
-Mô hình vận hành đơn giản:
+## Architecture Flow
 
 ```text
-Máy người dùng
-  -> mở ứng dụng QuanLyVanBan
-  -> kết nối về server nội bộ
-  -> server đọc/ghi dữ liệu vào database
+WPF client
+  -> ASP.NET Core API
+  -> Application services
+  -> Domain rules
+  -> Infrastructure persistence/storage/OCR
+
+PDF or OCR content
+  -> MinerU content_list_v2 adapter
+  -> DocumentStructure
+  -> SemanticExtractionPipeline
+  -> field candidates, confidence, rejection reasons
+  -> ReviewEvidenceResolver
+  -> review fields and overlay regions
+  -> WPF human review workflow
 ```
 
-Các thành phần trong dự án:
+Main projects:
 
-- `DocumentManagement.Api`: chương trình API chạy trên server.
-- `DocumentManagement.Wpf`: ứng dụng Windows cho người dùng.
-- `DocumentManagement.Application`: xử lý nghiệp vụ chính.
-- `DocumentManagement.Infrastructure`: kết nối database, lưu file, xuất báo cáo, backup.
-- `DocumentManagement.Domain`: các đối tượng và trạng thái nghiệp vụ.
-- `DocumentManagement.Contracts`: dữ liệu trao đổi giữa API và client.
-- `DocumentManagement.Tests`: bộ kiểm thử tự động.
+* `DocumentManagement.Wpf`: WPF desktop client, MVVM screens, dashboard, document forms, and semantic review UI.
+* `DocumentManagement.Api`: authentication, document endpoints, admin/backup operations, persistence endpoints, and API hosting.
+* `DocumentManagement.Application`: application orchestration and service contracts.
+* `DocumentManagement.Domain`: entities, document status semantics, and domain rules.
+* `DocumentManagement.Infrastructure`: SQLite/SQL Server persistence, migrations, file storage, backup, demo data, OCR/PDF, and export services.
+* `DocumentManagement.Intelligence`: MinerU adaptation, semantic extraction, provenance, deterministic review mapping, resolver ordering, replay/audit snapshots, and overlay navigation.
+* `DocumentManagement.Contracts`: shared DTO contracts.
+* `DocumentManagement.Tests`: service, security, persistence, intelligence, review determinism, runtime safety, and UI-critical regression tests.
 
-## 3. Yêu Cầu Máy Chủ Và Máy Người Dùng
+## Deterministic Semantic Review
 
-Máy server pilot nhỏ:
+The semantic review path is designed around explainable evidence:
 
-- Windows 10/11 Pro hoặc Windows Server.
-- CPU 4 nhân trở lên.
-- RAM 8 GB trở lên.
-- Ổ đĩa trống tối thiểu 20 GB.
-- Có IP cố định trong mạng nội bộ.
-- Port mặc định của API: `5033`.
+```text
+PDF
+-> OCR/MinerU blocks
+-> normalized document structure
+-> deterministic field extractors
+-> candidate confidence and rejection reasoning
+-> evidence provenance
+-> resolver-authoritative ordering
+-> human review UI with overlay navigation
+```
 
-Máy người dùng:
+Review evidence is classified as:
 
-- Windows 10/11.
-- Kết nối được tới server nội bộ.
-- Có quyền chạy file `DocumentManagement.Wpf.exe`.
+* Primary: the exact source used for the proposed value.
+* Supporting: evidence that explains semantic validity, such as a signer role near a signer name.
+* Contextual: nearby ordered content that helps review without becoming the value.
 
-Database:
+Rejected candidates remain visible when useful. For example, a DOB-looking date inside `sinh ngay`, `ngay sinh`, or `DOB` context is hard rejected and must not become the issue date.
 
-- SQLite phù hợp pilot nhỏ.
-- SQL Server Express/Standard nên dùng khi triển khai thật cho nhiều người dùng.
+## Resolver Authority
 
-## 4. Cách Chạy Kiểm Tra Trên Máy Phát Triển
+`ReviewEvidenceResolver` is the sole semantic ordering authority for review evidence. Overlay traversal, focus restoration, replay, audit, diff, diagnostics, and operational observability consume resolver-normalized order; they do not re-rank or mutate semantic evidence.
 
-Mở PowerShell tại thư mục dự án:
+Determinism is a product requirement:
+
+* stable evidence ordering.
+* stable overlay traversal.
+* stable semantic group IDs and overlay IDs.
+* stable focus capture and restoration across refresh/remap cycles.
+* stable replay, audit, diff, and operational snapshots.
+* no timing-based correctness.
+* no coordinate-only focus recovery.
+* no hash-order dependent output.
+
+Repeated header/footer evidence is demoted with diagnostics inside a resolver invocation. It is not removed, so provenance remains reviewable.
+
+## Current Capabilities
+
+Implemented and tested capabilities include:
+
+* OCR/MinerU block adaptation into `DocumentStructure`.
+* semantic extraction for issuer, document number, issue date, title/trich yeu, signer, recipients, and body sections.
+* real-world Vietnamese administrative/corporate heuristic tuning for common noisy OCR layouts.
+* deterministic rejection of DOB-as-issue-date candidates.
+* document number normalization for noisy `So`, `S6`, `S0`, spaced `S o`, `No`, and `Ky hieu` markers.
+* issuer promotion from guarded top-left organization evidence, including multi-line administrative headers.
+* title/trich yeu promotion for common document types such as `QUYET DINH`, `THONG BAO`, `CONG VAN`, `TO TRINH`, `BAO CAO`, `KE HOACH`, and `NGHI QUYET`.
+* direct `Kinh gui` addressee and footer `Noi nhan` recipient support.
+* signer role/name evidence with stamp/signature overlap tolerance.
+* body section reconstruction in visual reading order, including effective-date wording as body evidence.
+* provenance propagation through extraction, review mapping, and overlay mapping.
+* deterministic semantic grouping and overlay traversal.
+* focus restoration across refresh and remap scenarios.
+* deterministic replay, audit, diff, and bounded operational observability snapshots.
+* runtime stale-refresh and cancellation safety.
+* deterministic demo-data seeding and cleanup.
+* SQLite pilot runtime and SQL Server deployment support.
+
+## Real-World Corpus Tuning
+
+Recent tuning is intentionally conservative and corpus-driven. The goal is better promotion of real Vietnamese administrative/corporate documents without replacing the deterministic model.
+
+The tuning added lightweight heuristics for:
+
+* organization/issuer headers.
+* signer roles and person-like signer names.
+* administrative titles and trich yeu subject lines.
+* recipients and archive/footer blocks.
+* document-number OCR whitespace and marker normalization.
+* duplicated, noisy, malformed, or missing-accent OCR.
+* repeated headers/footers and stamp-like fragments.
+
+The system still prefers an empty or low-confidence value over an unsupported authoritative promotion.
+
+## Review Examples And Artifacts
+
+Committed deterministic artifacts:
+
+* `artifacts/samples/decision_content_list_v2.json`: sample MinerU-style OCR fixture used by intelligence and review tests.
+* `artifacts/screenshots/*.png`: canonical UI screenshot evidence currently focused on login/dashboard workflows.
+
+The repository does not currently include a canonical semantic review window screenshot. Review behavior is primarily documented by tests in `DocumentManagement.Tests/Intelligence`, including snapshot, overlay traversal, focus restoration, stale refresh, and real-world coverage regressions.
+
+To inspect the sample extraction from the console:
 
 ```powershell
-cd D:\QuanLyVanBan
-powershell -ExecutionPolicy Bypass -File .\tools\verify.ps1 -SkipSmoke
+dotnet run --project .\DocumentManagement.Intelligence.ConsoleTest\DocumentManagement.Intelligence.ConsoleTest.csproj -- .\artifacts\samples\decision_content_list_v2.json
 ```
 
-Lệnh này sẽ build các project, chạy kiểm tra kiến trúc và chạy test tự động.
+The console output lists accepted candidates, rejected candidates, confidence reasoning, and field values. It is intended for debugging and review validation, not as a production analytics pipeline.
 
-Chạy API thử:
+## Runtime And Operations
+
+Runtime coordination is freshness-only. It guards refresh, cancellation, stale completion, overlay remap, and focus restoration state without owning semantics.
+
+Operational hardening includes:
+
+* startup validation for production JWT configuration.
+* permission and security regression tests.
+* bounded diagnostics rather than telemetry services.
+* backup and restore services.
+* runtime path validation.
+* SQLite backup/restore coverage.
+* publish scripts that refuse weak production secrets.
+
+Operational observability is debug-oriented and observational only. It must not influence extraction, resolver ordering, review decisions, or overlay traversal.
+
+## Known Limitations
+
+Current limitations are explicit:
+
+* OCR evidence is block/bbox-level; token/span bounding boxes are not authoritative.
+* OCR may be corrupted, duplicated, malformed, or missing Vietnamese accents.
+* Some page metrics may be inferred from block boxes.
+* Real PDFs may have visual reading order that differs from JSON order.
+* Signature and stamp areas may appear as ordinary paragraph blocks.
+* Effective-date wording is preserved as body evidence; it is not a separate authoritative effective-date field.
+* Extraction is heuristic and deterministic, not a generalized NLP reasoning engine.
+* Low-confidence or missing values are expected when evidence is not explainable.
+* Reviewers remain responsible for final business decisions.
+
+## Non-Goals
+
+This repository does not claim or implement:
+
+* autonomous document approval.
+* self-learning intelligence.
+* LLM extraction or LLM ranking.
+* fuzzy semantic inference.
+* graph-based semantic reasoning.
+* adaptive ranking or confidence feedback loops.
+* ML orchestration.
+* semantic cache hierarchies.
+* replay/event sourcing systems.
+* telemetry or analytics pipelines.
+* token/span-level layout authority.
+
+Predictable enterprise behavior is more important than unstable "smart" behavior.
+
+## Running Locally
+
+Requirements:
+
+* .NET 8 SDK.
+* Windows for the WPF client.
+* PowerShell.
+* Optional Tesseract installation for local OCR fallback.
+
+Build the solution:
 
 ```powershell
-cd D:\QuanLyVanBan
-powershell -ExecutionPolicy Bypass -File .\tools\start-local-api.ps1
+dotnet build .\DocumentManagement.sln
 ```
 
-Kiểm tra API:
+Run the main test project:
+
+```powershell
+dotnet test .\DocumentManagement.Tests\DocumentManagement.Tests.csproj
+```
+
+If normal output folders are locked by a running process, use the alternate output path:
+
+```powershell
+dotnet test .\DocumentManagement.Tests\DocumentManagement.Tests.csproj -p:OutputPath="D:\QuanLyVanBan - V1.05\artifacts\test-out"
+```
+
+Run the WPF client:
+
+```powershell
+dotnet run --project .\DocumentManagement.Wpf\DocumentManagement.Wpf.csproj
+```
+
+Run the API from source:
+
+```powershell
+dotnet run --project .\DocumentManagement.Api\DocumentManagement.Api.csproj
+```
+
+Default health check:
 
 ```text
 http://localhost:5033/health
 ```
 
-Chạy ứng dụng Windows:
+## Configuration Notes
+
+`DocumentManagement.Api/appsettings.json` contains development defaults only, including a clearly marked local JWT placeholder. Production deployments must provide a strong JWT secret through environment-specific configuration or a managed secret store.
+
+Pilot deployments can use SQLite. SQL Server is supported for more durable multi-user deployments.
+
+Do not commit production databases, runtime logs, generated publish folders, local API keys, real JWT secrets, or machine-specific production configuration. Use deployment templates and environment-specific configuration for real secrets.
+
+See `docs/DEPLOYMENT.md` and `docs/security-hardening.md` for operational deployment and security guidance.
+
+## Repository Hygiene
+
+Canonical repository artifacts:
+
+* source code.
+* tests.
+* documentation.
+* deterministic sample fixtures under `artifacts/samples/`.
+* canonical screenshots under `artifacts/screenshots/`.
+
+Non-canonical generated content should stay out of Git:
+
+* `bin/` and `obj/`.
+* `publish/` and `artifacts/publish/`.
+* `logs/` and `DocumentManagement.Api/logs/`.
+* local databases and runtime storage.
+* `artifacts/test-out/`.
+* transient OCR proof files.
+* copied binaries and zip packages.
+
+Before publication or commit:
 
 ```powershell
-cd D:\QuanLyVanBan\DocumentManagement.Wpf
-dotnet run
+git status
+dotnet test .\DocumentManagement.Tests\DocumentManagement.Tests.csproj -p:OutputPath="D:\QuanLyVanBan - V1.05\artifacts\test-out"
+dotnet build .\DocumentManagement.sln
 ```
 
-## 5. Cách Triển Khai Cho Người Dùng Nội Bộ
-
-Triển khai gồm 2 việc chính:
-
-1. Cài API trên một máy server nội bộ.
-2. Cài ứng dụng WPF trên từng máy người dùng.
-
-### Bước 1: Đóng Gói API Server
-
-Trên máy phát triển:
-
-```powershell
-cd D:\QuanLyVanBan
-powershell -ExecutionPolicy Bypass -File .\tools\publish-api.ps1 `
-  -Urls http://0.0.0.0:5033 `
-  -DatabaseProvider Sqlite `
-  -DatabasePath database/app.db `
-  -JwtSecret CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026
-```
-
-Kết quả nằm ở:
-
-```text
-D:\QuanLyVanBan\publish\api-server
-```
-
-Copy file ZIP API sang server và giải nén vào:
-
-```text
-C:\QuanLyVanBan\Api
-```
-
-### Bước 2: Cài API Thành Dịch Vụ Windows
-
-Trên server, mở PowerShell bằng quyền Administrator:
-
-```powershell
-cd C:\QuanLyVanBan\Api
-powershell -ExecutionPolicy Bypass -File .\install-service.ps1
-```
-
-Kiểm tra dịch vụ:
-
-```powershell
-Get-Service DocumentManagement.Api
-```
-
-Trạng thái đúng là `Running`.
-
-### Bước 3: Mở Firewall
-
-Trên server, mở port `5033`:
-
-```powershell
-New-NetFirewallRule `
-  -DisplayName "QuanLyVanBan API 5033" `
-  -Direction Inbound `
-  -Protocol TCP `
-  -LocalPort 5033 `
-  -Action Allow
-```
-
-Từ máy người dùng, mở trình duyệt và kiểm tra:
-
-```text
-http://SERVER_IP:5033/health
-```
-
-Nếu hiện `Healthy` hoặc trang phản hồi thành công, server đang chạy.
-
-### Bước 4: Đóng Gói Ứng Dụng WPF
-
-Trên máy phát triển, thay `SERVER_IP` bằng IP server thật:
-
-```powershell
-cd D:\QuanLyVanBan
-powershell -ExecutionPolicy Bypass -File .\tools\publish-wpf-client.ps1 `
-  -ApiBaseUrl http://SERVER_IP:5033/
-```
-
-Kết quả nằm ở:
-
-```text
-D:\QuanLyVanBan\publish\wpf-client
-```
-
-Copy file ZIP client sang máy người dùng và giải nén vào:
-
-```text
-C:\QuanLyVanBan\Client
-```
-
-Người dùng mở:
-
-```text
-C:\QuanLyVanBan\Client\DocumentManagement.Wpf.exe
-```
-
-## 6. Tài Khoản Kiểm Thử Ban Đầu
-
-Tài khoản thường dùng cho kiểm thử pilot:
-
-- `admin` / `admin123`
-- `manager` / `manager123`
-- `staff` / `staff123`
-
-Khi triển khai thật, cần đổi mật khẩu mặc định, tối thiểu là tài khoản `admin`.
-
-## 7. Việc Vận Hành Hằng Ngày
-
-Người phụ trách nên kiểm tra nhanh mỗi ngày:
-
-- Mở ứng dụng và đăng nhập được.
-- Dashboard hiển thị số liệu.
-- Tìm kiếm được một văn bản cũ.
-- Service `DocumentManagement.Api` trên server đang `Running`.
-- Thư mục backup có file mới.
-- Ổ đĩa server còn đủ dung lượng.
-
-Thư mục log API thường nằm ở:
-
-```text
-C:\QuanLyVanBan\Api\logs
-```
-
-Thư mục backup khuyến nghị:
-
-```text
-C:\QuanLyVanBan\Backups
-```
-
-## 8. Backup Và Khôi Phục
-
-Với SQLite pilot, database thường là:
-
-```text
-C:\QuanLyVanBan\Api\database\app.db
-```
-
-Backup thủ công:
-
-```powershell
-cd D:\QuanLyVanBan
-powershell -ExecutionPolicy Bypass -File .\tools\backup-sqlite.ps1 `
-  -DatabasePath C:\QuanLyVanBan\Api\database\app.db `
-  -BackupDirectory C:\QuanLyVanBan\Backups `
-  -RetentionDays 30
-```
-
-Với SQL Server, xem lệnh chi tiết trong `docs/DEPLOYMENT.md`.
-
-Nguyên tắc quan trọng: không chỉ giữ backup trên chính server. Nên copy thêm ra ổ cứng ngoài, NAS hoặc máy khác.
-
-## 9. Khi Có Sự Cố
-
-Làm theo thứ tự:
-
-1. Ghi lại thời gian xảy ra lỗi.
-2. Hỏi người dùng đang thao tác gì.
-3. Chụp màn hình lỗi.
-4. Kiểm tra `http://SERVER_IP:5033/health`.
-5. Kiểm tra service `DocumentManagement.Api`.
-6. Nếu API không phản hồi, restart service.
-7. Nếu vẫn lỗi, gửi log trong `C:\QuanLyVanBan\Api\logs` cho người kỹ thuật.
-
-Restart API:
-
-```powershell
-Restart-Service DocumentManagement.Api
-```
-
-## 10. Những Việc Không Nên Tự Làm Nếu Không Chắc
-
-- Không xóa file trong thư mục API.
-- Không sửa trực tiếp file database.
-- Không xóa database trong SQL Server.
-- Không tắt firewall server.
-- Không đổi port API khi client đang dùng.
-- Không restore database khi chưa báo người dùng tạm ngừng sử dụng.
-
-## 11. Trạng Thái Kiểm Tra Hiện Tại
-
-Bộ kiểm tra chính của dự án:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\verify.ps1 -SkipSmoke
-```
-
-Bộ smoke test đầy đủ có thể chạy bằng:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\tools\verify-all.ps1
-```
-
-Smoke test sẽ khởi động API tạm thời trên port `5033`, chạy kiểm thử đăng nhập và thao tác API, sau đó tắt API.
+After verification, remove generated `artifacts/test-out/` before publishing the repository unless it is needed temporarily for local diagnosis.

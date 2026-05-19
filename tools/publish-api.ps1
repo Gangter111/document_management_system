@@ -4,7 +4,7 @@ param(
     [string]$DatabaseProvider = "Sqlite",
     [string]$DatabasePath = "database/app.db",
     [string]$ConnectionString = "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True",
-    [string]$JwtSecret = "CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026",
+    [string]$JwtSecret = $env:DMS_JWT_SECRET,
     [string]$Configuration = "Release",
     [string]$RuntimeIdentifier = "win-x64",
     [switch]$FrameworkDependent
@@ -35,8 +35,12 @@ if ($DatabaseProvider -eq "SqlServer" -and [string]::IsNullOrWhiteSpace($Connect
     Fail "ConnectionString is required when DatabaseProvider is SqlServer."
 }
 
-if ([string]::IsNullOrWhiteSpace($JwtSecret) -or $JwtSecret.Length -lt 32) {
-    Fail "JwtSecret must be at least 32 characters."
+if ([string]::IsNullOrWhiteSpace($JwtSecret) -or $JwtSecret.Length -lt 48) {
+    Fail "JwtSecret must be supplied through -JwtSecret or DMS_JWT_SECRET and must be at least 48 characters."
+}
+
+if ($JwtSecret -match "CHANGE_THIS|DEV_ONLY|PLACEHOLDER|DEFAULT|SECRET_KEY") {
+    Fail "JwtSecret is a placeholder and cannot be used for publish."
 }
 
 if (-not (Test-Path $Template)) {

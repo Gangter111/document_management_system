@@ -2,6 +2,135 @@
 
 Huong dan nay danh cho ban phat hanh noi bo hien tai cua QuanLyVanBan / DocumentManagement.
 
+## Production Publish Path
+
+Use `tools/publish-production.ps1` for installer-ready publish artifacts. The script runs the required build and tests, publishes API and WPF in `Release`, creates self-contained `win-x64` outputs by default, writes artifacts under `artifacts/publish/`, refuses placeholder JWT secrets, and removes transient `.db`, `.sqlite`, and `.log` files from the publish folders.
+
+Example:
+
+```powershell
+$env:DMS_JWT_SECRET = "<48-plus-character-secret-from-approved-secret-manager>"
+powershell -ExecutionPolicy Bypass -File .\tools\publish-production.ps1 `
+  -ApiBaseUrl http://SERVER_IP:5033/ `
+  -ApiUrls http://0.0.0.0:5033 `
+  -DatabaseProvider SqlServer `
+  -ConnectionString "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True" `
+  -DataRoot "C:\ProgramData\QuanLyVanBan" `
+  -AttachmentsPath "C:\ProgramData\QuanLyVanBan\storage\attachments" `
+  -BackupPath "C:\ProgramData\QuanLyVanBan\backups" `
+  -LogFilePath "C:\ProgramData\QuanLyVanBan\logs\api-.log"
+```
+
+Outputs:
+
+```text
+artifacts/publish/api
+artifacts/publish/wpf
+artifacts/publish/DocumentManagement.Api-win-x64.zip
+artifacts/publish/DocumentManagement.Wpf-win-x64.zip
+```
+
+The ZIPs are installer-ready inputs only. Production still requires code signing and an MSI/MSIX packaging step owned by the deployment team. Do not deploy raw publish folders to end users as the final product.
+
+Production configuration should come from `appsettings.Production.json`, machine environment variables, or a managed secret store. Required settings:
+
+- `Jwt:Secret`: high-entropy secret, at least 48 characters, not committed.
+- `AdminSeed:Password`: omit in production unless intentionally provisioning a rotated break-glass account.
+- `Storage:DataRoot`: base runtime data folder. Recommended: `C:\ProgramData\QuanLyVanBan`.
+- `Database:Path` or `Database:ConnectionString`: production database location.
+- `Storage:AttachmentsPath`: durable attachment storage outside the app binary folder.
+- `Backup:Path`: durable backup location outside the app binary folder.
+- `Logging:FilePath`: rolling log path, preferably under `C:\ProgramData\QuanLyVanBan\logs`.
+- `PdfExtraction:Ocr:Enabled`: enable only when local OCR dependencies are installed and governed.
+- `PdfExtraction:Ocr:TesseractPath`: path to the local Tesseract executable.
+- `PdfExtraction:Ocr:TessdataPath`: path to the local Tesseract language data folder.
+- `PdfExtraction:Ocr:Language`: recommended `vie+eng` when Vietnamese trained data is installed.
+
+Environment variable names used by release scripts:
+
+- `DMS_JWT_SECRET`: production JWT signing secret used by `tools/publish-production.ps1`.
+- `DMS_ADMIN_SEED_PASSWORD`: optional one-time admin seed password for controlled provisioning.
+- `ASPNETCORE_ENVIRONMENT`: set to `Production` for the API service.
+
+First production install outline:
+
+1. Generate a high-entropy `DMS_JWT_SECRET` with at least 48 characters using an approved password manager or secret generator.
+2. Publish with `tools/publish-production.ps1`; confirm `artifacts/publish/deployment-manifest.json`.
+3. Code-sign binaries and package the artifacts with the enterprise MSI/MSIX process.
+4. Install API binaries under `C:\Program Files\QuanLyVanBan\Api`.
+5. Create `C:\ProgramData\QuanLyVanBan` folders and lock ACLs to Administrators and the API service account.
+6. Configure `appsettings.Production.json` or machine environment configuration.
+7. Install/start the API Windows Service and verify `/health`.
+8. Install the WPF client package and run the smoke checklist.
+
+Admin password rotation:
+
+- Do not rely on development accounts in production.
+- Create the initial administrator through the approved provisioning process.
+- If `DMS_ADMIN_SEED_PASSWORD` is used for provisioning, rotate it immediately after first login and remove the seed value.
+
+Maintenance and restore procedure:
+
+1. Notify users and stop normal activity.
+2. Set `Maintenance:Mode=true`.
+3. Set `Maintenance:RestoreEnabled=true` only for the restore window.
+4. Perform restore from a verified backup.
+5. Check `/health` and admin operations status.
+6. Set `Maintenance:RestoreEnabled=false`.
+7. Set `Maintenance:Mode=false`.
+
+Attachment reconciliation procedure:
+
+1. Run the reconciliation report endpoint first.
+2. Review missing metadata/files and orphan counts.
+3. Run cleanup only with explicit approval.
+4. Keep the cleanup default as dry-run unless deleting verified file-only orphans.
+
+Rollback procedure:
+
+- Stop the API service.
+- Restore the previous API package.
+- Do not overwrite `C:\ProgramData\QuanLyVanBan`.
+- Restart the service and run `/health` plus the smoke checklist.
+
+Smoke-test checklist:
+
+- `/health` returns healthy.
+- Login works for an approved account.
+- Document search/list loads.
+- Create/update/delete permissions match role policy.
+- Backup status and operations status endpoints do not expose local paths.
+- PDF extraction handles invalid PDFs with classified failure.
+- Scanned PDF extraction either runs bounded local OCR or returns a calm scanned/image-only limitation message.
+
+Recommended installation layout:
+
+```text
+C:\Program Files\QuanLyVanBan\Api
+C:\Program Files\QuanLyVanBan\Client
+C:\ProgramData\QuanLyVanBan\database
+C:\ProgramData\QuanLyVanBan\storage\attachments
+C:\ProgramData\QuanLyVanBan\backups
+C:\ProgramData\QuanLyVanBan\logs
+```
+
+Keep runtime data out of `Program Files`. Grant write access only to the API service identity and administrators. The WPF client should be installed read-only for normal users.
+
+API hosting:
+
+- Run the API as a Windows Service under a least-privilege service account.
+- Use IIS, YARP, Nginx, or another approved reverse proxy when TLS termination, enterprise certificates, or network segmentation are required.
+- Open only the required inbound port from trusted client subnets.
+- Keep Swagger disabled outside Development unless explicitly required by internal operations policy.
+
+Backup and update guidance:
+
+- Keep at least 30 daily backups for pilot SQLite and follow the SQL Server retention policy for production SQL Server.
+- Test restore on a separate machine before rollout and after backup policy changes.
+- Deploy updates through a signed MSI/MSIX or enterprise software distribution system.
+- Stop the Windows Service before replacing API binaries.
+- Never overwrite `ProgramData` runtime data during an application update.
+
 Neu nguoi van hanh khong phai IT, doc ban huong dan don gian hon truoc:
 
 ```text
@@ -46,11 +175,11 @@ C:\QuanLyVanBan\Backups
 
 ```powershell
 cd D:\QuanLyVanBan
-powershell -ExecutionPolicy Bypass -File .\tools\publish-api.ps1 `
-  -Urls http://0.0.0.0:5033 `
+powershell -ExecutionPolicy Bypass -File .\tools\publish-production.ps1 `
+  -ApiBaseUrl http://SERVER_IP:5033/ `
+  -ApiUrls http://0.0.0.0:5033 `
   -DatabaseProvider Sqlite `
-  -DatabasePath database/app.db `
-  -JwtSecret CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026
+  -DatabasePath database/app.db
 ```
 
 ### SQL Server production
@@ -59,18 +188,18 @@ Dung cho rollout chinh thuc 50-70 user:
 
 ```powershell
 cd D:\QuanLyVanBan
-powershell -ExecutionPolicy Bypass -File .\tools\publish-api.ps1 `
-  -Urls http://0.0.0.0:5033 `
+powershell -ExecutionPolicy Bypass -File .\tools\publish-production.ps1 `
+  -ApiBaseUrl http://SERVER_IP:5033/ `
+  -ApiUrls http://0.0.0.0:5033 `
   -DatabaseProvider SqlServer `
-  -ConnectionString "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True" `
-  -JwtSecret CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026
+  -ConnectionString "Server=localhost\SQLEXPRESS;Database=DocumentManagementDb;Trusted_Connection=True;TrustServerCertificate=True"
 ```
 
 Output:
 
 ```text
-D:\QuanLyVanBan\publish\api-server\app
-D:\QuanLyVanBan\publish\api-server\DocumentManagement.Api-win-x64.zip
+D:\QuanLyVanBan\artifacts\publish\api
+D:\QuanLyVanBan\artifacts\publish\DocumentManagement.Api-win-x64.zip
 ```
 
 Copy file ZIP sang server va giai nen vao:
@@ -99,7 +228,7 @@ Cac gia tri quan trong:
   "Jwt": {
     "Issuer": "DocumentManagement",
     "Audience": "DocumentManagementClient",
-    "Secret": "CHANGE_THIS_TO_A_LONG_SECURE_SECRET_KEY_32_CHARS_MIN_2026",
+    "Secret": "",
     "AccessTokenMinutes": 60
   },
   "Kestrel": {
@@ -232,7 +361,7 @@ Neu doi server, sua `Api:BaseUrl`, dong app va mo lai.
 
 ## 8. Tai Khoan Kiem Thu Pilot
 
-Tai khoan hien dung cho smoke test:
+Tai khoan nay chi dung cho Development/smoke test noi bo, khong dung cho production:
 
 - `admin` / `admin123`
 - `manager` / `manager123`
